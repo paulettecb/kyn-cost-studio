@@ -1,0 +1,123 @@
+/* ============================================================
+   KYN · Component styles
+   Token-driven classes shared by the React components and their
+   specimen cards. Imported into styles.css so consumers get them.
+   ============================================================ */
+
+/* ---------- Buttons ---------- */
+.kyn-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font-family:var(--font-sans);font-weight:var(--weight-semibold);
+  border:1.5px solid transparent;border-radius:var(--radius-pill);
+  cursor:pointer;text-decoration:none;white-space:nowrap;
+  transition:background var(--dur-fast) var(--ease-out),
+             color var(--dur-fast) var(--ease-out),
+             border-color var(--dur-fast) var(--ease-out),
+             box-shadow var(--dur-base) var(--ease-out),
+             transform var(--dur-fast) var(--ease-out);
+}
+.kyn-btn:focus-visible{outline:none;box-shadow:var(--shadow-focus);}
+.kyn-btn:active{transform:translateY(1px) scale(0.99);}
+
+/* sizes */
+.kyn-btn--sm{font-size:13px;padding:9px 18px;}
+.kyn-btn--md{font-size:15px;padding:13px 26px;}
+.kyn-btn--lg{font-size:16px;padding:16px 32px;}
+
+/* variants */
+.kyn-btn--primary{background:var(--periwinkle-500);color:#fff;box-shadow:var(--shadow-sm);}
+.kyn-btn--primary:hover{background:var(--periwinkle-600);box-shadow:var(--shadow-md);}
+.kyn-btn--secondary{background:var(--white);color:var(--ink-900);border-color:var(--ink-100);}
+.kyn-btn--secondary:hover{border-color:var(--periwinkle-300);background:var(--periwinkle-50);}
+.kyn-btn--ghost{background:transparent;color:var(--periwinkle-700);}
+.kyn-btn--ghost:hover{background:var(--periwinkle-50);}
+.kyn-btn--pop{background:var(--pop-magenta);color:#fff;box-shadow:var(--shadow-sm);}
+.kyn-btn--pop:hover{filter:brightness(0.96);box-shadow:var(--shadow-md);}
+.kyn-btn[disabled],.kyn-btn--disabled{opacity:0.45;pointer-events:none;box-shadow:none;}
+.kyn-btn svg{width:1.15em;height:1.15em;}
+
+/* ---------- Icon button ---------- */
+.kyn-iconbtn{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--white);border:1.5px solid var(--ink-100);
+  border-radius:var(--radius-pill);cursor:pointer;color:var(--ink-700);
+  transition:all var(--dur-fast) var(--ease-out);
+}
+.kyn-iconbtn:hover{border-color:var(--periwinkle-300);color:var(--periwinkle-700);background:var(--periwinkle-50);}
+.kyn-iconbtn:focus-visible{outline:none;box-shadow:var(--shadow-focus);}
+.kyn-iconbtn--sm{width:36px;height:36px;}
+.kyn-iconbtn--md{width:44px;height:44px;}
+.kyn-iconbtn svg{width:20px;height:20px;}
+
+/* ---------- Badge / Tag ---------- */
+.kyn-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--font-sans);font-weight:var(--weight-bold);
+  font-size:11px;letter-spacing:0.06em;text-transform:uppercase;
+  padding:5px 12px;border-radius:var(--radius-pill);line-height:1;white-space:nowrap;
+}
+.kyn-badge--pop{background:var(--pop-magenta);color:#fff;}
+.kyn-badge--brand{background:var(--periwinkle-500);color:#fff;}
+.kyn-badge--soft{background:var(--periwinkle-100);color:var(--periwinkle-800);}
+.kyn-badge--blush{background:var(--pastel-blush);color:#9B4D67;}
+.kyn-badge--mint{background:var(--pastel-mint);color:#2F6B4F;}
+.kyn-badge--butter{background:var(--pastel-butter);color:#8A6D1F;}
+.kyn-badge--outline{background:transparent;border:1.5px solid var(--ink-100);color:var(--ink-700);}
+
+/* ---------- Input ---------- */
+.kyn-field{display:flex;flex-direction:column;gap:7px;font-family:var(--font-sans);}
+.kyn-field__label{font-size:13px;font-weight:var(--weight-semibold);color:var(--ink-900);}
+.kyn-field__hint{font-size:12px;color:var(--text-muted);}
+.kyn-input{
+  font-family:var(--font-sans);font-size:15px;color:var(--ink-900);
+  background:var(--white);border:1.5px solid var(--ink-100);
+  border-radius:var(--radius-md);padding:13px 16px;width:100%;box-sizing:border-box;
+  transition:border-color var(--dur-fast) var(--ease-out),box-shadow var(--dur-base) var(--ease-out);
+}
+.kyn-input::placeholder{color:var(--ink-300);}
+.kyn-input:hover{border-color:var(--periwinkle-300);}
+.kyn-input:focus{outline:none;border-color:var(--periwinkle-500);box-shadow:var(--shadow-focus);}
+.kyn-input--error{border-color:var(--danger);}
+.kyn-input--error:focus{box-shadow:0 0 0 3px rgba(217,83,79,0.25);}
+
+/* ---------- Checkbox ---------- */
+.kyn-check{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-sans);font-size:15px;color:var(--ink-900);cursor:pointer;}
+.kyn-check input{position:absolute;opacity:0;width:0;height:0;}
+.kyn-check__box{
+  width:22px;height:22px;border-radius:7px;border:1.5px solid var(--ink-100);
+  background:var(--white);display:inline-flex;align-items:center;justify-content:center;
+  color:#fff;transition:all var(--dur-fast) var(--ease-out);flex:none;
+}
+.kyn-check__box svg{width:14px;height:14px;opacity:0;transform:scale(0.6);transition:all var(--dur-fast) var(--ease-out);}
+.kyn-check input:checked + .kyn-check__box{background:var(--periwinkle-500);border-color:var(--periwinkle-500);}
+.kyn-check input:checked + .kyn-check__box svg{opacity:1;transform:scale(1);}
+.kyn-check input:focus-visible + .kyn-check__box{box-shadow:var(--shadow-focus);}
+
+/* ---------- Card ---------- */
+.kyn-card{
+  background:var(--surface-card);border:1px solid var(--border-subtle);
+  border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);
+  padding:var(--space-5);transition:box-shadow var(--dur-base) var(--ease-out),transform var(--dur-base) var(--ease-out);
+}
+.kyn-card--interactive{cursor:pointer;}
+.kyn-card--interactive:hover{box-shadow:var(--shadow-lg);transform:translateY(-3px);}
+
+/* ---------- Product card ---------- */
+.kyn-product{
+  background:var(--white);border:1px solid var(--border-subtle);
+  border-radius:var(--radius-lg);overflow:hidden;font-family:var(--font-sans);
+  display:flex;flex-direction:column;width:260px;
+  transition:box-shadow var(--dur-base) var(--ease-out),transform var(--dur-base) var(--ease-out);
+}
+.kyn-product--interactive{cursor:pointer;}
+.kyn-product--interactive:hover{box-shadow:var(--shadow-lg);transform:translateY(-4px);}
+.kyn-product__media{position:relative;aspect-ratio:1/1;background:var(--oat);display:flex;align-items:center;justify-content:center;}
+.kyn-product__media .kyn-badge{position:absolute;top:12px;left:12px;}
+.kyn-product__fav{position:absolute;top:10px;right:10px;}
+.kyn-product__body{padding:16px 18px 20px;display:flex;flex-direction:column;gap:8px;}
+.kyn-product__name{font-family:var(--font-heading);font-weight:var(--weight-bold);font-size:18px;line-height:1.15;letter-spacing:-0.01em;color:var(--ink-900);margin:0;}
+.kyn-product__desc{font-size:13px;color:var(--text-muted);line-height:1.45;margin:0;}
+.kyn-product__row{display:flex;align-items:center;justify-content:space-between;margin-top:6px;}
+.kyn-product__price{font-family:var(--font-heading);font-weight:var(--weight-bold);font-size:18px;color:var(--ink-900);}
+.kyn-product__swatches{display:flex;gap:6px;}
+.kyn-product__swatches i{width:16px;height:16px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,0.08);}

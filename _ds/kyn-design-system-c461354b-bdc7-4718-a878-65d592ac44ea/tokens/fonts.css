@@ -1,0 +1,25 @@
+/* ============================================================
+   KYN · Font declarations
+   - Friendship  : hand-drawn marker display (logo + whimsy spark)
+   - Farmhouse   : signature SCRIPT (rare flourishes: monograms, marks, swashes)
+                   swash alternates live in the PUA (e.g. n.alt1=U+F00E, w.alt2=U+F031)
+   - Hanken Grotesk : clean sans (body + UI)  [Google Fonts]
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,300..800;1,300..800&display=swap');
+
+@font-face {
+  font-family: 'Friendship';
+  src: url('../assets/fonts/Friendship-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Farmhouse';
+  src: url('../assets/fonts/Farmhouse.otf?v=script1') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

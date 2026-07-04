@@ -1,0 +1,67 @@
+/* ============================================================
+   KYN · Color tokens
+   Base = periwinkle. Neutrals = warm, lightly periwinkle-tilted.
+   Whimsy = pastels + one magenta "pop", used sparingly.
+   ============================================================ */
+
+:root {
+  /* ---- Brand periwinkle scale (500 = brand) ---- */
+  --periwinkle-50:  #F0F2FB;
+  --periwinkle-100: #E2E6F5;
+  --periwinkle-200: #C9D0ED;
+  --periwinkle-300: #AEB8E2;
+  --periwinkle-400: #9BA6DA;
+  --periwinkle-500: #8795D2;  /* brand primary */
+  --periwinkle-600: #6B7AC1;
+  --periwinkle-700: #5562A4;
+  --periwinkle-800: #434D80;
+  --periwinkle-900: #2F3658;
+
+  /* ---- Warm neutrals (slight periwinkle tilt) ---- */
+  --white:    #FFFFFF;
+  --paper:    #FBFAF7;  /* default page surface */
+  --oat:      #F4F0E8;  /* warm section background */
+  --sand:     #E9E3D7;  /* hairlines / dividers on oat */
+  --ink-900:  #2A2933;  /* primary text */
+  --ink-700:  #4A4955;
+  --ink-500:  #75737F;  /* muted text */
+  --ink-300:  #A8A6B0;  /* disabled / faint */
+  --ink-100:  #E4E2E6;  /* borders on paper */
+
+  /* ---- Whimsy: the pop (hand-drawn heart magenta) ---- */
+  --pop-magenta:      #E85DA0;
+  --pop-magenta-soft: #F7C9DE;
+
+  /* ---- Whimsy: soft pastels (accents only) ---- */
+  --pastel-blush:  #F6D2DD;
+  --pastel-peach:  #F8DCC9;
+  --pastel-butter: #F6EBC4;
+  --pastel-mint:   #CFE8DA;
+  --pastel-sky:    #CFE0F2;
+  --pastel-lilac:  #E2D6F0;
+
+  /* ---- Semantic aliases ---- */
+  --surface-page:      var(--paper);
+  --surface-section:   var(--oat);
+  --surface-card:      var(--white);
+  --surface-brand:     var(--periwinkle-500);
+  --surface-brand-soft:var(--periwinkle-50);
+
+  --text-primary:   var(--ink-900);
+  --text-secondary: var(--ink-700);
+  --text-muted:     var(--ink-500);
+  --text-on-brand:  var(--white);
+  --text-accent:    var(--periwinkle-700);
+
+  --border-subtle: var(--ink-100);
+  --border-on-oat: var(--sand);
+  --border-strong: var(--periwinkle-200);
+
+  --accent-pop:    var(--pop-magenta);
+
+  /* ---- Functional ---- */
+  --success: #4FA47A;
+  --warning: #D9A441;
+  --danger:  #D9534F;
+  --focus-ring: var(--periwinkle-500);
+}

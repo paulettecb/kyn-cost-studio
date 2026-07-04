@@ -1,0 +1,1924 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="stylesheet" href="_ds/kyn-design-system-c461354b-bdc7-4718-a878-65d592ac44ea/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/kyn-design-system-c461354b-bdc7-4718-a878-65d592ac44ea/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/kyn-design-system-c461354b-bdc7-4718-a878-65d592ac44ea/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/kyn-design-system-c461354b-bdc7-4718-a878-65d592ac44ea/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/kyn-design-system-c461354b-bdc7-4718-a878-65d592ac44ea/tokens/effects.css">
+  <link rel="stylesheet" href="_ds/kyn-design-system-c461354b-bdc7-4718-a878-65d592ac44ea/components/components.css">
+  <link rel="stylesheet" href="_ds/kyn-design-system-c461354b-bdc7-4718-a878-65d592ac44ea/styles.css">
+  <script src="_ds/kyn-design-system-c461354b-bdc7-4718-a878-65d592ac44ea/_ds_bundle.js"></script>
+  <style>
+    body{margin:0;background:var(--paper,#FBFAF7);}
+    @keyframes kynFade{from{opacity:0}to{opacity:1}}
+    @keyframes kynSlideIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+    @keyframes kynSheetUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+    @keyframes kynToast{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+  </style>
+</helmet>
+
+<sc-if value="{{ notReady }}" hint-placeholder-val="{{ false }}">
+  <div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;font-family:var(--font-sans);color:var(--ink-500);background:var(--paper)">Cargando KYN Cost Studio…</div>
+</sc-if>
+
+<sc-if value="{{ ready }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="KYN Cost Studio" style="min-height:100dvh;background:var(--paper);font-family:var(--font-sans);color:var(--ink-900);display:flex">
+
+  <!-- ============ SIDEBAR (desktop) ============ -->
+  <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+    <aside style="width:236px;flex:none;background:var(--white);border-right:1px solid var(--ink-100);display:flex;flex-direction:column;position:sticky;top:0;height:100dvh;box-sizing:border-box;padding:28px 16px 20px">
+      <div style="padding:0 12px 26px;display:flex;flex-direction:column;gap:2px">
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span style="font-family:var(--font-display);font-size:30px;line-height:1;color:var(--ink-900)">KYN</span>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--pop-magenta)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-8deg)"><path d="M19.5 12.6 12 20l-7.5-7.4A5 5 0 1 1 12 6.3a5 5 0 1 1 7.5 6.3Z"></path></svg>
+        </div>
+        <span style="font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-500)">Cost Studio</span>
+      </div>
+      <nav style="display:flex;flex-direction:column;gap:4px">
+        <sc-for list="{{ navMain }}" as="n" hint-placeholder-count="7">
+          <button onClick="{{ n.onClick }}" style="{{ n.style }}" style-hover="background:var(--periwinkle-50)">
+            {{ n.icon }}<span>{{ n.label }}</span>
+            <sc-if value="{{ n.badge }}"><span style="margin-left:auto;background:var(--pastel-blush);color:#9B4D67;font-size:11px;font-weight:700;border-radius:99px;padding:2px 8px">{{ n.badge }}</span></sc-if>
+          </button>
+        </sc-for>
+      </nav>
+      <div style="margin-top:auto;display:flex;flex-direction:column;gap:4px">
+        <sc-for list="{{ navBottom }}" as="n" hint-placeholder-count="1">
+          <button onClick="{{ n.onClick }}" style="{{ n.style }}" style-hover="background:var(--periwinkle-50)">{{ n.icon }}<span>{{ n.label }}</span></button>
+        </sc-for>
+        <button onClick="{{ syncNow }}" title="Sincronizar ahora" style="display:flex;align-items:center;gap:8px;border:none;background:none;cursor:pointer;text-align:left;font-family:var(--font-sans);padding:14px 12px 0;font-size:11px;color:var(--ink-500);line-height:1.5">
+          <span style="{{ syncDotStyle }}"></span><span>{{ syncLabel }}</span>
+        </button>
+      </div>
+    </aside>
+  </sc-if>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+
+    <!-- mobile top bar -->
+    <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+      <header style="position:sticky;top:0;z-index:40;background:rgba(251,250,247,0.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--ink-100);padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;display:flex;align-items:center;gap:10px">
+        <span style="font-family:var(--font-display);font-size:22px;line-height:1">KYN</span>
+        <span style="font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-500)">Cost Studio</span>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="kyn-iconbtn kyn-iconbtn--sm" onClick="{{ goCalc }}" aria-label="Calculadora"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><rect x="4" y="2.5" width="16" height="19" rx="2.5"></rect><path d="M8 7h8M8.5 12h0M12 12h0M15.5 12h0M8.5 16h0M12 16h0M15.5 16h0"></path></svg></button>
+          <button class="kyn-iconbtn kyn-iconbtn--sm" onClick="{{ goSettings }}" aria-label="Ajustes"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path></svg></button>
+        </div>
+      </header>
+    </sc-if>
+
+    <main style="{{ mainStyle }}">
+
+      <!-- ============ DASHBOARD ============ -->
+      <sc-if value="{{ vDash }}" hint-placeholder-val="{{ true }}">
+      <section data-screen-label="Dashboard" style="display:flex;flex-direction:column;gap:28px;animation:kynFade 240ms ease-out">
+        <div>
+          <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-0.02em;line-height:1.1">Los <span style="font-family:var(--font-display);font-weight:400;color:var(--periwinkle-700)">buenos</span> números.</h1>
+          <p style="margin:8px 0 0;color:var(--ink-500);font-size:15px">Costos reales, recetas y precios de KYN Studio — todo en un lugar.</p>
+        </div>
+        <div style="{{ kpiGridStyle }}">
+          <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+            <button onClick="{{ k.onClick }}" class="kyn-card" style="text-align:left;cursor:pointer;border:1px solid var(--ink-100);padding:20px;display:flex;flex-direction:column;gap:6px;font-family:var(--font-sans)" style-hover="box-shadow:var(--shadow-md)">
+              <span style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-500)">{{ k.label }}</span>
+              <span style="{{ k.valStyle }}">{{ k.value }}</span>
+              <span style="font-size:12.5px;color:var(--ink-500)">{{ k.sub }}</span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px">
+          <button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ goNewPurchase }}">+ Nueva compra</button>
+          <button class="kyn-btn kyn-btn--secondary kyn-btn--md" onClick="{{ goNewProduct }}">+ Nuevo producto</button>
+          <button class="kyn-btn kyn-btn--ghost kyn-btn--md" onClick="{{ goCalc }}">Calcular precio →</button>
+        </div>
+        <sc-if value="{{ hasDashAlerts }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ dashAlerts }}" as="a" hint-placeholder-count="2">
+              <button onClick="{{ a.onClick }}" style="{{ a.style }}">
+                <span style="flex:none;width:8px;height:8px;border-radius:99px;background:currentColor;margin-top:6px"></span>
+                <span style="text-align:left">{{ a.msg }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+        <div style="{{ twoColStyle }}">
+          <div class="kyn-card" style="padding:22px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
+              <h2 style="margin:0;font-size:16px;font-weight:700">Últimos productos</h2>
+              <button onClick="{{ goProducts }}" style="background:none;border:none;cursor:pointer;color:var(--periwinkle-700);font-weight:600;font-size:13px;font-family:var(--font-sans)">Ver todos →</button>
+            </div>
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ recentProducts }}" as="r" hint-placeholder-count="4">
+                <button onClick="{{ r.onClick }}" style="display:flex;align-items:center;gap:12px;padding:10px 6px;border:none;background:none;cursor:pointer;border-bottom:1px solid #F3F1F5;font-family:var(--font-sans)" style-hover="background:var(--periwinkle-50)">
+                  <span style="font-size:14.5px;font-weight:600;color:var(--ink-900)">{{ r.name }}</span>
+                  <span class="{{ r.chipCls }}">{{ r.chipLabel }}</span>
+                  <span style="margin-left:auto;font-size:14px;font-weight:700;color:var(--ink-700)">{{ r.cost }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          <div class="kyn-card" style="padding:22px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
+              <h2 style="margin:0;font-size:16px;font-weight:700">Últimas compras</h2>
+              <button onClick="{{ goPurchases }}" style="background:none;border:none;cursor:pointer;color:var(--periwinkle-700);font-weight:600;font-size:13px;font-family:var(--font-sans)">Ver todas →</button>
+            </div>
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ recentPurchases }}" as="r" hint-placeholder-count="3">
+                <button onClick="{{ r.onClick }}" style="display:flex;align-items:center;gap:12px;padding:10px 6px;border:none;background:none;cursor:pointer;border-bottom:1px solid #F3F1F5;font-family:var(--font-sans)" style-hover="background:var(--periwinkle-50)">
+                  <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0">
+                    <span style="font-size:14.5px;font-weight:600;color:var(--ink-900);text-align:left">{{ r.name }}</span>
+                    <span style="font-size:12px;color:var(--ink-500)">{{ r.sub }}</span>
+                  </div>
+                  <span style="margin-left:auto;font-size:14px;font-weight:700;color:var(--ink-700);white-space:nowrap">{{ r.total }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </section>
+      </sc-if>
+
+      <!-- ============ COMPRAS (lista) ============ -->
+      <sc-if value="{{ vPurchases }}" hint-placeholder-val="{{ false }}">
+      <section data-screen-label="Compras" style="display:flex;flex-direction:column;gap:20px;animation:kynFade 240ms ease-out">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+          <div>
+            <h1 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em">Compras</h1>
+            <p style="margin:4px 0 0;color:var(--ink-500);font-size:14px">Cada compra distribuye envío, impuestos e importación entre sus materiales.</p>
+          </div>
+          <button class="kyn-btn kyn-btn--primary kyn-btn--md" style="margin-left:auto" onClick="{{ goNewPurchase }}">+ Nueva compra</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{ purchaseRows }}" as="p" hint-placeholder-count="3">
+            <button onClick="{{ p.onOpen }}" class="kyn-card" style="cursor:pointer;padding:18px 20px;display:flex;flex-wrap:wrap;align-items:center;gap:14px;text-align:left;font-family:var(--font-sans)" style-hover="box-shadow:var(--shadow-md)">
+              <div style="display:flex;flex-direction:column;gap:3px;min-width:180px;flex:1">
+                <span style="font-size:15.5px;font-weight:700;color:var(--ink-900)">{{ p.name }}</span>
+                <span style="font-size:12.5px;color:var(--ink-500)">{{ p.sub }}</span>
+              </div>
+              <span class="kyn-badge kyn-badge--outline">{{ p.methodLabel }}</span>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+                <span style="font-size:16px;font-weight:800;color:var(--ink-900)">{{ p.total }}</span>
+                <span style="font-size:12px;color:var(--ink-500)">{{ p.extras }} en extras</span>
+              </div>
+            </button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ purchasesEmpty }}"><div style="padding:48px;text-align:center;color:var(--ink-500);font-size:14.5px">Todavía no hay compras registradas. Registra tu primera compra para calcular costos unitarios reales.</div></sc-if>
+      </section>
+      </sc-if>
+
+      <!-- ============ DETALLE DE COMPRA ============ -->
+      <sc-if value="{{ vPurchaseDetail }}" hint-placeholder-val="{{ false }}">
+      <section data-screen-label="Detalle de compra" style="display:flex;flex-direction:column;gap:20px;animation:kynFade 240ms ease-out">
+        <button onClick="{{ goPurchases }}" style="align-self:flex-start;background:none;border:none;cursor:pointer;color:var(--periwinkle-700);font-weight:600;font-size:13.5px;font-family:var(--font-sans);padding:0">← Compras</button>
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px">
+          <div style="flex:1;min-width:220px">
+            <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.02em">{{ pd.name }}</h1>
+            <p style="margin:6px 0 0;color:var(--ink-500);font-size:14px">{{ pd.sub }}</p>
+          </div>
+          <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" onClick="{{ pdEdit }}">Editar compra</button>
+        </div>
+        <div style="{{ kpiGridStyle }}">
+          <sc-for list="{{ pdCards }}" as="c" hint-placeholder-count="4">
+            <div class="kyn-card" style="padding:18px;display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:11.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-500)">{{ c.label }}</span>
+              <span style="font-size:20px;font-weight:800">{{ c.value }}</span>
+              <span style="font-size:12px;color:var(--ink-500)">{{ c.sub }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="background:var(--periwinkle-50);border:1px solid var(--periwinkle-200);border-radius:var(--radius-md);padding:14px 18px;font-size:13.5px;color:var(--periwinkle-800);line-height:1.5">{{ pdExplain }}</div>
+        <sc-if value="{{ isDesktop }}">
+          <div class="kyn-card" style="padding:0;overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:14px">
+              <thead><tr>
+                <sc-for list="{{ pdCols }}" as="h"><th style="text-align:left;padding:12px 16px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-500);border-bottom:1px solid var(--ink-100);white-space:nowrap">{{ h }}</th></sc-for>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{ pdItems }}" as="it" hint-placeholder-count="4">
+                  <tr style-hover="background:var(--periwinkle-50)">
+                    <td style="padding:12px 16px;border-bottom:1px solid #F3F1F5;font-weight:600">{{ it.name }}</td>
+                    <td style="padding:12px 16px;border-bottom:1px solid #F3F1F5;color:var(--ink-700)">{{ it.qty }}</td>
+                    <td style="padding:12px 16px;border-bottom:1px solid #F3F1F5;color:var(--ink-700)">{{ it.orig }}</td>
+                    <td style="padding:12px 16px;border-bottom:1px solid #F3F1F5;color:var(--ink-700)">{{ it.mxn }}</td>
+                    <td style="padding:12px 16px;border-bottom:1px solid #F3F1F5;color:var(--ink-700)">{{ it.extra }}</td>
+                    <td style="padding:12px 16px;border-bottom:1px solid #F3F1F5;font-weight:700">{{ it.realUnit }}</td>
+                    <td style="padding:12px 16px;border-bottom:1px solid #F3F1F5"><span class="kyn-badge kyn-badge--soft">{{ it.diff }}</span></td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isMobile }}">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ pdItems }}" as="it" hint-placeholder-count="4">
+              <div class="kyn-card" style="padding:16px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;justify-content:space-between;gap:10px"><span style="font-weight:700;font-size:14.5px">{{ it.name }}</span><span class="kyn-badge kyn-badge--soft">{{ it.diff }}</span></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px;color:var(--ink-700)">
+                  <span>Cantidad: {{ it.qty }}</span><span>Original: {{ it.orig }}</span>
+                  <span>MXN: {{ it.mxn }}</span><span>Extra: {{ it.extra }}</span>
+                </div>
+                <div style="font-size:14px;font-weight:700">Costo unitario real: {{ it.realUnit }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ pdNotes }}"><div style="font-size:13.5px;color:var(--ink-500);line-height:1.6"><strong style="color:var(--ink-700)">Notas:</strong> {{ pdNotes }}</div></sc-if>
+      </section>
+      </sc-if>
+
+      <!-- ============ FORMULARIO DE COMPRA (3 pasos) ============ -->
+      <sc-if value="{{ vPurchaseForm }}" hint-placeholder-val="{{ false }}">
+      <section data-screen-label="Nueva compra" style="display:flex;flex-direction:column;gap:22px;max-width:860px;animation:kynFade 240ms ease-out">
+        <button onClick="{{ pfCancel }}" style="align-self:flex-start;background:none;border:none;cursor:pointer;color:var(--periwinkle-700);font-weight:600;font-size:13.5px;font-family:var(--font-sans);padding:0">← Cancelar y volver</button>
+        <div>
+          <h1 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em">{{ pfTitle }}</h1>
+          <p style="margin:6px 0 0;color:var(--ink-500);font-size:14px">Paso {{ pfStep }} de 3 — {{ pfStepLabel }}</p>
+        </div>
+        <div style="display:flex;gap:6px">
+          <sc-for list="{{ pfStepDots }}" as="d"><span style="{{ d }}"></span></sc-for>
+        </div>
+
+        <sc-if value="{{ pfStep1 }}">
+          <div style="{{ formGridStyle }}">
+            <sc-for list="{{ pfFields }}" as="f" hint-placeholder-count="6">
+              <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                <label style="font-size:13px;font-weight:600">{{ f.label }}</label>
+                <sc-if value="{{ f.isSelect }}" hint-placeholder-val="{{ false }}">
+                  <select class="kyn-input" value="{{ f.value }}" onChange="{{ f.onChange }}" style="padding:11px 14px">
+                    <sc-for list="{{ f.options }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+                  </select>
+                </sc-if>
+                <sc-if value="{{ f.isInput }}" hint-placeholder-val="{{ true }}">
+                  <input class="kyn-input" type="{{ f.type }}" step="any" value="{{ f.value }}" onChange="{{ f.onChange }}" placeholder="{{ f.placeholder }}" style="padding:11px 14px">
+                </sc-if>
+                <sc-if value="{{ f.hint }}"><span style="font-size:12px;color:var(--ink-500)">{{ f.hint }}</span></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ pfStep2 }}">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <sc-for list="{{ pfItems }}" as="it" hint-placeholder-count="2">
+              <div class="kyn-card" style="padding:18px;display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-500)">Material {{ it.num }}</span>
+                  <button onClick="{{ it.onRemove }}" style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--danger);font-size:13px;font-weight:600;font-family:var(--font-sans)">Eliminar</button>
+                </div>
+                <div style="{{ formGridStyle }}">
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <label style="font-size:13px;font-weight:600">Material</label>
+                    <select class="kyn-input" value="{{ it.materialId }}" onChange="{{ it.onMaterial }}" style="padding:11px 14px">
+                      <option value="">Selecciona material…</option>
+                      <sc-for list="{{ materialOptions }}" as="mo"><option value="{{ mo.id }}">{{ mo.label }}</option></sc-for>
+                      <option value="__new__">+ Nuevo material…</option>
+                    </select>
+                  </div>
+                  <sc-if value="{{ it.isNew }}">
+                    <div style="display:flex;flex-direction:column;gap:6px"><label style="font-size:13px;font-weight:600">Nombre del material nuevo</label><input class="kyn-input" value="{{ it.newName }}" onChange="{{ it.onNewName }}" placeholder="p. ej. Biothane Blush 19 mm" style="padding:11px 14px"></div>
+                    <div style="display:flex;flex-direction:column;gap:6px"><label style="font-size:13px;font-weight:600">Categoría</label>
+                      <select class="kyn-input" value="{{ it.newCat }}" onChange="{{ it.onNewCat }}" style="padding:11px 14px"><sc-for list="{{ categoryOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+                    </div>
+                  </sc-if>
+                  <div style="display:flex;flex-direction:column;gap:6px"><label style="font-size:13px;font-weight:600">Cantidad</label><input class="kyn-input" type="number" step="any" value="{{ it.quantity }}" onChange="{{ it.onQty }}" style="padding:11px 14px"></div>
+                  <div style="display:flex;flex-direction:column;gap:6px"><label style="font-size:13px;font-weight:600">Unidad</label>
+                    <select class="kyn-input" value="{{ it.unit }}" onChange="{{ it.onUnit }}" style="padding:11px 14px"><sc-for list="{{ unitOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px"><label style="font-size:13px;font-weight:600">Precio unitario ({{ pfCurrency }})</label><input class="kyn-input" type="number" step="any" value="{{ it.originalUnitPrice }}" onChange="{{ it.onPrice }}" style="padding:11px 14px"></div>
+                </div>
+                <div style="font-size:13px;color:var(--ink-500)">Subtotal: <strong style="color:var(--ink-900)">{{ it.subtotal }}</strong></div>
+              </div>
+            </sc-for>
+            <button class="kyn-btn kyn-btn--secondary kyn-btn--md" style="align-self:flex-start" onClick="{{ pfAddItem }}">+ Agregar material</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ pfStep3 }}">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="kyn-card" style="padding:20px;display:flex;flex-direction:column;gap:10px">
+              <h2 style="margin:0;font-size:16px;font-weight:700">Distribución de costos extra</h2>
+              <p style="margin:0;font-size:13.5px;color:var(--ink-500);line-height:1.5">{{ pfReviewExplain }}</p>
+              <div style="display:flex;flex-direction:column;gap:0;margin-top:6px">
+                <sc-for list="{{ pfReviewRows }}" as="r" hint-placeholder-count="3">
+                  <div style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid #F3F1F5;font-size:14px">
+                    <span style="font-weight:600;flex:1;min-width:0">{{ r.name }}</span>
+                    <span style="color:var(--ink-500);font-size:13px">{{ r.detail }}</span>
+                    <span style="font-weight:700;white-space:nowrap">{{ r.unit }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:24px;padding-top:10px;font-size:14.5px">
+                <span style="color:var(--ink-500)">Extras: <strong style="color:var(--ink-900)">{{ pfReviewExtras }}</strong></span>
+                <span style="color:var(--ink-500)">Total MXN: <strong style="color:var(--ink-900)">{{ pfReviewTotal }}</strong></span>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ pfHasErrors }}">
+          <div style="background:#FBEDEC;border:1px solid #EFC7C5;border-radius:var(--radius-md);padding:14px 18px;display:flex;flex-direction:column;gap:4px">
+            <sc-for list="{{ pfErrors }}" as="e"><span style="font-size:13.5px;color:var(--danger);font-weight:600">{{ e }}</span></sc-for>
+          </div>
+        </sc-if>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <sc-if value="{{ pfCanBack }}"><button class="kyn-btn kyn-btn--secondary kyn-btn--md" onClick="{{ pfBack }}">← Atrás</button></sc-if>
+          <sc-if value="{{ pfCanNext }}"><button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ pfNext }}">Continuar →</button></sc-if>
+          <sc-if value="{{ pfStep3 }}"><button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ pfSave }}">Guardar compra</button></sc-if>
+        </div>
+      </section>
+      </sc-if>
+
+      <!-- ============ MATERIALES ============ -->
+      <sc-if value="{{ vMaterials }}" hint-placeholder-val="{{ false }}">
+      <section data-screen-label="Materiales" style="display:flex;flex-direction:column;gap:18px;animation:kynFade 240ms ease-out">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+          <div>
+            <h1 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em">Materiales</h1>
+            <p style="margin:4px 0 0;color:var(--ink-500);font-size:14px">El costo unitario incluye envío, importación y otros cargos distribuidos.</p>
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+          <input class="kyn-input" value="{{ matSearch }}" onChange="{{ onMatSearch }}" placeholder="Buscar material…" style="padding:10px 14px;max-width:280px">
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <sc-for list="{{ matCatChips }}" as="c" hint-placeholder-count="5">
+              <button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <sc-if value="{{ isDesktop }}">
+          <div class="kyn-card" style="padding:0;overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:14px">
+              <thead><tr>
+                <sc-for list="{{ matCols }}" as="h"><th style="text-align:left;padding:12px 16px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-500);border-bottom:1px solid var(--ink-100);white-space:nowrap">{{ h }}</th></sc-for>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{ matRows }}" as="m" hint-placeholder-count="6">
+                  <tr onClick="{{ m.onOpen }}" style="cursor:pointer" style-hover="background:var(--periwinkle-50)">
+                    <td style="padding:12px 16px;border-bottom:1px solid #F3F1F5;font-weight:600">{{ m.name }}</td>
+                    <td style="padding:12px 16px;border-bottom:1px solid #F3F1F5;color:var(--ink-700)">{{ m.category }}</td>
+                    <td style="padding:12px 16px;border-bottom:1px solid #F3F1F5;color:var(--ink-700)">{{ m.unit }}</td>
+                    <td style="padding:12px 16px;border-bottom:1px solid #F3F1F5;font-weight:700">{{ m.cost }}</td>
+                    <td style="padding:12px 16px;border-bottom:1px solid #F3F1F5;color:var(--ink-500);font-size:13px">{{ m.methodLabel }}</td>
+                    <td style="padding:12px 16px;border-bottom:1px solid #F3F1F5"><span class="{{ m.chipCls }}">{{ m.chipLabel }}</span></td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isMobile }}">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ matRows }}" as="m" hint-placeholder-count="6">
+              <button onClick="{{ m.onOpen }}" class="kyn-card" style="cursor:pointer;padding:16px;display:flex;align-items:center;gap:12px;text-align:left;font-family:var(--font-sans)">
+                <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0">
+                  <span style="font-weight:700;font-size:14.5px">{{ m.name }}</span>
+                  <span style="font-size:12.5px;color:var(--ink-500)">{{ m.category }} · {{ m.methodLabel }}</span>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                  <span style="font-weight:800;font-size:15px">{{ m.cost }}</span>
+                  <span class="{{ m.chipCls }}">{{ m.chipLabel }}</span>
+                </div>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ matEmpty }}"><div style="padding:48px;text-align:center;color:var(--ink-500);font-size:14.5px">No hay materiales que coincidan con tu búsqueda.</div></sc-if>
+      </section>
+      </sc-if>
+
+      <!-- ============ PRODUCTOS ============ -->
+      <sc-if value="{{ vProducts }}" hint-placeholder-val="{{ false }}">
+      <section data-screen-label="Productos" style="display:flex;flex-direction:column;gap:18px;animation:kynFade 240ms ease-out">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+          <div>
+            <h1 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em">Productos</h1>
+            <p style="margin:4px 0 0;color:var(--ink-500);font-size:14px">Duplica un producto para crear una variante sin empezar desde cero.</p>
+          </div>
+          <button class="kyn-btn kyn-btn--primary kyn-btn--md" style="margin-left:auto" onClick="{{ goNewProduct }}">+ Nuevo producto</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{ prodFilterChips }}" as="c" hint-placeholder-count="4"><button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+        </div>
+        <div style="{{ prodGridStyle }}">
+          <sc-for list="{{ productCards }}" as="p" hint-placeholder-count="6">
+            <button onClick="{{ p.onOpen }}" class="kyn-card" style="cursor:pointer;padding:0;overflow:hidden;text-align:left;display:flex;flex-direction:column;font-family:var(--font-sans)" style-hover="box-shadow:var(--shadow-lg);transform:translateY(-2px)">
+              <div style="{{ p.mediaStyle }}">
+                <span style="font-size:26px;font-weight:800;letter-spacing:-0.02em;color:var(--ink-700);opacity:0.75">{{ p.initials }}</span>
+                <sc-if value="{{ p.warnCount }}"><span class="kyn-badge kyn-badge--blush" style="position:absolute;top:12px;right:12px">{{ p.warnCount }} ⚠</span></sc-if>
+              </div>
+              <div style="padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <span style="font-size:16px;font-weight:700;letter-spacing:-0.01em">{{ p.name }}</span>
+                  <span class="{{ p.chipCls }}">{{ p.chipLabel }}</span>
+                </div>
+                <span style="font-size:12.5px;color:var(--ink-500)">{{ p.category }} · {{ p.version }}</span>
+                <div style="display:flex;align-items:baseline;gap:8px;margin-top:2px">
+                  <span style="font-size:12px;color:var(--ink-500)">Costo</span>
+                  <span style="font-size:17px;font-weight:800">{{ p.cost }}</span>
+                </div>
+                <div style="display:flex;gap:10px;font-size:12.5px;color:var(--ink-700);flex-wrap:wrap">
+                  <span>Línea {{ p.online }}</span><span>·</span><span>Persona {{ p.inPerson }}</span><span>·</span><span>F&amp;A {{ p.friends }}</span>
+                </div>
+              </div>
+            </button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ prodEmpty }}"><div style="padding:48px;text-align:center;color:var(--ink-500);font-size:14.5px">No hay productos aquí todavía. Crea uno nuevo o cambia el filtro.</div></sc-if>
+      </section>
+      </sc-if>
+
+      <!-- ============ DETALLE DE PRODUCTO ============ -->
+      <sc-if value="{{ vProductDetail }}" hint-placeholder-val="{{ false }}">
+      <section data-screen-label="Detalle de producto" style="display:flex;flex-direction:column;gap:22px;animation:kynFade 240ms ease-out">
+        <button onClick="{{ goProducts }}" style="align-self:flex-start;background:none;border:none;cursor:pointer;color:var(--periwinkle-700);font-weight:600;font-size:13.5px;font-family:var(--font-sans);padding:0">← Productos</button>
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px">
+          <div style="flex:1;min-width:240px">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <h1 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em">{{ prd.name }}</h1>
+              <span class="{{ prd.chipCls }}">{{ prd.chipLabel }}</span>
+            </div>
+            <p style="margin:6px 0 0;color:var(--ink-500);font-size:14px">{{ prd.sub }}</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="kyn-btn kyn-btn--primary kyn-btn--sm" onClick="{{ prdCalc }}">Calcular precio</button>
+            <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" onClick="{{ prdDuplicate }}">Duplicar</button>
+            <button class="kyn-btn kyn-btn--ghost kyn-btn--sm" onClick="{{ prdArchive }}">{{ prdArchiveLabel }}</button>
+          </div>
+        </div>
+
+        <sc-if value="{{ prdHasWarnings }}">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ prdWarnings }}" as="w" hint-placeholder-count="2">
+              <div style="{{ w.style }}"><span style="flex:none;width:8px;height:8px;border-radius:99px;background:currentColor;margin-top:6px"></span><span>{{ w.msg }}</span></div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div style="{{ twoColStyle }}">
+          <!-- Desglose de costo -->
+          <div class="kyn-card" style="padding:22px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between">
+              <h2 style="margin:0;font-size:16px;font-weight:700">Costo de producción</h2>
+              <span style="font-size:24px;font-weight:800">{{ prd.costTotal }}</span>
+            </div>
+            <div style="display:flex;height:14px;border-radius:99px;overflow:hidden;background:var(--oat)">
+              <sc-for list="{{ prdBar }}" as="b" hint-placeholder-count="3"><span style="{{ b }}"></span></sc-for>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0">
+              <sc-for list="{{ prdBreakdown }}" as="b" hint-placeholder-count="5">
+                <div style="display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid #F3F1F5;font-size:14px">
+                  <span style="{{ b.dotStyle }}"></span>
+                  <span style="color:var(--ink-700)">{{ b.label }}</span>
+                  <span style="margin-left:auto;font-weight:700">{{ b.value }}</span>
+                  <span style="width:52px;text-align:right;font-size:12.5px;color:var(--ink-500)">{{ b.pct }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="{{ formGridStyle }}">
+              <sc-for list="{{ prdCostFields }}" as="f" hint-placeholder-count="6">
+                <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                  <label style="font-size:13px;font-weight:600">{{ f.label }}</label>
+                  <input class="kyn-input" type="number" step="any" value="{{ f.value }}" onChange="{{ f.onChange }}" placeholder="{{ f.placeholder }}" style="padding:10px 13px">
+                  <sc-if value="{{ f.hint }}"><span style="font-size:12px;color:var(--ink-500)">{{ f.hint }}</span></sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <!-- Receta -->
+          <div class="kyn-card" style="padding:22px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <h2 style="margin:0;font-size:16px;font-weight:700">Receta (BOM)</h2>
+              <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" onClick="{{ prdEditRecipe }}">Editar receta</button>
+            </div>
+            <sc-if value="{{ prdRecipeEmpty }}"><div style="padding:26px 10px;text-align:center;color:var(--ink-500);font-size:13.5px">La receta está vacía. Agrega materiales para calcular el costo real.</div></sc-if>
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ prdRecipeRows }}" as="r" hint-placeholder-count="5">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid #F3F1F5;font-size:14px">
+                  <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0">
+                    <span style="font-weight:600">{{ r.name }}</span>
+                    <span style="font-size:12px;color:var(--ink-500)">{{ r.detail }}</span>
+                  </div>
+                  <span style="font-weight:700;white-space:nowrap">{{ r.total }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:14px;padding-top:4px"><span style="color:var(--ink-500)">Total materiales</span><strong>{{ prd.matTotal }}</strong></div>
+            <div style="background:var(--oat);border-radius:var(--radius-md);padding:12px 14px;font-size:12.5px;color:var(--ink-700);line-height:1.5">Los materiales más caros de este producto: {{ prd.topMaterials }}</div>
+          </div>
+        </div>
+
+        <!-- Precios guardados -->
+        <div class="kyn-card" style="padding:22px;display:flex;flex-direction:column;gap:14px">
+          <h2 style="margin:0;font-size:16px;font-weight:700">Precios guardados por canal</h2>
+          <div style="{{ threeColStyle }}">
+            <sc-for list="{{ prdPrices }}" as="c" hint-placeholder-count="3">
+              <div style="border:1px solid var(--ink-100);border-radius:var(--radius-md);padding:16px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                  <span style="font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-500)">{{ c.label }}</span>
+                  <span class="{{ c.chipCls }}">{{ c.chipLabel }}</span>
+                </div>
+                <input class="kyn-input" type="number" step="any" value="{{ c.price }}" onChange="{{ c.onPrice }}" placeholder="—" style="padding:9px 12px;font-weight:700;font-size:16px">
+                <span style="{{ c.marginStyle }}">{{ c.marginLabel }}</span>
+                <span style="font-size:12px;color:var(--ink-500)">{{ c.sub }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" onClick="{{ prdRecalcPrices }}">Recalcular con valores sugeridos</button>
+          </div>
+        </div>
+
+        <sc-if value="{{ prdNotes }}"><div style="font-size:13.5px;color:var(--ink-500);line-height:1.6"><strong style="color:var(--ink-700)">Notas:</strong> {{ prdNotes }}</div></sc-if>
+      </section>
+      </sc-if>
+
+      <!-- ============ CALCULADORA ============ -->
+      <sc-if value="{{ vCalc }}" hint-placeholder-val="{{ false }}">
+      <section data-screen-label="Calculadora de precio" style="display:flex;flex-direction:column;gap:20px;max-width:980px;animation:kynFade 240ms ease-out">
+        <div>
+          <h1 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em">Calculadora de precio</h1>
+          <p style="margin:6px 0 0;color:var(--ink-500);font-size:14px">Elige un producto, ajusta variables y guarda el precio final por canal.</p>
+        </div>
+        <div style="{{ twoColStyle }}">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="kyn-card" style="padding:20px;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:13px;font-weight:600">Producto</label>
+                <select class="kyn-input" value="{{ calcProductId }}" onChange="{{ onCalcProduct }}" style="padding:11px 14px">
+                  <option value="">Selecciona un producto…</option>
+                  <sc-for list="{{ productOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+                </select>
+              </div>
+              <sc-if value="{{ calcHasProduct }}">
+                <div style="background:var(--oat);border-radius:var(--radius-md);padding:14px 16px;display:flex;justify-content:space-between;align-items:baseline">
+                  <span style="font-size:13px;color:var(--ink-700)">Costo de producción</span>
+                  <span style="font-size:20px;font-weight:800">{{ calcCost }}</span>
+                </div>
+              </sc-if>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:13px;font-weight:600">Canal de venta</label>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <sc-for list="{{ calcChannelChips }}" as="c" hint-placeholder-count="3"><button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:13px;font-weight:600">Método de cálculo</label>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <sc-for list="{{ calcMethodChips }}" as="c" hint-placeholder-count="3"><button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+                </div>
+              </div>
+              <div style="{{ formGridStyle }}">
+                <sc-for list="{{ calcFields }}" as="f" hint-placeholder-count="4">
+                  <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                    <label style="font-size:13px;font-weight:600">{{ f.label }}</label>
+                    <input class="kyn-input" type="number" step="any" value="{{ f.value }}" onChange="{{ f.onChange }}" placeholder="{{ f.placeholder }}" style="padding:10px 13px">
+                    <sc-if value="{{ f.hint }}"><span style="font-size:12px;color:var(--ink-500)">{{ f.hint }}</span></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="background:var(--periwinkle-50);border:1px solid var(--periwinkle-200);border-radius:var(--radius-md);padding:14px 18px;font-size:13px;color:var(--periwinkle-800);line-height:1.55">
+              <strong>Margen</strong> = utilidad ÷ precio (qué parte del precio te queda). <strong>Markup</strong> = utilidad ÷ costo (cuántas veces le ganas al costo). Un margen de 50% equivale a un markup de 100%.
+            </div>
+          </div>
+
+          <div class="kyn-card" style="padding:22px;display:flex;flex-direction:column;gap:4px;align-self:start">
+            <h2 style="margin:0 0 10px;font-size:16px;font-weight:700">Resultado</h2>
+            <sc-if value="{{ calcNoProduct }}"><div style="padding:30px 10px;text-align:center;color:var(--ink-500);font-size:13.5px">Selecciona un producto para ver el cálculo.</div></sc-if>
+            <sc-for list="{{ calcRows }}" as="r" hint-placeholder-count="8">
+              <div style="display:flex;align-items:baseline;gap:12px;padding:8px 2px;border-bottom:1px solid #F3F1F5">
+                <span style="font-size:13.5px;color:var(--ink-700)">{{ r.label }}</span>
+                <span style="{{ r.style }}">{{ r.value }}</span>
+              </div>
+            </sc-for>
+            <sc-if value="{{ calcWarning }}">
+              <div style="margin-top:10px;background:#FBEDEC;border:1px solid #EFC7C5;border-radius:var(--radius-md);padding:12px 14px;font-size:13px;color:var(--danger);font-weight:600">{{ calcWarning }}</div>
+            </sc-if>
+            <sc-if value="{{ calcHasProduct }}">
+              <button class="kyn-btn kyn-btn--primary kyn-btn--md" style="margin-top:14px" onClick="{{ calcSave }}">Guardar en {{ calcChannelLabel }}</button>
+            </sc-if>
+          </div>
+        </div>
+      </section>
+      </sc-if>
+
+      <!-- ============ LISTA FINAL DE PRECIOS ============ -->
+      <sc-if value="{{ vPrices }}" hint-placeholder-val="{{ false }}">
+      <section data-screen-label="Lista de precios" style="display:flex;flex-direction:column;gap:18px;animation:kynFade 240ms ease-out">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+          <div>
+            <h1 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em">Lista final de precios</h1>
+            <p style="margin:4px 0 0;color:var(--ink-500);font-size:14px">Tres precios siempre visibles: en línea, en persona y familia &amp; amigos.</p>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" onClick="{{ plExportCsv }}">CSV</button>
+            <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" onClick="{{ plCopy }}">Copiar</button>
+            <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" onClick="{{ plPrint }}">PDF</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <sc-for list="{{ plModeChips }}" as="c" hint-placeholder-count="2"><button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+          <sc-if value="{{ plCardsMode }}">
+            <span style="width:10px"></span>
+            <sc-for list="{{ plCardChips }}" as="c" hint-placeholder-count="4"><button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+          </sc-if>
+        </div>
+        <sc-if value="{{ plTableMode }}">
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+          <input class="kyn-input" value="{{ plSearch }}" onChange="{{ onPlSearch }}" placeholder="Buscar producto…" style="padding:10px 14px;max-width:240px">
+          <select class="kyn-input" value="{{ plCat }}" onChange="{{ onPlCat }}" style="padding:10px 14px;max-width:190px"><sc-for list="{{ plCatOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+          <select class="kyn-input" value="{{ plStatus }}" onChange="{{ onPlStatus }}" style="padding:10px 14px;max-width:190px"><sc-for list="{{ plStatusOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+          <select class="kyn-input" value="{{ plSort }}" onChange="{{ onPlSort }}" style="padding:10px 14px;max-width:210px"><sc-for list="{{ plSortOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+        </div>
+        <sc-if value="{{ isDesktop }}">
+          <div class="kyn-card" style="padding:0;overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:13.5px">
+              <thead><tr>
+                <sc-for list="{{ plCols }}" as="h"><th style="text-align:left;padding:12px 14px;font-size:10.5px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--ink-500);border-bottom:1px solid var(--ink-100);white-space:nowrap">{{ h }}</th></sc-for>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{ plRows }}" as="r" hint-placeholder-count="6">
+                  <tr onClick="{{ r.onOpen }}" style="cursor:pointer" style-hover="background:var(--periwinkle-50)">
+                    <td style="padding:12px 14px;border-bottom:1px solid #F3F1F5">
+                      <div style="display:flex;align-items:center;gap:8px"><span style="font-weight:600">{{ r.name }}</span><sc-if value="{{ r.stale }}"><span title="Precio desactualizado" style="color:var(--warning);font-size:14px">●</span></sc-if></div>
+                      <span style="font-size:11.5px;color:var(--ink-500)">{{ r.category }}</span>
+                    </td>
+                    <td style="padding:12px 14px;border-bottom:1px solid #F3F1F5"><span class="{{ r.chipCls }}">{{ r.chipLabel }}</span></td>
+                    <td style="padding:12px 14px;border-bottom:1px solid #F3F1F5;font-weight:700">{{ r.cost }}</td>
+                    <td style="padding:12px 14px;border-bottom:1px solid #F3F1F5"><div style="font-weight:700">{{ r.online }}</div><span style="{{ r.onlineMStyle }}">{{ r.onlineM }}</span></td>
+                    <td style="padding:12px 14px;border-bottom:1px solid #F3F1F5"><div style="font-weight:700">{{ r.inPerson }}</div><span style="{{ r.inPersonMStyle }}">{{ r.inPersonM }}</span></td>
+                    <td style="padding:12px 14px;border-bottom:1px solid #F3F1F5"><div style="font-weight:700">{{ r.friends }}</div><span style="{{ r.friendsMStyle }}">{{ r.friendsM }}</span></td>
+                    <td style="padding:12px 14px;border-bottom:1px solid #F3F1F5;color:var(--ink-500);font-size:12.5px;white-space:nowrap">{{ r.updated }}</td>
+                    <td style="padding:12px 14px;border-bottom:1px solid #F3F1F5"><button onClick="{{ r.onRecalc }}" class="kyn-btn kyn-btn--ghost kyn-btn--sm" style="padding:6px 12px;font-size:12px">Recalcular</button></td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isMobile }}">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ plRows }}" as="r" hint-placeholder-count="6">
+              <button onClick="{{ r.onOpen }}" class="kyn-card" style="cursor:pointer;padding:16px;display:flex;flex-direction:column;gap:10px;text-align:left;font-family:var(--font-sans)">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <span style="font-weight:700;font-size:15px">{{ r.name }}</span>
+                  <span class="{{ r.chipCls }}">{{ r.chipLabel }}</span>
+                  <sc-if value="{{ r.stale }}"><span style="color:var(--warning);font-size:14px">●</span></sc-if>
+                  <span style="margin-left:auto;font-size:13px;color:var(--ink-500)">Costo <strong style="color:var(--ink-900)">{{ r.cost }}</strong></span>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+                  <div style="background:var(--oat);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-500)">En línea</span><span style="font-weight:800;font-size:14.5px">{{ r.online }}</span><span style="{{ r.onlineMStyle }}">{{ r.onlineM }}</span></div>
+                  <div style="background:var(--oat);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-500)">Persona</span><span style="font-weight:800;font-size:14.5px">{{ r.inPerson }}</span><span style="{{ r.inPersonMStyle }}">{{ r.inPersonM }}</span></div>
+                  <div style="background:var(--oat);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-500)">F &amp; A</span><span style="font-weight:800;font-size:14.5px">{{ r.friends }}</span><span style="{{ r.friendsMStyle }}">{{ r.friendsM }}</span></div>
+                </div>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ plEmpty }}"><div style="padding:48px;text-align:center;color:var(--ink-500);font-size:14.5px">No hay productos que coincidan con los filtros.</div></sc-if>
+        </sc-if>
+
+        <!-- vista de tarjetas (lista de precios bonita) -->
+        <sc-if value="{{ plCardsMode }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start;justify-content:center;padding:24px 0">
+            <sc-for list="{{ priceCards }}" as="c" hint-placeholder-count="3">
+              <div style="{{ c.cardStyle }}">
+                <span style="{{ c.blobStyle }}"></span>
+                <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding-top:8px">
+                  <div style="display:flex;align-items:baseline;gap:10px">
+                    <span style="font-family:var(--font-display);font-size:46px;line-height:1;color:var(--ink-900)">KYN</span>
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="{{ c.heartColor }}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-8deg)"><path d="M19.5 12.6 12 20l-7.5-7.4A5 5 0 1 1 12 6.3a5 5 0 1 1 7.5 6.3Z"></path></svg>
+                  </div>
+                  <span style="font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-500)">Handmade · Biothane &amp; solid brass</span>
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:14px">
+                    <span style="{{ c.eyebrowStyle }}">{{ c.eyebrow }}</span>
+                    <span style="font-family:var(--font-display);font-size:40px;line-height:1.15;color:var(--ink-900)">{{ c.title }}</span>
+                  </div>
+                </div>
+                <div style="position:relative;display:flex;flex-direction:column;gap:26px">
+                  <sc-for list="{{ c.sections }}" as="s" hint-placeholder-count="3">
+                    <div style="display:flex;flex-direction:column;gap:4px">
+                      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+                        <span style="{{ c.sectionLabelStyle }}">{{ s.label }}</span>
+                        <span style="{{ c.sectionRuleStyle }}"></span>
+                      </div>
+                      <sc-for list="{{ s.rows }}" as="r" hint-placeholder-count="4">
+                        <div style="display:flex;align-items:baseline;gap:10px;padding:7px 0">
+                          <span style="font-size:16px;font-weight:600;letter-spacing:-0.01em;white-space:nowrap">{{ r.name }}</span>
+                          <span style="flex:1;border-bottom:2px dotted var(--sand);transform:translateY(-3px)"></span>
+                          <span style="font-size:16.5px;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums">{{ r.price }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;margin-top:6px;padding-top:20px;border-top:1px solid {{ c.ruleColor }}">
+                  <sc-if value="{{ c.flourish }}"><span style="font-family:var(--font-accent);font-size:26px;color:var(--pop-magenta);line-height:1">{{ c.flourish }}</span></sc-if>
+                  <span style="font-size:12px;color:var(--ink-500);letter-spacing:0.04em">{{ c.footNote }}</span>
+                  <span style="font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-300)">Precios en MXN · {{ plDateLabel }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </section>
+      </sc-if>
+
+      <!-- ============ AJUSTES ============ -->
+      <sc-if value="{{ vSettings }}" hint-placeholder-val="{{ false }}">
+      <section data-screen-label="Ajustes" style="display:flex;flex-direction:column;gap:20px;max-width:860px;animation:kynFade 240ms ease-out">
+        <div>
+          <h1 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em">Ajustes</h1>
+          <p style="margin:6px 0 0;color:var(--ink-500);font-size:14px">Variables globales. Todos los productos se recalculan automáticamente al cambiarlas.</p>
+        </div>
+        <sc-for list="{{ settingsGroups }}" as="g" hint-placeholder-count="4">
+          <div class="kyn-card" style="padding:22px;display:flex;flex-direction:column;gap:16px">
+            <h2 style="margin:0;font-size:16px;font-weight:700">{{ g.title }}</h2>
+            <sc-if value="{{ g.desc }}"><p style="margin:-8px 0 0;font-size:13px;color:var(--ink-500)">{{ g.desc }}</p></sc-if>
+            <div style="{{ formGridStyle }}">
+              <sc-for list="{{ g.fields }}" as="f">
+                <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                  <label style="font-size:13px;font-weight:600">{{ f.label }}</label>
+                  <sc-if value="{{ f.isSelect }}" hint-placeholder-val="{{ false }}">
+                    <select class="kyn-input" value="{{ f.value }}" onChange="{{ f.onChange }}" style="padding:10px 13px"><sc-for list="{{ f.options }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+                  </sc-if>
+                  <sc-if value="{{ f.isInput }}" hint-placeholder-val="{{ true }}">
+                    <input class="kyn-input" type="{{ f.type }}" step="any" value="{{ f.value }}" onChange="{{ f.onChange }}" style="padding:10px 13px">
+                  </sc-if>
+                  <sc-if value="{{ f.hint }}"><span style="font-size:12px;color:var(--ink-500)">{{ f.hint }}</span></sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </section>
+      </sc-if>
+
+    </main>
+
+    <!-- ============ BOTTOM NAV (mobile) ============ -->
+    <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+      <div style="height:calc(76px + env(safe-area-inset-bottom))"></div>
+      <nav style="position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(255,255,255,0.96);backdrop-filter:blur(12px);border-top:1px solid var(--ink-100);display:flex;justify-content:space-around;padding:8px 4px calc(8px + env(safe-area-inset-bottom))">
+        <sc-for list="{{ navMobile }}" as="n" hint-placeholder-count="5">
+          <button onClick="{{ n.onClick }}" style="{{ n.style }}">{{ n.icon }}<span style="font-size:10.5px;font-weight:600">{{ n.label }}</span></button>
+        </sc-for>
+      </nav>
+    </sc-if>
+  </div>
+
+  <!-- ============ DRAWER ============ -->
+  <sc-if value="{{ drawerOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeDrawer }}" style="position:fixed;inset:0;z-index:90;background:rgba(42,41,51,0.38);animation:kynFade 180ms ease-out"></div>
+    <div style="{{ drawerPanelStyle }}">
+      <div style="display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--ink-100);flex:none">
+        <h2 style="margin:0;font-size:17px;font-weight:800;letter-spacing:-0.01em">{{ drawerTitle }}</h2>
+        <button class="kyn-iconbtn kyn-iconbtn--sm" style="margin-left:auto" onClick="{{ closeDrawer }}" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:22px 24px;display:flex;flex-direction:column;gap:16px">
+
+        <!-- Material drawer -->
+        <sc-if value="{{ dMaterial }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span class="kyn-badge kyn-badge--soft">{{ dm.category }}</span>
+            <sc-if value="{{ dm.color }}"><span class="kyn-badge kyn-badge--outline">{{ dm.color }}</span></sc-if>
+            <span class="{{ dm.chipCls }}">{{ dm.chipLabel }}</span>
+          </div>
+          <div style="background:var(--oat);border-radius:var(--radius-md);padding:16px 18px;display:flex;justify-content:space-between;align-items:baseline">
+            <span style="font-size:13px;color:var(--ink-700)">Costo unitario vigente</span>
+            <span style="font-size:22px;font-weight:800">{{ dm.cost }} <span style="font-size:13px;font-weight:600;color:var(--ink-500)">/ {{ dm.unit }}</span></span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="font-size:13px;font-weight:600">Método de costeo</label>
+            <sc-for list="{{ dmMethods }}" as="m" hint-placeholder-count="3">
+              <button onClick="{{ m.onClick }}" style="{{ m.style }}">
+                <span style="{{ m.radioStyle }}"></span>
+                <span style="display:flex;flex-direction:column;align-items:flex-start;gap:1px"><span style="font-weight:600;font-size:14px">{{ m.label }}</span><span style="font-size:12px;color:var(--ink-500)">{{ m.hint }}</span></span>
+                <span style="margin-left:auto;font-weight:700;font-size:14px">{{ m.value }}</span>
+              </button>
+            </sc-for>
+            <sc-if value="{{ dmManual }}">
+              <input class="kyn-input" type="number" step="any" value="{{ dm.manualCost }}" onChange="{{ dmOnManual }}" placeholder="Costo manual en MXN" style="padding:10px 13px">
+            </sc-if>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label style="font-size:13px;font-weight:600">Estado</label>
+            <select class="kyn-input" value="{{ dm.status }}" onChange="{{ dmOnStatus }}" style="padding:10px 13px">
+              <sc-for list="{{ statusOptionsMat }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="font-size:13px;font-weight:600">Historial de compras</label>
+            <sc-if value="{{ dmNoHistory }}"><div style="font-size:13px;color:var(--ink-500);padding:8px 0">Este material todavía no tiene compras registradas — su costo real no está calculado.</div></sc-if>
+            <sc-for list="{{ dmHistory }}" as="h" hint-placeholder-count="2">
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid #F3F1F5;font-size:13.5px">
+                <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0"><span style="font-weight:600">{{ h.name }}</span><span style="font-size:12px;color:var(--ink-500)">{{ h.sub }}</span></div>
+                <span style="font-weight:700;white-space:nowrap">{{ h.unit }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label style="font-size:13px;font-weight:600">Notas</label>
+            <textarea class="kyn-input" rows="3" value="{{ dm.notes }}" onChange="{{ dmOnNotes }}" style="padding:10px 13px;resize:vertical;font-family:var(--font-sans)"></textarea>
+          </div>
+        </sc-if>
+
+        <!-- Product form drawer -->
+        <sc-if value="{{ dProductForm }}" hint-placeholder-val="{{ false }}">
+          <sc-for list="{{ dpfFields }}" as="f" hint-placeholder-count="5">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <label style="font-size:13px;font-weight:600">{{ f.label }}</label>
+              <sc-if value="{{ f.isSelect }}" hint-placeholder-val="{{ false }}">
+                <select class="kyn-input" value="{{ f.value }}" onChange="{{ f.onChange }}" style="padding:10px 13px"><sc-for list="{{ f.options }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+              </sc-if>
+              <sc-if value="{{ f.isInput }}" hint-placeholder-val="{{ true }}">
+                <input class="kyn-input" value="{{ f.value }}" onChange="{{ f.onChange }}" placeholder="{{ f.placeholder }}" style="padding:10px 13px">
+              </sc-if>
+              <sc-if value="{{ f.hint }}"><span style="font-size:12px;color:var(--ink-500)">{{ f.hint }}</span></sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ dpfError }}"><div style="font-size:13px;color:var(--danger);font-weight:600">{{ dpfError }}</div></sc-if>
+          <button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ dpfSave }}">Guardar producto</button>
+          <p style="margin:0;font-size:12.5px;color:var(--ink-500)">Después de guardarlo podrás armar su receta de materiales.</p>
+        </sc-if>
+
+        <!-- Recipe drawer -->
+        <sc-if value="{{ dRecipe }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <input class="kyn-input" value="{{ recSearch }}" onChange="{{ onRecSearch }}" placeholder="Buscar material para agregar…" style="padding:10px 13px">
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <sc-for list="{{ recCatChips }}" as="c" hint-placeholder-count="4"><button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+            </div>
+            <div style="display:flex;flex-direction:column;max-height:200px;overflow-y:auto;border:1px solid var(--ink-100);border-radius:var(--radius-md)">
+              <sc-for list="{{ recCandidates }}" as="m" hint-placeholder-count="4">
+                <button onClick="{{ m.onAdd }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:none;background:none;cursor:pointer;border-bottom:1px solid #F3F1F5;font-family:var(--font-sans);text-align:left" style-hover="background:var(--periwinkle-50)">
+                  <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0"><span style="font-weight:600;font-size:13.5px">{{ m.name }}</span><span style="font-size:11.5px;color:var(--ink-500)">{{ m.sub }}</span></div>
+                  <span style="font-weight:700;font-size:13px;white-space:nowrap">{{ m.cost }}</span>
+                  <span style="color:var(--periwinkle-700);font-weight:800;font-size:16px">+</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="font-size:13px;font-weight:600">Materiales en la receta</label>
+            <sc-if value="{{ recEmpty }}"><div style="font-size:13px;color:var(--ink-500);padding:6px 0">Aún no hay materiales. Busca arriba y agrégalos con +.</div></sc-if>
+            <sc-for list="{{ recLines }}" as="l" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--ink-100);border-radius:var(--radius-md)">
+                <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0">
+                  <span style="font-weight:600;font-size:13.5px">{{ l.name }}</span>
+                  <span style="font-size:11.5px;color:var(--ink-500)">{{ l.sub }}</span>
+                </div>
+                <input class="kyn-input" type="number" step="any" value="{{ l.quantity }}" onChange="{{ l.onQty }}" style="padding:8px 10px;width:76px;text-align:right">
+                <span style="font-size:12px;color:var(--ink-500);width:26px">{{ l.unit }}</span>
+                <span style="font-weight:700;font-size:13.5px;white-space:nowrap;width:76px;text-align:right">{{ l.total }}</span>
+                <button onClick="{{ l.onDup }}" title="Duplicar línea" style="background:none;border:none;cursor:pointer;color:var(--ink-500);font-size:15px;padding:4px" style-hover="color:var(--periwinkle-700)">⧉</button>
+                <button onClick="{{ l.onRemove }}" title="Eliminar" style="background:none;border:none;cursor:pointer;color:var(--ink-500);font-size:15px;padding:4px" style-hover="color:var(--danger)">✕</button>
+              </div>
+            </sc-for>
+            <div style="display:flex;justify-content:space-between;font-size:14.5px;padding-top:6px"><span style="color:var(--ink-500)">Total materiales</span><strong>{{ recTotal }}</strong></div>
+            <button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ closeDrawer }}">Listo</button>
+          </div>
+        </sc-if>
+
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ CONFIRM ============ -->
+  <sc-if value="{{ confirmOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:120;background:rgba(42,41,51,0.42);display:flex;align-items:center;justify-content:center;padding:20px;animation:kynFade 160ms ease-out">
+      <div class="kyn-card" style="max-width:400px;padding:26px;display:flex;flex-direction:column;gap:16px">
+        <h3 style="margin:0;font-size:17px;font-weight:800">{{ confirmTitle }}</h3>
+        <p style="margin:0;font-size:14px;color:var(--ink-700);line-height:1.55">{{ confirmMsg }}</p>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" onClick="{{ confirmNo }}">Cancelar</button>
+          <button class="kyn-btn kyn-btn--primary kyn-btn--sm" onClick="{{ confirmYes }}">{{ confirmYesLabel }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ TOAST ============ -->
+  <sc-if value="{{ toastMsg }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom));z-index:150;background:var(--ink-900);color:#fff;font-family:var(--font-sans);font-size:14px;font-weight:600;padding:12px 22px;border-radius:99px;box-shadow:var(--shadow-lg);animation:kynToast 220ms ease-out">{{ toastMsg }}</div>
+  </sc-if>
+
+</div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;startView&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;dashboard&quot;, &quot;purchases&quot;, &quot;materials&quot;, &quot;products&quot;, &quot;calculator&quot;, &quot;prices&quot;, &quot;settings&quot;], &quot;default&quot;: &quot;dashboard&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Comportamiento&quot; },
+  &quot;forceMobile&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Comportamiento&quot; }
+}">
+class Component extends DCLogic {
+  state = {
+    ready: false,
+    vw: typeof window !== 'undefined' ? window.innerWidth : 1280,
+    view: 'dashboard',
+    params: {},
+    db: null,
+    drawer: null,          // {type:'material'|'productForm'|'recipe', id?, form?}
+    matSearch: '', matCat: 'todas',
+    prodFilter: 'todos',
+    pf: null, pfStep: 1, pfErrors: [],
+    recSearch: '', recCat: 'todas',
+    calc: { productId: '', channel: 'online', method: 'margin', multiplier: '2.5', margin: '47', manualPrice: '', platformFee: '4', paymentFee: '3.6', fixedFee: '0' },
+    plSearch: '', plCat: 'todas', plStatus: 'activos', plSort: 'name', plMode: 'table', plCardChannel: 'all',
+    confirm: null, toast: null,
+    syncMode: 'seed',        // 'notion' | 'local' | 'seed'
+    syncState: 'off',        // 'ok' | 'saving' | 'error' | 'off'
+    lastSyncAt: null,
+  };
+
+  componentDidMount() {
+    this._onResize = () => this.setState({ vw: window.innerWidth });
+    window.addEventListener('resize', this._onResize);
+    import(new URL('./kyn-calc.js', document.baseURI).href).then(async (mod) => {
+      this.C = mod;
+      const view = this.props.startView || 'dashboard';
+      let db = null, syncMode = 'seed', syncState = 'off';
+      try {
+        this.N = await import(new URL('./kyn-notion.js', document.baseURI).href);
+        const res = await this.N.loadDB(mod);
+        db = res.db; this._nctx = res.ctx;
+        syncMode = 'notion'; syncState = 'ok';
+      } catch (e) {
+        console.warn('Notion no disponible — usando datos locales.', e);
+        this._notionError = (e && e.message) || String(e);
+      }
+      if (!db) {
+        try { const raw = localStorage.getItem('kyn-db'); if (raw) { db = JSON.parse(raw); syncMode = 'local'; } } catch (e) {}
+      }
+      if (!db) db = mod.makeSeedDB();
+      this.setState({ db, ready: true, view, syncMode, syncState, lastSyncAt: syncMode === 'notion' ? new Date() : null });
+      this._startAutosave();
+    }).catch((e) => console.error('No se pudo cargar kyn-calc.js', e));
+  }
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._onResize);
+    clearInterval(this._autosave);
+  }
+
+  // ---------- persistencia (localStorage + Notion) ----------
+  _startAutosave() {
+    this._lastJson = JSON.stringify(this.state.db);
+    this._autosave = setInterval(() => {
+      if (!this.state.db) return;
+      const j = JSON.stringify(this.state.db);
+      if (j === this._lastJson) return;
+      this._lastJson = j;
+      try { localStorage.setItem('kyn-db', j); } catch (e) {}
+      this._pushNotion();
+    }, 2500);
+  }
+  async _pushNotion(manual) {
+    if (!this.N || !this._nctx) {
+      if (manual) this.showToast('Sin conexión a Notion — revisa notion-config.json');
+      return;
+    }
+    if (this._pushing) { this._pushQueued = true; return; }
+    this._pushing = true;
+    this.setState({ syncState: 'saving' });
+    try {
+      await this.N.saveDB(this.state.db, this._nctx, this.C);
+      this.setState({ syncState: 'ok', lastSyncAt: new Date() });
+      if (manual) this.showToast('Sincronizado con Notion');
+    } catch (e) {
+      console.error('Error al sincronizar con Notion:', e);
+      this.setState({ syncState: 'error' });
+      if (manual) this.showToast('Error al sincronizar: ' + ((e && e.message) || e));
+    }
+    this._pushing = false;
+    if (this._pushQueued) { this._pushQueued = false; this._pushNotion(); }
+  }
+  syncNow = () => { this._lastJson = JSON.stringify(this.state.db); try { localStorage.setItem('kyn-db', this._lastJson); } catch (e) {} this._pushNotion(true); };
+
+  // ---------- utils ----------
+  today() { return new Date().toISOString().slice(0, 10); }
+  up() { this.setState({ db: this.state.db }); }
+  showToast(msg) { clearTimeout(this._tt); this.setState({ toast: msg }); this._tt = setTimeout(() => this.setState({ toast: null }), 2600); }
+  nav(view, params) {
+    this.setState({ view, params: params || {}, drawer: null });
+    const se = document.scrollingElement; if (se) se.scrollTop = 0;
+  }
+  ask(title, msg, yesLabel, action) { this.setState({ confirm: { title, msg, yesLabel, action } }); }
+
+  icon(name, size) {
+    const R = React, s = size || 19;
+    const paths = {
+      home: 'M3 10.5 12 3l9 7.5M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5',
+      cart: 'M6 7V6a6 6 0 0 1 12 0v1M4.2 7h15.6l-1 13a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8Z',
+      box: 'M21 8.2 12 3 3 8.2v7.6L12 21l9-5.2ZM3.3 8.4 12 13.4l8.7-5M12 13.4V21',
+      tag: 'M12.6 2.9 21 11.3a2 2 0 0 1 0 2.8l-6.9 6.9a2 2 0 0 1-2.8 0L2.9 12.6A2 2 0 0 1 2.3 11V4.3a2 2 0 0 1 2-2H11a2 2 0 0 1 1.6.6ZM7.5 7.5h0',
+      calc: 'M6 2.5h12A1.5 1.5 0 0 1 19.5 4v16a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 20V4A1.5 1.5 0 0 1 6 2.5ZM8 7h8M8.5 12h0M12 12h0M15.5 12h0M8.5 16.5h0M12 16.5h0M15.5 16.5h0',
+      list: 'M8 6h13M8 12h13M8 18h13M3.5 6h0M3.5 12h0M3.5 18h0',
+      gear: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm8.5 3a8.5 8.5 0 0 0-.15-1.6l2-1.55-2-3.46-2.35 1a8.6 8.6 0 0 0-2.75-1.6L14.9 2.3H9.1l-.35 2.5a8.6 8.6 0 0 0-2.75 1.6l-2.35-1-2 3.46 2 1.55A8.5 8.5 0 0 0 3.5 12c0 .55.05 1.08.15 1.6l-2 1.55 2 3.46 2.35-1a8.6 8.6 0 0 0 2.75 1.6l.35 2.5h5.8l.35-2.5a8.6 8.6 0 0 0 2.75-1.6l2.35 1 2-3.46-2-1.55c.1-.52.15-1.05.15-1.6Z',
+    };
+    return R.createElement('svg', { viewBox: '0 0 24 24', width: s, height: s, fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flex: 'none' } },
+      R.createElement('path', { d: paths[name] || paths.home }));
+  }
+
+  chip(status) {
+    const map = {
+      activo: ['Activo', 'kyn-badge kyn-badge--mint'],
+      prototipo: ['Prototipo', 'kyn-badge kyn-badge--butter'],
+      prueba: ['Prueba', 'kyn-badge kyn-badge--butter'],
+      agotado: ['Agotado', 'kyn-badge kyn-badge--blush'],
+      archivado: ['Archivado', 'kyn-badge kyn-badge--outline'],
+      descontinuado: ['Descontinuado', 'kyn-badge kyn-badge--outline'],
+    };
+    const [label, cls] = map[status] || [status, 'kyn-badge kyn-badge--outline'];
+    return { label, cls };
+  }
+
+  fld(label, value, onChange, opts = {}) {
+    return {
+      label, value: value == null ? '' : String(value), onChange,
+      type: opts.type || 'text', placeholder: opts.placeholder || '', hint: opts.hint || '',
+      isSelect: !!opts.options, isInput: !opts.options, options: opts.options || [],
+    };
+  }
+  opt(list) { return list.map(([value, label]) => ({ value, label })); }
+
+  chipStyle(active) {
+    return 'border:1.5px solid ' + (active ? 'var(--periwinkle-500);background:var(--periwinkle-500);color:#fff' : 'var(--ink-100);background:var(--white);color:var(--ink-700)') +
+      ';border-radius:99px;padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:var(--font-sans);white-space:nowrap';
+  }
+  marginStyle(m) {
+    const c = m == null ? 'var(--ink-300)' : m < 0 ? 'var(--danger)' : m < (+this.state.db.settings.lowMarginThreshold || 0.3) ? 'var(--warning)' : 'var(--success)';
+    return 'font-size:12px;font-weight:700;color:' + c;
+  }
+  alertStyle(level) {
+    const map = {
+      danger: 'background:#FBEDEC;border:1px solid #EFC7C5;color:var(--danger)',
+      warn: 'background:#FBF4E4;border:1px solid #EFDDB3;color:#8A6D1F',
+      info: 'background:var(--periwinkle-50);border:1px solid var(--periwinkle-200);color:var(--periwinkle-800)',
+    };
+    return (map[level] || map.info) + ';border-radius:var(--radius-md);padding:12px 16px;font-size:13.5px;font-weight:600;display:flex;gap:10px;align-items:flex-start;font-family:var(--font-sans);cursor:pointer;text-align:left;line-height:1.45;width:100%';
+  }
+
+  // ---------- purchase form ----------
+  blankPurchaseForm() {
+    const s = this.state.db.settings;
+    return {
+      id: null, name: '', supplier: '', date: this.today(), currency: 'MXN',
+      exchangeRate: String(s.defaultExchangeRate), shippingCost: '', taxes: '', importFees: '', paymentFees: '', otherFees: '',
+      allocationMethod: s.defaultAllocationMethod, notes: '',
+      items: [this.blankItem()],
+    };
+  }
+  blankItem() { return { id: this.C.uid(), materialId: '', isNew: false, newName: '', newCat: 'Biothane', unit: 'pza', quantity: '', originalUnitPrice: '', notes: '' }; }
+  pfToPurchase() {
+    const f = this.state.pf, n = (v) => +v || 0;
+    return {
+      id: f.id || this.C.uid(), name: f.name.trim(), supplier: f.supplier.trim(), date: f.date,
+      currency: f.currency, exchangeRate: f.currency === 'MXN' ? 1 : n(f.exchangeRate),
+      shippingCost: n(f.shippingCost), taxes: n(f.taxes), importFees: n(f.importFees), paymentFees: n(f.paymentFees), otherFees: n(f.otherFees),
+      allocationMethod: f.allocationMethod, notes: f.notes,
+      createdAt: f.date, updatedAt: this.today(),
+      items: f.items.map((it) => ({ id: it.id, materialId: it.isNew ? it.pendingId || (it.pendingId = this.C.uid()) : it.materialId, quantity: +it.quantity || 0, unit: it.unit, originalUnitPrice: +it.originalUnitPrice || 0, notes: it.notes })),
+    };
+  }
+  pfValidate(step) {
+    const f = this.state.pf, errs = [];
+    if (step >= 1) {
+      if (!f.name.trim()) errs.push('Ponle nombre a la compra.');
+      if (f.currency !== 'MXN' && !(+f.exchangeRate > 0)) errs.push('El tipo de cambio debe ser mayor a cero.');
+      for (const k of ['shippingCost', 'taxes', 'importFees', 'paymentFees', 'otherFees']) if (f[k] !== '' && +f[k] < 0) errs.push('Los costos no pueden ser negativos.');
+    }
+    if (step >= 2) {
+      if (!f.items.length) errs.push('Agrega al menos un material.');
+      f.items.forEach((it, i) => {
+        if (!it.materialId && !(it.isNew && it.newName.trim())) errs.push('Material ' + (i + 1) + ': selecciona o nombra el material.');
+        if (!(+it.quantity > 0)) errs.push('Material ' + (i + 1) + ': la cantidad debe ser mayor a cero.');
+        if (+it.originalUnitPrice < 0 || it.originalUnitPrice === '') errs.push('Material ' + (i + 1) + ': falta el precio unitario.');
+      });
+    }
+    return [...new Set(errs)];
+  }
+  pfSave = () => {
+    const errs = this.pfValidate(2);
+    if (errs.length) { this.setState({ pfErrors: errs }); return; }
+    const db = this.state.db, f = this.state.pf;
+    // crea materiales nuevos
+    for (const it of f.items) {
+      if (it.isNew && it.newName.trim()) {
+        it.pendingId = it.pendingId || this.C.uid();
+        db.materials.push({
+          id: it.pendingId, name: it.newName.trim(), category: it.newCat, subcategory: '', unit: it.unit,
+          costingMethod: db.settings.defaultCostingMethod, manualCost: null, currentUnitCost: null,
+          supplier: f.supplier, color: '', size: '', variant: '', sku: '', status: 'activo', notes: '',
+          createdAt: this.today(), updatedAt: this.today(),
+        });
+      }
+    }
+    const p = this.pfToPurchase();
+    const ix = db.purchases.findIndex((x) => x.id === p.id);
+    if (ix >= 0) db.purchases[ix] = p; else db.purchases.unshift(p);
+    this.showToast('Compra guardada — costos unitarios recalculados');
+    this.nav('purchaseDetail', { id: p.id });
+  };
+
+  // ---------- product ops ----------
+  saveProductForm = () => {
+    const d = this.state.drawer, f = d.form, db = this.state.db;
+    if (!f.name.trim()) { d.error = 'El producto necesita un nombre.'; this.up(); return; }
+    if (f.id) {
+      const p = db.products.find((x) => x.id === f.id);
+      Object.assign(p, { name: f.name.trim(), category: f.category, status: f.status, version: f.version, description: f.description, notes: f.notes, updatedAt: this.today() });
+      this.setState({ drawer: null }); this.showToast('Producto actualizado');
+    } else {
+      const p = {
+        id: this.C.uid(), name: f.name.trim(), category: f.category, status: f.status, version: f.version || 'v1',
+        description: f.description, laborTimeMinutes: 0, laborHourlyRate: null, packagingCost: 0,
+        wastePercentage: null, customizationCost: 0, otherCosts: 0, notes: f.notes, recipe: [], savedPrices: {},
+        createdAt: this.today(), updatedAt: this.today(),
+      };
+      db.products.unshift(p);
+      this.showToast('Producto creado — ahora arma su receta');
+      this.nav('productDetail', { id: p.id });
+      this.setState({ drawer: { type: 'recipe', id: p.id } });
+    }
+  };
+  duplicateProduct(p) {
+    const db = this.state.db;
+    const copy = JSON.parse(JSON.stringify(p));
+    copy.id = this.C.uid(); copy.name = p.name + ' (copia)'; copy.status = 'prototipo'; copy.savedPrices = {};
+    copy.recipe.forEach((l) => (l.id = this.C.uid()));
+    copy.createdAt = this.today(); copy.updatedAt = this.today();
+    db.products.unshift(copy);
+    this.showToast('Producto duplicado');
+    this.nav('productDetail', { id: copy.id });
+  }
+  recalcProductPrices(p) {
+    const db = this.state.db, C = this.C, s = db.settings;
+    const cost = C.productCost(db, p).total;
+    p.savedPrices = p.savedPrices || {};
+    for (const chId of Object.keys(s.channels)) {
+      const price = C.channelSuggestedPrice(cost, s.channels[chId], s);
+      p.savedPrices[chId] = { price, costSnapshot: cost, savedAt: this.today() };
+    }
+    p.updatedAt = this.today();
+    this.up(); this.showToast('Precios recalculados para ' + p.name);
+  }
+
+  // ---------- exports ----------
+  plComputedRows() {
+    const { db, plSearch, plCat, plStatus, plSort } = this.state, C = this.C, s = db.settings;
+    let list = db.products.filter((p) => {
+      if (plStatus === 'activos' && p.status !== 'activo') return false;
+      if (plStatus !== 'activos' && plStatus !== 'todos' && p.status !== plStatus) return false;
+      if (plCat !== 'todas' && p.category !== plCat) return false;
+      if (plSearch && !p.name.toLowerCase().includes(plSearch.toLowerCase())) return false;
+      return true;
+    });
+    const rows = list.map((p) => {
+      const cost = C.productCost(db, p);
+      const ch = {};
+      let stale = false;
+      for (const chId of Object.keys(s.channels)) {
+        const cfg = s.channels[chId], sp = (p.savedPrices || {})[chId];
+        const price = sp && sp.price != null ? +sp.price : null;
+        const a = price != null ? C.analyzePrice(cost.total, price, C.channelFeesPct(cfg), cfg.fixedFee) : null;
+        if (sp && sp.costSnapshot != null && Math.abs(sp.costSnapshot - cost.total) > 0.5) stale = true;
+        ch[chId] = { price, margin: a ? a.margin : null, saved: sp };
+      }
+      return { p, cost: cost.total, ch, stale, warnings: C.productWarnings(db, p, s, cost) };
+    });
+    const sorters = {
+      name: (a, b) => a.p.name.localeCompare(b.p.name),
+      priceDesc: (a, b) => (b.ch.online.price || 0) - (a.ch.online.price || 0),
+      priceAsc: (a, b) => (a.ch.online.price || 0) - (b.ch.online.price || 0),
+      marginDesc: (a, b) => (b.ch.online.margin ?? -9) - (a.ch.online.margin ?? -9),
+      costDesc: (a, b) => b.cost - a.cost,
+    };
+    rows.sort(sorters[plSort] || sorters.name);
+    return rows;
+  }
+  buildTable(sep) {
+    const C = this.C;
+    const head = ['Producto', 'Categoría', 'Estado', 'Costo', 'Venta en línea', 'Margen línea', 'En persona', 'Margen persona', 'Familia y amigos', 'Margen F&A', 'Actualizado'];
+    const lines = [head.join(sep)];
+    for (const r of this.plComputedRows()) {
+      lines.push([r.p.name, r.p.category, r.p.status, r.cost.toFixed(2),
+        r.ch.online.price ?? '', C.pct(r.ch.online.margin), r.ch.inPerson.price ?? '', C.pct(r.ch.inPerson.margin),
+        r.ch.friends.price ?? '', C.pct(r.ch.friends.margin), r.ch.online.saved ? r.ch.online.saved.savedAt : ''].join(sep));
+    }
+    return lines.join('\n');
+  }
+  plExportCsv = () => {
+    const blob = new Blob(['\ufeff' + this.buildTable(',')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'kyn-lista-de-precios.csv'; a.click();
+    URL.revokeObjectURL(a.href);
+    this.showToast('CSV descargado');
+  };
+  plCopy = () => {
+    navigator.clipboard.writeText(this.buildTable('\t')).then(() => this.showToast('Tabla copiada al portapapeles'));
+  };
+  plPrint = () => { window.print(); };
+
+  // ================= RENDER =================
+  renderVals() {
+    const st = this.state;
+    if (!st.ready || !st.db) return { ready: false, notReady: true };
+    const C = this.C, db = st.db, s = db.settings;
+    const forceMobile = !!this.props.forceMobile;
+    const isMobile = forceMobile || st.vw < 900;
+    const isDesktop = !isMobile;
+    const M = (n, d) => C.money(n, d);
+    const today = this.today();
+
+    // ---- nav ----
+    const navDef = [
+      ['dashboard', 'Inicio', 'home'], ['purchases', 'Compras', 'cart'], ['materials', 'Materiales', 'box'],
+      ['products', 'Productos', 'tag'], ['calculator', 'Calculadora', 'calc'], ['prices', 'Lista de precios', 'list'],
+    ];
+    const viewGroup = { purchaseDetail: 'purchases', purchaseForm: 'purchases', productDetail: 'products' }[st.view] || st.view;
+    const navBtn = ([id, label, ic]) => {
+      const active = viewGroup === id;
+      return {
+        id, label, icon: this.icon(ic),
+        onClick: () => this.nav(id),
+        style: 'display:flex;align-items:center;gap:11px;width:100%;border:none;cursor:pointer;text-align:left;font-family:var(--font-sans);font-size:14px;font-weight:600;padding:10px 12px;border-radius:12px;' +
+          (active ? 'background:var(--periwinkle-50);color:var(--periwinkle-700)' : 'background:transparent;color:var(--ink-700)'),
+      };
+    };
+    const navMain = navDef.map(navBtn);
+    const navBottom = [navBtn(['settings', 'Ajustes', 'gear'])];
+    const navMobile = [['dashboard', 'Inicio', 'home'], ['purchases', 'Compras', 'cart'], ['materials', 'Material', 'box'], ['products', 'Productos', 'tag'], ['prices', 'Precios', 'list']].map(([id, label, ic]) => {
+      const active = viewGroup === id;
+      return {
+        label, icon: this.icon(ic, 21), onClick: () => this.nav(id),
+        style: 'display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;cursor:pointer;font-family:var(--font-sans);padding:6px 10px;border-radius:12px;min-width:56px;' +
+          (active ? 'color:var(--periwinkle-700)' : 'color:var(--ink-500)'),
+      };
+    });
+
+    const vals = {
+      ready: true, notReady: false, isMobile, isDesktop,
+      navMain, navBottom, navMobile,
+      mainStyle: 'flex:1;box-sizing:border-box;width:100%;max-width:1180px;padding:' + (isMobile ? '20px 16px 24px' : '36px 40px 48px'),
+      kpiGridStyle: 'display:grid;gap:12px;grid-template-columns:' + (isMobile ? '1fr 1fr' : 'repeat(4,1fr)'),
+      twoColStyle: 'display:grid;gap:18px;grid-template-columns:' + (isMobile ? '1fr' : '1fr 1fr') + ';align-items:start',
+      threeColStyle: 'display:grid;gap:12px;grid-template-columns:' + (isMobile ? '1fr' : '1fr 1fr 1fr'),
+      formGridStyle: 'display:grid;gap:14px;grid-template-columns:' + (isMobile ? '1fr' : '1fr 1fr'),
+      prodGridStyle: 'display:grid;gap:16px;grid-template-columns:' + (isMobile ? '1fr' : 'repeat(auto-fill,minmax(280px,1fr))'),
+      vDash: st.view === 'dashboard', vPurchases: st.view === 'purchases', vPurchaseDetail: st.view === 'purchaseDetail',
+      vPurchaseForm: st.view === 'purchaseForm', vMaterials: st.view === 'materials', vProducts: st.view === 'products',
+      vProductDetail: st.view === 'productDetail', vCalc: st.view === 'calculator', vPrices: st.view === 'prices', vSettings: st.view === 'settings',
+      goPurchases: () => this.nav('purchases'), goProducts: () => this.nav('products'),
+      goCalc: () => this.nav('calculator'), goSettings: () => this.nav('settings'),
+      goNewPurchase: () => { this.setState({ pf: this.blankPurchaseForm(), pfStep: 1, pfErrors: [] }); this.nav('purchaseForm'); },
+      goNewProduct: () => this.setState({ drawer: { type: 'productForm', form: { id: null, name: '', category: 'Correas', status: 'prototipo', version: 'v1', description: '', notes: '' } } }),
+      toastMsg: st.toast,
+      confirmOpen: !!st.confirm,
+      confirmTitle: st.confirm ? st.confirm.title : '', confirmMsg: st.confirm ? st.confirm.msg : '',
+      confirmYesLabel: st.confirm ? st.confirm.yesLabel : 'Confirmar',
+      confirmNo: () => this.setState({ confirm: null }),
+      confirmYes: () => { const a = st.confirm && st.confirm.action; this.setState({ confirm: null }); if (a) a(); },
+      closeDrawer: () => this.setState({ drawer: null }),
+      drawerOpen: !!st.drawer,
+      drawerTitle: '', dMaterial: false, dProductForm: false, dRecipe: false,
+      drawerPanelStyle: isMobile
+        ? 'position:fixed;left:0;right:0;bottom:0;z-index:95;max-height:88dvh;background:var(--paper);border-radius:20px 20px 0 0;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:kynSheetUp 240ms ease-out;padding-bottom:env(safe-area-inset-bottom)'
+        : 'position:fixed;top:0;right:0;bottom:0;z-index:95;width:min(540px,92vw);background:var(--paper);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:kynSlideIn 240ms ease-out',
+      categoryOptions: C.MATERIAL_CATEGORIES.map((c) => ({ value: c, label: c })),
+      unitOptions: C.UNITS.map((u) => ({ value: u, label: u })),
+      statusOptionsMat: this.opt([['activo', 'Activo'], ['prueba', 'Prueba'], ['agotado', 'Agotado'], ['archivado', 'Archivado']]),
+      materialOptions: db.materials.filter((m) => m.status !== 'archivado').map((m) => ({ id: m.id, label: m.name + ' (' + m.unit + ')' })),
+    };
+
+    // ---- estado de sincronización ----
+    {
+      const dot = (c) => 'flex:none;width:8px;height:8px;border-radius:99px;background:' + c;
+      const hh = st.lastSyncAt ? st.lastSyncAt.toTimeString().slice(0, 5) : '';
+      if (st.syncMode === 'notion') {
+        if (st.syncState === 'saving') { vals.syncLabel = 'Guardando en Notion…'; vals.syncDotStyle = dot('var(--warning)'); }
+        else if (st.syncState === 'error') { vals.syncLabel = 'Error al sincronizar — toca para reintentar'; vals.syncDotStyle = dot('var(--danger)'); }
+        else { vals.syncLabel = 'Sincronizado con Notion' + (hh ? ' · ' + hh : ''); vals.syncDotStyle = dot('var(--success)'); }
+      } else if (st.syncMode === 'local') {
+        vals.syncLabel = 'Sin Notion — guardado solo en este navegador'; vals.syncDotStyle = dot('var(--warning)');
+      } else {
+        vals.syncLabel = 'Sin Notion — datos de ejemplo (configura tu token)'; vals.syncDotStyle = dot('var(--ink-300)');
+      }
+      vals.syncNow = this.syncNow;
+    }
+
+    // ---- costos por producto (cache por render) ----
+    const costOf = {}; const warnsOf = {};
+    for (const p of db.products) { costOf[p.id] = C.productCost(db, p, s); warnsOf[p.id] = C.productWarnings(db, p, s, costOf[p.id]); }
+    const matCostOf = {}; for (const m of db.materials) matCostOf[m.id] = C.materialUnitCost(db, m);
+
+    // ============ DASHBOARD ============
+    if (vals.vDash) {
+      const activeMats = db.materials.filter((m) => m.status === 'activo').length;
+      const activeProds = db.products.filter((p) => p.status === 'activo').length;
+      const noCost = db.materials.filter((m) => m.status !== 'archivado' && matCostOf[m.id] == null);
+      const lowMargin = db.products.filter((p) => p.status !== 'archivado' && warnsOf[p.id].some((w) => w.level !== 'info'));
+      const val = (accent) => 'font-size:30px;font-weight:800;letter-spacing:-0.02em;color:' + (accent || 'var(--ink-900)');
+      vals.kpis = [
+        { label: 'Materiales activos', value: String(activeMats), sub: 'en la biblioteca', valStyle: val(), onClick: () => this.nav('materials') },
+        { label: 'Productos activos', value: String(activeProds), sub: 'con receta y precios', valStyle: val(), onClick: () => this.nav('products') },
+        { label: 'Con advertencias', value: String(lowMargin.length), sub: 'productos por revisar', valStyle: val(lowMargin.length ? 'var(--warning)' : 'var(--success)'), onClick: () => this.nav('products') },
+        { label: 'Sin costo', value: String(noCost.length), sub: 'materiales sin compra', valStyle: val(noCost.length ? 'var(--pop-magenta)' : 'var(--success)'), onClick: () => this.nav('materials') },
+      ];
+      const alerts = [];
+      for (const m of noCost) alerts.push({ level: 'warn', msg: '“' + m.name + '” todavía no tiene costo real calculado.', onClick: () => this.setState({ drawer: { type: 'material', id: m.id } }) });
+      for (const p of db.products) for (const w of warnsOf[p.id]) if (w.level === 'danger') alerts.push({ level: 'danger', msg: p.name + ': ' + w.msg, onClick: () => this.nav('productDetail', { id: p.id }) });
+      vals.dashAlerts = alerts.slice(0, 3).map((a) => ({ ...a, style: this.alertStyle(a.level) }));
+      vals.hasDashAlerts = vals.dashAlerts.length > 0;
+      vals.recentProducts = [...db.products].sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || '')).slice(0, 5).map((p) => {
+        const c = this.chip(p.status);
+        return { name: p.name, chipLabel: c.label, chipCls: c.cls, cost: M(costOf[p.id].total, 0), onClick: () => this.nav('productDetail', { id: p.id }) };
+      });
+      vals.recentPurchases = [...db.purchases].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 4).map((p) => {
+        const t = C.purchaseTotals(p);
+        return { name: p.name, sub: p.supplier + ' · ' + C.fmtDate(p.date) + ' · ' + t.itemCount + ' materiales', total: M(t.totalMXN, 0), onClick: () => this.nav('purchaseDetail', { id: p.id }) };
+      });
+    }
+
+    // ============ COMPRAS ============
+    if (vals.vPurchases) {
+      vals.purchaseRows = [...db.purchases].sort((a, b) => (b.date || '').localeCompare(a.date || '')).map((p) => {
+        const t = C.purchaseTotals(p);
+        return {
+          name: p.name,
+          sub: p.supplier + ' · ' + C.fmtDate(p.date) + ' · ' + t.itemCount + ' materiales · ' + p.currency,
+          methodLabel: p.allocationMethod === 'qty' ? 'Distribución por cantidad' : 'Distribución por costo',
+          total: M(t.totalMXN, 0), extras: M(t.extrasMXN, 0),
+          onOpen: () => this.nav('purchaseDetail', { id: p.id }),
+        };
+      });
+      vals.purchasesEmpty = !db.purchases.length;
+    }
+
+    // ============ DETALLE DE COMPRA ============
+    if (vals.vPurchaseDetail) {
+      const p = db.purchases.find((x) => x.id === st.params.id);
+      if (p) {
+        const t = C.purchaseTotals(p);
+        const items = C.computePurchaseItems(p);
+        vals.pd = { name: p.name, sub: p.supplier + ' · ' + C.fmtDate(p.date) + (p.currency !== 'MXN' ? ' · ' + p.currency + ' @ ' + p.exchangeRate : '') };
+        vals.pdNotes = p.notes || '';
+        vals.pdEdit = () => {
+          const pf = {
+            id: p.id, name: p.name, supplier: p.supplier, date: p.date, currency: p.currency,
+            exchangeRate: String(p.exchangeRate), shippingCost: String(p.shippingCost || ''), taxes: String(p.taxes || ''),
+            importFees: String(p.importFees || ''), paymentFees: String(p.paymentFees || ''), otherFees: String(p.otherFees || ''),
+            allocationMethod: p.allocationMethod, notes: p.notes,
+            items: p.items.map((it) => ({ id: it.id, materialId: it.materialId, isNew: false, newName: '', newCat: 'Biothane', unit: it.unit, quantity: String(it.quantity), originalUnitPrice: String(C.round2(it.originalUnitPrice)), notes: it.notes })),
+          };
+          this.setState({ pf, pfStep: 1, pfErrors: [] }); this.nav('purchaseForm');
+        };
+        vals.pdCards = [
+          { label: 'Subtotal productos', value: M(t.subtotalMXN, 0), sub: 'convertido a MXN' },
+          { label: 'Costos extra', value: M(t.extrasMXN, 0), sub: 'envío + impuestos + importación' },
+          { label: 'Total compra', value: M(t.totalMXN, 0), sub: 'costo real total' },
+          { label: 'Impacto extras', value: C.pct(t.subtotalMXN ? t.extrasMXN / t.subtotalMXN : 0), sub: 'sobre el subtotal' },
+        ];
+        vals.pdExplain = p.allocationMethod === 'qty'
+          ? 'Los costos extra se distribuyen por cantidad: cada unidad comprada absorbe la misma parte del envío e importación.'
+          : 'Los costos extra se distribuyen por costo: cada material absorbe extras según el porcentaje que representa dentro del subtotal.';
+        vals.pdCols = ['Material', 'Cantidad', 'Precio original', 'Subtotal MXN', 'Extra asignado', 'Costo unitario real', 'vs. base'];
+        vals.pdItems = items.map((it) => {
+          const mat = db.materials.find((m) => m.id === it.materialId);
+          return {
+            name: mat ? mat.name : '—',
+            qty: it.quantity + ' ' + it.unit,
+            orig: M(it.originalUnitPrice) + ' ' + p.currency,
+            mxn: M(it.convertedTotalMXN, 0),
+            extra: M(it.allocatedExtraCost, 0),
+            realUnit: M(it.realUnitCost) + '/' + it.unit,
+            diff: '+' + C.pct(it.extraPct),
+          };
+        });
+      }
+    }
+
+    // ============ FORM DE COMPRA ============
+    if (vals.vPurchaseForm && st.pf) {
+      const f = st.pf;
+      const set = (k) => (e) => { f[k] = e.target.value; this.up(); };
+      vals.pfTitle = f.id ? 'Editar compra' : 'Nueva compra';
+      vals.pfStep = st.pfStep;
+      vals.pfStepLabel = ['Datos generales', 'Materiales comprados', 'Revisión y distribución'][st.pfStep - 1];
+      vals.pfStepDots = [1, 2, 3].map((n) => 'flex:1;height:5px;border-radius:99px;background:' + (n <= st.pfStep ? 'var(--periwinkle-500)' : 'var(--ink-100)'));
+      vals.pfStep1 = st.pfStep === 1; vals.pfStep2 = st.pfStep === 2; vals.pfStep3 = st.pfStep === 3;
+      vals.pfCanBack = st.pfStep > 1; vals.pfCanNext = st.pfStep < 3;
+      vals.pfCurrency = f.currency;
+      vals.pfCancel = () => this.ask('¿Descartar cambios?', 'Se perderá lo capturado en esta compra.', 'Descartar', () => this.nav('purchases'));
+      vals.pfBack = () => this.setState({ pfStep: st.pfStep - 1, pfErrors: [] });
+      vals.pfNext = () => {
+        const errs = this.pfValidate(st.pfStep);
+        if (errs.length) { this.setState({ pfErrors: errs }); return; }
+        this.setState({ pfStep: st.pfStep + 1, pfErrors: [] });
+      };
+      vals.pfSave = this.pfSave;
+      vals.pfErrors = st.pfErrors; vals.pfHasErrors = st.pfErrors.length > 0;
+      const fields = [
+        this.fld('Nombre de la compra', f.name, set('name'), { placeholder: 'p. ej. Pedido BioThane mayo' }),
+        this.fld('Proveedor', f.supplier, set('supplier'), { placeholder: 'p. ej. BioThane USA' }),
+        this.fld('Fecha', f.date, set('date'), { type: 'date' }),
+        this.fld('Moneda', f.currency, set('currency'), { options: this.opt([['MXN', 'MXN — pesos'], ['USD', 'USD — dólares']]) }),
+      ];
+      if (f.currency !== 'MXN') fields.push(this.fld('Tipo de cambio a MXN', f.exchangeRate, set('exchangeRate'), { type: 'number', hint: '1 ' + f.currency + ' = ? MXN' }));
+      fields.push(
+        this.fld('Costo de envío (' + f.currency + ')', f.shippingCost, set('shippingCost'), { type: 'number' }),
+        this.fld('Impuestos (' + f.currency + ')', f.taxes, set('taxes'), { type: 'number' }),
+        this.fld('Importación (' + f.currency + ')', f.importFees, set('importFees'), { type: 'number' }),
+        this.fld('Comisiones (' + f.currency + ')', f.paymentFees, set('paymentFees'), { type: 'number' }),
+        this.fld('Otros costos (' + f.currency + ')', f.otherFees, set('otherFees'), { type: 'number' }),
+        this.fld('Distribución de extras', f.allocationMethod, set('allocationMethod'), { options: this.opt([['cost', 'Proporcional por costo'], ['qty', 'Proporcional por cantidad']]), hint: 'Cómo se reparten envío, impuestos e importación entre materiales.' }),
+        this.fld('Notas / links de referencia', f.notes, set('notes'), { placeholder: 'Tracking, factura, link del pedido…' }),
+      );
+      vals.pfFields = fields;
+      const rate = f.currency === 'MXN' ? 1 : (+f.exchangeRate || 1);
+      vals.pfItems = f.items.map((it, i) => {
+        const sit = (k) => (e) => { it[k] = e.target.value; this.up(); };
+        return {
+          num: String(i + 1),
+          materialId: it.isNew ? '__new__' : it.materialId,
+          isNew: it.isNew, newName: it.newName, newCat: it.newCat,
+          quantity: it.quantity, unit: it.unit, originalUnitPrice: it.originalUnitPrice,
+          subtotal: M((+it.quantity || 0) * (+it.originalUnitPrice || 0)) + ' ' + f.currency + '  (' + M((+it.quantity || 0) * (+it.originalUnitPrice || 0) * rate, 0) + ' MXN)',
+          onMaterial: (e) => {
+            const v = e.target.value;
+            if (v === '__new__') { it.isNew = true; it.materialId = ''; }
+            else { it.isNew = false; it.materialId = v; const m = db.materials.find((x) => x.id === v); if (m) it.unit = m.unit; }
+            this.up();
+          },
+          onNewName: sit('newName'), onNewCat: sit('newCat'), onQty: sit('quantity'), onUnit: sit('unit'), onPrice: sit('originalUnitPrice'),
+          onRemove: () => { f.items = f.items.filter((x) => x !== it); this.up(); },
+        };
+      });
+      vals.pfAddItem = () => { f.items.push(this.blankItem()); this.up(); };
+      if (st.pfStep === 3) {
+        const preview = this.pfToPurchase();
+        const t = C.purchaseTotals(preview);
+        const items = C.computePurchaseItems(preview);
+        vals.pfReviewExplain = (preview.allocationMethod === 'qty'
+          ? 'Repartiendo ' + M(t.extrasMXN, 0) + ' de extras proporcionalmente por cantidad de unidades.'
+          : 'Repartiendo ' + M(t.extrasMXN, 0) + ' de extras según el peso de cada material en el subtotal.') + ' Así queda el costo unitario real:';
+        vals.pfReviewRows = items.map((it) => {
+          const mat = db.materials.find((m) => m.id === it.materialId);
+          const src = f.items.find((x) => x.id === it.id);
+          return {
+            name: mat ? mat.name : (src && src.newName) || '—',
+            detail: it.quantity + ' ' + it.unit + ' · base ' + M(it.baseUnitCostMXN) + ' + extras ' + M(it.allocatedExtraCost / (it.quantity || 1)),
+            unit: M(it.realUnitCost) + '/' + it.unit,
+          };
+        });
+        vals.pfReviewExtras = M(t.extrasMXN, 0);
+        vals.pfReviewTotal = M(t.totalMXN, 0);
+      }
+    }
+
+    // ============ MATERIALES ============
+    if (vals.vMaterials) {
+      const cats = ['todas', ...new Set(db.materials.map((m) => m.category))];
+      vals.matSearch = st.matSearch;
+      vals.onMatSearch = (e) => this.setState({ matSearch: e.target.value });
+      vals.matCatChips = cats.map((c) => ({ label: c === 'todas' ? 'Todas' : c, onClick: () => this.setState({ matCat: c }), style: this.chipStyle(st.matCat === c) }));
+      vals.matCols = ['Material', 'Categoría', 'Unidad', 'Costo unitario real', 'Método', 'Estado'];
+      const methodLabel = { last: 'Último costo', wavg: 'Promedio ponderado', manual: 'Manual' };
+      const list = db.materials.filter((m) =>
+        (st.matCat === 'todas' || m.category === st.matCat) &&
+        (!st.matSearch || (m.name + ' ' + m.color + ' ' + m.category).toLowerCase().includes(st.matSearch.toLowerCase()))
+      );
+      vals.matRows = list.map((m) => {
+        const cost = matCostOf[m.id];
+        const c = cost == null ? { label: 'Sin costo', cls: 'kyn-badge kyn-badge--pop' } : this.chip(m.status);
+        return {
+          name: m.name, category: m.category + (m.size ? ' · ' + m.size : ''), unit: m.unit,
+          cost: cost == null ? '—' : M(cost) + '/' + m.unit,
+          methodLabel: methodLabel[m.costingMethod || s.defaultCostingMethod],
+          chipLabel: c.label, chipCls: c.cls,
+          onOpen: () => this.setState({ drawer: { type: 'material', id: m.id } }),
+        };
+      });
+      vals.matEmpty = !list.length;
+    }
+
+    // ============ PRODUCTOS ============
+    if (vals.vProducts) {
+      const filters = [['todos', 'Todos'], ['activo', 'Activos'], ['prototipo', 'Prototipos'], ['descontinuado', 'Descontinuados'], ['archivado', 'Archivados']];
+      vals.prodFilterChips = filters.map(([v, label]) => ({ label, onClick: () => this.setState({ prodFilter: v }), style: this.chipStyle(st.prodFilter === v) }));
+      const pastels = ['var(--periwinkle-100)', 'var(--pastel-lilac)', 'var(--pastel-sky)', 'var(--pastel-blush)', 'var(--pastel-mint)', 'var(--pastel-peach)'];
+      const list = db.products.filter((p) => st.prodFilter === 'todos' ? p.status !== 'archivado' : p.status === st.prodFilter);
+      vals.productCards = list.map((p, i) => {
+        const cost = costOf[p.id]; const c = this.chip(p.status); const sp = p.savedPrices || {};
+        const px = (ch) => sp[ch] && sp[ch].price != null ? M(+sp[ch].price, 0) : '—';
+        const warnCount = warnsOf[p.id].filter((w) => w.level !== 'info').length;
+        return {
+          name: p.name, category: p.category, version: p.version || 'v1',
+          chipLabel: c.label, chipCls: c.cls,
+          cost: M(cost.total, 0), online: px('online'), inPerson: px('inPerson'), friends: px('friends'),
+          warnCount: warnCount ? String(warnCount) : '',
+          initials: p.name.replace(/^The /, '').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase(),
+          mediaStyle: 'position:relative;height:88px;display:flex;align-items:center;justify-content:center;background:' + pastels[i % pastels.length],
+          onOpen: () => this.nav('productDetail', { id: p.id }),
+        };
+      });
+      vals.prodEmpty = !list.length;
+    }
+
+    // ============ DETALLE DE PRODUCTO ============
+    if (vals.vProductDetail) {
+      const p = db.products.find((x) => x.id === st.params.id);
+      if (p) {
+        const cost = costOf[p.id]; const c = this.chip(p.status);
+        vals.prd = {
+          name: p.name, chipLabel: c.label, chipCls: c.cls,
+          sub: p.category + ' · ' + (p.version || 'v1') + (p.description ? ' — ' + p.description : ''),
+          costTotal: M(cost.total), matTotal: M(cost.materials),
+          topMaterials: [...cost.lines].filter((l) => l.totalCost != null).sort((a, b) => b.totalCost - a.totalCost).slice(0, 3).map((l) => (l.material ? l.material.name : '—') + ' (' + M(l.totalCost, 0) + ')').join(', ') || '—',
+        };
+        vals.prdNotes = p.notes || '';
+        vals.prdCalc = () => { this.setState({ calc: { ...st.calc, productId: p.id } }); this.nav('calculator'); };
+        vals.prdDuplicate = () => this.duplicateProduct(p);
+        vals.prdArchiveLabel = p.status === 'archivado' ? 'Reactivar' : 'Archivar';
+        vals.prdArchive = () => {
+          if (p.status === 'archivado') { p.status = 'activo'; p.updatedAt = today; this.up(); this.showToast('Producto reactivado'); }
+          else this.ask('¿Archivar producto?', 'No se elimina: podrás reactivarlo cuando quieras desde el filtro “Archivados”.', 'Archivar', () => { p.status = 'archivado'; p.updatedAt = today; this.up(); this.showToast('Producto archivado'); });
+        };
+        vals.prdWarnings = warnsOf[p.id].map((w) => ({ msg: w.msg, style: this.alertStyle(w.level).replace('cursor:pointer;', '') }));
+        vals.prdHasWarnings = vals.prdWarnings.length > 0;
+        const segs = [
+          ['Materiales', cost.materials, 'var(--periwinkle-500)'],
+          ['Mano de obra', cost.labor, 'var(--pastel-lilac)'],
+          ['Empaque', cost.packaging, 'var(--pastel-mint)'],
+          ['Merma (' + C.pct(cost.wastePct) + ')', cost.waste, 'var(--pastel-peach)'],
+          ['Otros', cost.other, 'var(--pastel-butter)'],
+        ];
+        vals.prdBar = segs.filter(([, v]) => v > 0).map(([, v, col]) => 'display:block;width:' + (cost.total ? (v / cost.total) * 100 : 0) + '%;background:' + col);
+        vals.prdBreakdown = segs.map(([label, v, col]) => ({
+          label, value: M(v), pct: C.pct(cost.total ? v / cost.total : 0, 0),
+          dotStyle: 'flex:none;width:10px;height:10px;border-radius:99px;background:' + col,
+        }));
+        const setP = (k, transform) => (e) => {
+          const v = e.target.value;
+          p[k] = v === '' ? (k === 'laborHourlyRate' || k === 'wastePercentage' ? null : 0) : (transform ? transform(+v) : +v);
+          p.updatedAt = today; this.up();
+        };
+        vals.prdCostFields = [
+          { ...this.fld('Tiempo de producción (min)', p.laborTimeMinutes || '', setP('laborTimeMinutes'), { type: 'number' }), hint: 'Mano de obra: ' + M(cost.labor) },
+          { ...this.fld('Costo por hora (MXN)', p.laborHourlyRate == null ? '' : p.laborHourlyRate, setP('laborHourlyRate'), { type: 'number' }), placeholder: String(s.defaultLaborHourlyRate) + ' (global)', hint: 'Vacío = usa el global de Ajustes' },
+          this.fld('Empaque (MXN)', p.packagingCost || '', setP('packagingCost'), { type: 'number' }),
+          { ...this.fld('Merma (%)', p.wastePercentage == null ? '' : C.round2(p.wastePercentage * 100), setP('wastePercentage', (v) => v / 100), { type: 'number' }), placeholder: String((s.defaultWastePercentage || 0) * 100) + ' (global)', hint: 'Desperdicio sobre el costo de materiales' },
+          this.fld('Personalización (MXN)', p.customizationCost || '', setP('customizationCost'), { type: 'number' }),
+          this.fld('Otros costos (MXN)', p.otherCosts || '', setP('otherCosts'), { type: 'number' }),
+        ];
+        vals.prdEditRecipe = () => this.setState({ drawer: { type: 'recipe', id: p.id } });
+        vals.prdRecipeEmpty = !cost.lines.length;
+        vals.prdRecipeRows = cost.lines.map((l) => ({
+          name: l.material ? l.material.name : 'Material eliminado',
+          detail: l.quantity + ' ' + l.unit + (l.unitCost != null ? ' × ' + M(l.unitCost) : ' · sin costo registrado'),
+          total: l.totalCost != null ? M(l.totalCost) : '—',
+        }));
+        vals.prdPrices = Object.keys(s.channels).map((chId) => {
+          const cfg = s.channels[chId], sp = (p.savedPrices || {})[chId];
+          const price = sp && sp.price != null ? +sp.price : null;
+          const a = price != null ? C.analyzePrice(cost.total, price, C.channelFeesPct(cfg), cfg.fixedFee) : null;
+          const stale = sp && sp.costSnapshot != null && Math.abs(sp.costSnapshot - cost.total) > 0.5;
+          const chipc = price == null ? { label: 'Sin precio', cls: 'kyn-badge kyn-badge--outline' } : stale ? { label: 'Desactualizado', cls: 'kyn-badge kyn-badge--butter' } : { label: 'Actualizado', cls: 'kyn-badge kyn-badge--mint' };
+          return {
+            label: cfg.label, chipLabel: chipc.label, chipCls: chipc.cls,
+            price: price == null ? '' : String(price),
+            onPrice: (e) => {
+              const v = e.target.value;
+              p.savedPrices = p.savedPrices || {};
+              if (v === '') delete p.savedPrices[chId];
+              else p.savedPrices[chId] = { price: +v, costSnapshot: cost.total, savedAt: today };
+              p.updatedAt = today; this.up();
+            },
+            marginStyle: this.marginStyle(a ? a.margin : null),
+            marginLabel: a ? 'Margen ' + C.pct(a.margin) + ' · utilidad ' + M(a.profit, 0) : 'Escribe un precio o usa la calculadora',
+            sub: 'Sugerido: ' + (C.channelSuggestedPrice(cost.total, cfg, s) != null ? M(C.channelSuggestedPrice(cost.total, cfg, s), 0) : '—'),
+          };
+        });
+        vals.prdRecalcPrices = () => this.recalcProductPrices(p);
+      }
+    }
+
+    // ============ CALCULADORA ============
+    if (vals.vCalc) {
+      const cs = st.calc;
+      const prod = db.products.find((x) => x.id === cs.productId) || null;
+      vals.productOptions = db.products.filter((p) => p.status !== 'archivado').map((p) => ({ value: p.id, label: p.name }));
+      vals.calcProductId = cs.productId;
+      vals.onCalcProduct = (e) => this.setState({ calc: { ...cs, productId: e.target.value } });
+      vals.calcHasProduct = !!prod; vals.calcNoProduct = !prod;
+      const applyChannel = (chId) => {
+        const cfg = s.channels[chId];
+        this.setState({ calc: { ...cs, channel: chId, method: cfg.method, multiplier: String(cfg.multiplier), margin: String(C.round2(cfg.targetMargin * 100)), platformFee: String(C.round2((cfg.platformFeePct || 0) * 100)), paymentFee: String(C.round2((cfg.paymentFeePct || 0) * 100)), fixedFee: String(cfg.fixedFee || 0) } });
+      };
+      vals.calcChannelChips = Object.keys(s.channels).map((chId) => ({ label: s.channels[chId].label, onClick: () => applyChannel(chId), style: this.chipStyle(cs.channel === chId) }));
+      vals.calcChannelLabel = s.channels[cs.channel].label;
+      const methods = [['multiplier', 'Multiplicador'], ['margin', 'Margen deseado'], ['manual', 'Precio manual']];
+      vals.calcMethodChips = methods.map(([v, label]) => ({ label, onClick: () => this.setState({ calc: { ...cs, method: v } }), style: this.chipStyle(cs.method === v) }));
+      const setC = (k) => (e) => this.setState({ calc: { ...cs, [k]: e.target.value } });
+      const fieldsC = [];
+      if (cs.method === 'multiplier') fieldsC.push({ ...this.fld('Multiplicador', cs.multiplier, setC('multiplier'), { type: 'number' }), hint: 'precio = costo × multiplicador' });
+      if (cs.method === 'margin') fieldsC.push({ ...this.fld('Margen deseado (%)', cs.margin, setC('margin'), { type: 'number' }), hint: 'precio = costo ÷ (1 − margen)' });
+      if (cs.method === 'manual') fieldsC.push({ ...this.fld('Precio manual (MXN)', cs.manualPrice, setC('manualPrice'), { type: 'number' }), hint: 'La app calcula utilidad, margen y viabilidad' });
+      fieldsC.push(
+        this.fld('Comisión plataforma (%)', cs.platformFee, setC('platformFee'), { type: 'number' }),
+        this.fld('Comisión de pago (%)', cs.paymentFee, setC('paymentFee'), { type: 'number' }),
+        this.fld('Cuota fija (MXN)', cs.fixedFee, setC('fixedFee'), { type: 'number' }),
+      );
+      vals.calcFields = fieldsC;
+      if (prod) {
+        const cost = costOf[prod.id].total;
+        vals.calcCost = M(cost);
+        const feesPct = ((+cs.platformFee || 0) + (+cs.paymentFee || 0)) / 100;
+        const fixed = +cs.fixedFee || 0;
+        let raw = null, marginErr = false;
+        if (cs.method === 'multiplier') raw = C.priceByMultiplier(cost, cs.multiplier);
+        else if (cs.method === 'margin') { const m = (+cs.margin || 0) / 100; if (m >= 1) marginErr = true; else raw = C.priceByMargin(cost, m); }
+        else raw = +cs.manualPrice || null;
+        const finalPrice = cs.method === 'manual' ? raw : C.roundPrice(raw, s.defaultRoundingRule);
+        const a = finalPrice != null ? C.analyzePrice(cost, finalPrice, feesPct, fixed) : null;
+        const minV = C.minViablePrice(cost, feesPct, fixed, s.minProfitPct);
+        const maxD = a ? C.maxSafeDiscount(finalPrice, minV) : null;
+        const big = (danger) => 'margin-left:auto;font-size:17px;font-weight:800;color:' + (danger ? 'var(--danger)' : 'var(--ink-900)');
+        const normal = 'margin-left:auto;font-size:14.5px;font-weight:700;color:var(--ink-900)';
+        const rows = [
+          { label: 'Costo total de producción', value: M(cost), style: normal },
+          { label: 'Precio sugerido (sin redondeo)', value: raw != null ? M(raw) : '—', style: normal },
+          { label: 'Precio final' + (cs.method === 'manual' ? ' (manual)' : ' redondeado'), value: finalPrice != null ? M(finalPrice, 0) : '—', style: big(a && !a.viable) },
+          { label: 'Comisiones (' + C.pct(feesPct) + ' + fija)', value: a ? '−' + M(a.fees) : '—', style: normal },
+          { label: 'Utilidad esperada', value: a ? M(a.profit) : '—', style: 'margin-left:auto;font-size:14.5px;font-weight:800;color:' + (a && a.profit < 0 ? 'var(--danger)' : 'var(--success)') },
+          { label: 'Margen real', value: a ? C.pct(a.margin) : '—', style: normal },
+          { label: 'Markup real', value: a && a.markup != null ? C.pct(a.markup) : '—', style: normal },
+          { label: 'Punto mínimo de venta', value: minV != null ? M(minV, 0) : '—', style: normal },
+          { label: 'Descuento máximo seguro', value: maxD != null ? C.pct(maxD) : '—', style: normal },
+        ];
+        vals.calcRows = rows;
+        vals.calcWarning = marginErr ? 'El margen objetivo debe ser menor a 100%.' :
+          a && a.profit < 0 ? 'Este precio está por debajo del costo real + comisiones. No es viable.' :
+          a && cs.channel === 'friends' && a.profit >= 0 && a.margin < 0.05 ? 'Precio de familia y amigos casi al costo — apenas recuperas.' :
+          a && cs.channel === 'online' && a.margin < (+s.lowMarginThreshold || 0.3) ? 'Este margen puede ser demasiado bajo para venta en línea.' : '';
+        vals.calcSave = () => {
+          if (finalPrice == null || (a && !a.viable && cs.channel !== 'friends')) { this.showToast('Ajusta el precio: no es viable todavía'); return; }
+          prod.savedPrices = prod.savedPrices || {};
+          prod.savedPrices[cs.channel] = { price: finalPrice, costSnapshot: cost, savedAt: today };
+          prod.updatedAt = today;
+          // guarda también la config del canal
+          const cfg = s.channels[cs.channel];
+          cfg.method = cs.method === 'manual' ? cfg.method : cs.method;
+          if (cs.method === 'margin') cfg.targetMargin = (+cs.margin || 0) / 100;
+          if (cs.method === 'multiplier') cfg.multiplier = +cs.multiplier || cfg.multiplier;
+          cfg.platformFeePct = feesPct - (+cs.paymentFee || 0) / 100;
+          cfg.paymentFeePct = (+cs.paymentFee || 0) / 100;
+          cfg.fixedFee = fixed;
+          this.up();
+          this.showToast('Precio guardado en ' + s.channels[cs.channel].label);
+        };
+      } else {
+        vals.calcRows = [];
+        vals.calcWarning = '';
+      }
+    }
+
+    // ============ LISTA DE PRECIOS ============
+    if (vals.vPrices) {
+      vals.plTableMode = st.plMode !== 'cards';
+      vals.plCardsMode = st.plMode === 'cards';
+      vals.plModeChips = [['table', 'Tabla'], ['cards', 'Tarjetas']].map(([v, label]) => ({
+        label, onClick: () => this.setState({ plMode: v }), style: this.chipStyle(st.plMode === v || (v === 'table' && st.plMode !== 'cards')),
+      }));
+      if (vals.plCardsMode) {
+        const chOpts = [['all', 'Los 3 canales'], ...Object.keys(s.channels).map((chId) => [chId, s.channels[chId].label])];
+        vals.plCardChips = chOpts.map(([v, label]) => ({ label, onClick: () => this.setState({ plCardChannel: v }), style: this.chipStyle(st.plCardChannel === v) }));
+        const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        const now = new Date();
+        vals.plDateLabel = meses[now.getMonth()] + ' ' + now.getFullYear();
+        const priceFmt = (n) => '$' + Math.round(n).toLocaleString('es-MX');
+        const catOrder = ['Correas', 'Collares', 'Accesorios', 'Sistemas modulares', 'Bundles', 'Personalizado', 'Otros'];
+        const sectionsFor = (chId) => {
+          const byCat = {};
+          for (const p of db.products) {
+            if (p.status !== 'activo') continue;
+            const sp = (p.savedPrices || {})[chId];
+            if (!sp || sp.price == null) continue;
+            (byCat[p.category] = byCat[p.category] || []).push({ name: p.name, price: priceFmt(+sp.price) });
+          }
+          return catOrder.filter((c) => byCat[c]).map((c) => ({ label: c, rows: byCat[c] }));
+        };
+        const defs = [
+          { id: 'online', eyebrow: 'Venta', title: 'en línea', accent: 'var(--periwinkle-700)', heartColor: 'var(--periwinkle-500)', bg: 'var(--white)', blob: 'var(--periwinkle-100)', rule: 'var(--periwinkle-100)', footNote: 'Envíos a todo México · pago seguro en línea', flourish: '' },
+          { id: 'inPerson', eyebrow: 'Venta', title: 'en persona', accent: 'var(--ink-700)', heartColor: 'var(--ink-700)', bg: 'var(--paper)', blob: 'var(--pastel-mint)', rule: 'var(--sand)', footNote: 'Entrega en mano · efectivo o transferencia', flourish: '' },
+          { id: 'friends', eyebrow: 'Para', title: 'familia & amigos', accent: 'var(--pop-magenta)', heartColor: 'var(--pop-magenta)', bg: 'var(--white)', blob: 'var(--pastel-blush)', rule: 'var(--pastel-blush)', footNote: 'Precio especial con mucho cariño', flourish: 'con amor' },
+        ];
+        vals.priceCards = defs.filter((d) => st.plCardChannel === 'all' || st.plCardChannel === d.id).map((d) => ({
+          title: d.title, eyebrow: d.eyebrow, heartColor: d.heartColor, ruleColor: d.rule,
+          footNote: d.footNote, flourish: d.flourish,
+          sections: sectionsFor(d.id),
+          cardStyle: 'position:relative;overflow:hidden;width:470px;max-width:94vw;box-sizing:border-box;border-radius:26px;padding:44px 42px 36px;display:flex;flex-direction:column;gap:30px;background:' + d.bg + ';border:1px solid var(--border-subtle);box-shadow:var(--shadow-md)',
+          blobStyle: 'position:absolute;top:-90px;right:-80px;width:230px;height:230px;border-radius:46% 54% 58% 42% / 52% 44% 56% 48%;background:' + d.blob + ';opacity:0.55',
+          eyebrowStyle: 'font-size:12px;font-weight:800;letter-spacing:0.24em;text-transform:uppercase;color:' + d.accent,
+          sectionLabelStyle: 'font-size:12px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:' + d.accent + ';white-space:nowrap',
+          sectionRuleStyle: 'flex:1;height:1px;background:' + d.rule,
+        }));
+      }
+      vals.plSearch = st.plSearch; vals.onPlSearch = (e) => this.setState({ plSearch: e.target.value });
+      vals.plCat = st.plCat; vals.onPlCat = (e) => this.setState({ plCat: e.target.value });
+      vals.plStatus = st.plStatus; vals.onPlStatus = (e) => this.setState({ plStatus: e.target.value });
+      vals.plSort = st.plSort; vals.onPlSort = (e) => this.setState({ plSort: e.target.value });
+      vals.plCatOptions = [{ value: 'todas', label: 'Todas las categorías' }, ...[...new Set(db.products.map((p) => p.category))].map((c) => ({ value: c, label: c }))];
+      vals.plStatusOptions = this.opt([['activos', 'Solo activos'], ['todos', 'Todos los estados'], ['prototipo', 'Prototipos'], ['descontinuado', 'Descontinuados'], ['archivado', 'Archivados']]);
+      vals.plSortOptions = this.opt([['name', 'Ordenar: nombre'], ['priceDesc', 'Precio ↓'], ['priceAsc', 'Precio ↑'], ['marginDesc', 'Margen ↓'], ['costDesc', 'Costo ↓']]);
+      vals.plCols = ['Producto', 'Estado', 'Costo', 'Venta en línea', 'En persona', 'Familia y amigos', 'Actualizado', ''];
+      vals.plExportCsv = this.plExportCsv; vals.plCopy = this.plCopy; vals.plPrint = this.plPrint;
+      const rows = this.plComputedRows();
+      vals.plRows = rows.map((r) => {
+        const c = this.chip(r.p.status);
+        const cell = (chId) => {
+          const d = r.ch[chId];
+          return {
+            price: d.price != null ? M(d.price, 0) : '—',
+            m: d.margin != null ? C.pct(d.margin) + (d.margin < 0 ? ' ⚠' : '') : 'sin precio',
+            mStyle: this.marginStyle(d.margin),
+          };
+        };
+        const o = cell('online'), ip = cell('inPerson'), fr = cell('friends');
+        return {
+          name: r.p.name, category: r.p.category, chipLabel: c.label, chipCls: c.cls,
+          cost: M(r.cost, 0), stale: r.stale,
+          online: o.price, onlineM: o.m, onlineMStyle: o.mStyle,
+          inPerson: ip.price, inPersonM: ip.m, inPersonMStyle: ip.mStyle,
+          friends: fr.price, friendsM: fr.m, friendsMStyle: fr.mStyle,
+          updated: r.ch.online.saved ? C.fmtDate(r.ch.online.saved.savedAt) : '—',
+          onOpen: () => this.nav('productDetail', { id: r.p.id }),
+          onRecalc: (e) => { e.stopPropagation(); this.recalcProductPrices(r.p); },
+        };
+      });
+      vals.plEmpty = !rows.length;
+    }
+
+    // ============ AJUSTES ============
+    if (vals.vSettings) {
+      const setS = (k, transform) => (e) => { const v = e.target.value; s[k] = transform ? transform(v) : v; this.up(); };
+      const num = (v) => +v || 0;
+      const pctT = (v) => (+v || 0) / 100;
+      const groups = [
+        {
+          title: 'Producción', desc: 'Se usan cuando un producto no define su propio valor.',
+          fields: [
+            { ...this.fld('Costo por hora (MXN)', s.defaultLaborHourlyRate, setS('defaultLaborHourlyRate', num), { type: 'number' }), hint: 'Mano de obra por hora de trabajo' },
+            this.fld('Merma default (%)', C.round2(s.defaultWastePercentage * 100), setS('defaultWastePercentage', pctT), { type: 'number' }),
+          ],
+        },
+        {
+          title: 'Compras y materiales',
+          fields: [
+            this.fld('Moneda base', s.baseCurrency, () => {}, { options: this.opt([['MXN', 'MXN — pesos mexicanos']]) }),
+            this.fld('Tipo de cambio default (USD→MXN)', s.defaultExchangeRate, setS('defaultExchangeRate', num), { type: 'number' }),
+            this.fld('Distribución de extras default', s.defaultAllocationMethod, setS('defaultAllocationMethod'), { options: this.opt([['cost', 'Proporcional por costo'], ['qty', 'Proporcional por cantidad']]) }),
+            { ...this.fld('Método de costeo default', s.defaultCostingMethod, setS('defaultCostingMethod'), { options: this.opt([['last', 'Último costo'], ['wavg', 'Promedio ponderado'], ['manual', 'Manual']]) }), hint: 'Cada material puede sobreescribirlo' },
+          ],
+        },
+        {
+          title: 'Precios',
+          fields: [
+            this.fld('Redondeo default', s.defaultRoundingRule, setS('defaultRoundingRule'), { options: this.opt([['none', 'Sin redondeo'], ['1', 'Al peso'], ['5', 'A $5'], ['10', 'A $10'], ['9', 'Terminación en 9']]) }),
+            { ...this.fld('Umbral de margen bajo (%)', C.round2(s.lowMarginThreshold * 100), setS('lowMarginThreshold', pctT), { type: 'number' }), hint: 'Debajo de esto se marca advertencia' },
+            { ...this.fld('Ganancia mínima (%)', C.round2(s.minProfitPct * 100), setS('minProfitPct', pctT), { type: 'number' }), hint: 'Para el punto mínimo de venta' },
+          ],
+        },
+      ];
+      for (const chId of Object.keys(s.channels)) {
+        const cfg = s.channels[chId];
+        const setCh = (k, transform) => (e) => { const v = e.target.value; cfg[k] = transform ? transform(v) : v; this.up(); };
+        groups.push({
+          title: 'Canal: ' + cfg.label, desc: 'Valores que precarga la calculadora y usa “Recalcular” en la lista de precios.',
+          fields: [
+            this.fld('Método', cfg.method, setCh('method'), { options: this.opt([['margin', 'Margen deseado'], ['multiplier', 'Multiplicador']]) }),
+            this.fld('Margen objetivo (%)', C.round2(cfg.targetMargin * 100), setCh('targetMargin', pctT), { type: 'number' }),
+            this.fld('Multiplicador', cfg.multiplier, setCh('multiplier', num), { type: 'number' }),
+            this.fld('Comisión plataforma (%)', C.round2((cfg.platformFeePct || 0) * 100), setCh('platformFeePct', pctT), { type: 'number' }),
+            this.fld('Comisión de pago (%)', C.round2((cfg.paymentFeePct || 0) * 100), setCh('paymentFeePct', pctT), { type: 'number' }),
+            this.fld('Cuota fija (MXN)', cfg.fixedFee || 0, setCh('fixedFee', num), { type: 'number' }),
+          ],
+        });
+      }
+      vals.settingsGroups = groups;
+    }
+
+    // ============ DRAWERS ============
+    const d = st.drawer;
+    if (d && d.type === 'material') {
+      const m = db.materials.find((x) => x.id === d.id);
+      if (m) {
+        vals.dMaterial = true; vals.drawerTitle = m.name;
+        const cost = matCostOf[m.id];
+        const c = this.chip(m.status);
+        vals.dm = {
+          category: m.category, color: m.color, chipLabel: c.label, chipCls: c.cls,
+          cost: cost == null ? '—' : M(cost), unit: m.unit,
+          status: m.status, notes: m.notes, manualCost: m.manualCost == null ? '' : String(m.manualCost),
+        };
+        const hist = C.materialHistory(db, m.id);
+        const wavg = hist.length ? hist.reduce((a, h) => a + h.realTotalCost, 0) / hist.reduce((a, h) => a + h.quantity, 0) : null;
+        const methodDefs = [
+          ['last', 'Último costo', 'Usa la compra más reciente', hist.length ? M(hist[0].realUnitCost) : '—'],
+          ['wavg', 'Promedio ponderado', 'Promedia todas las compras según cantidad', wavg != null ? M(wavg) : '—'],
+          ['manual', 'Manual', 'Tú defines el costo', m.manualCost != null ? M(+m.manualCost) : '—'],
+        ];
+        vals.dmMethods = methodDefs.map(([v, label, hint, value]) => {
+          const active = (m.costingMethod || s.defaultCostingMethod) === v;
+          return {
+            label, hint, value,
+            onClick: () => { m.costingMethod = v; m.updatedAt = today; this.up(); },
+            style: 'display:flex;align-items:center;gap:12px;width:100%;border:1.5px solid ' + (active ? 'var(--periwinkle-500)' : 'var(--ink-100)') + ';background:' + (active ? 'var(--periwinkle-50)' : 'var(--white)') + ';border-radius:var(--radius-md);padding:12px 14px;cursor:pointer;font-family:var(--font-sans);text-align:left',
+            radioStyle: 'flex:none;width:18px;height:18px;border-radius:99px;border:2px solid ' + (active ? 'var(--periwinkle-500)' : 'var(--ink-300)') + ';background:' + (active ? 'radial-gradient(circle at center, var(--periwinkle-500) 45%, transparent 50%)' : 'transparent'),
+          };
+        });
+        vals.dmManual = (m.costingMethod || s.defaultCostingMethod) === 'manual';
+        vals.dmOnManual = (e) => { m.manualCost = e.target.value === '' ? null : +e.target.value; m.updatedAt = today; this.up(); };
+        vals.dmOnStatus = (e) => { m.status = e.target.value; m.updatedAt = today; this.up(); };
+        vals.dmOnNotes = (e) => { m.notes = e.target.value; m.updatedAt = today; this.up(); };
+        vals.dmNoHistory = !hist.length;
+        vals.dmHistory = hist.map((h) => ({
+          name: h.purchaseName,
+          sub: C.fmtDate(h.date) + ' · ' + h.quantity + ' ' + h.unit + ' · base ' + M(h.baseUnitCostMXN) + ' + extras',
+          unit: M(h.realUnitCost) + '/' + h.unit,
+        }));
+      }
+    }
+    if (d && d.type === 'productForm') {
+      vals.dProductForm = true;
+      vals.drawerTitle = d.form.id ? 'Editar producto' : 'Nuevo producto';
+      const f = d.form;
+      const set = (k) => (e) => { f[k] = e.target.value; d.error = ''; this.up(); };
+      vals.dpfFields = [
+        this.fld('Nombre', f.name, set('name'), { placeholder: 'p. ej. The Urban Leash — Blush' }),
+        this.fld('Categoría', f.category, set('category'), { options: this.C.PRODUCT_CATEGORIES.map((c) => ({ value: c, label: c })) }),
+        this.fld('Estado', f.status, set('status'), { options: this.opt([['prototipo', 'Prototipo'], ['activo', 'Activo'], ['descontinuado', 'Descontinuado']]) }),
+        this.fld('Versión / variante', f.version, set('version'), { placeholder: 'v1, proto 2, edición especial…' }),
+        this.fld('Descripción', f.description, set('description')),
+        this.fld('Notas de prueba', f.notes, set('notes')),
+      ];
+      vals.dpfError = d.error || '';
+      vals.dpfSave = this.saveProductForm;
+    }
+    if (d && d.type === 'recipe') {
+      const p = db.products.find((x) => x.id === d.id);
+      if (p) {
+        vals.dRecipe = true; vals.drawerTitle = 'Receta — ' + p.name;
+        vals.recSearch = st.recSearch;
+        vals.onRecSearch = (e) => this.setState({ recSearch: e.target.value });
+        const cats = ['todas', ...new Set(db.materials.map((m) => m.category))];
+        vals.recCatChips = cats.map((c) => ({ label: c === 'todas' ? 'Todas' : c, onClick: () => this.setState({ recCat: c }), style: this.chipStyle(st.recCat === c) }));
+        const candidates = db.materials.filter((m) =>
+          m.status !== 'archivado' &&
+          (st.recCat === 'todas' || m.category === st.recCat) &&
+          (!st.recSearch || (m.name + ' ' + m.color).toLowerCase().includes(st.recSearch.toLowerCase()))
+        ).slice(0, 30);
+        vals.recCandidates = candidates.map((m) => {
+          const cost = matCostOf[m.id];
+          return {
+            name: m.name, sub: m.category + ' · ' + m.unit + (cost == null ? ' · sin costo' : ''),
+            cost: cost == null ? '—' : M(cost) + '/' + m.unit,
+            onAdd: () => {
+              p.recipe.push({ id: C.uid(), materialId: m.id, quantity: m.unit === 'm' ? 1 : 1, unit: m.unit, notes: '' });
+              p.updatedAt = today; this.up();
+            },
+          };
+        });
+        const cost = C.productCost(db, p, s);
+        vals.recEmpty = !p.recipe.length;
+        vals.recLines = cost.lines.map((l) => ({
+          name: l.material ? l.material.name : 'Material eliminado',
+          sub: l.unitCost != null ? M(l.unitCost) + '/' + l.unit : 'sin costo registrado',
+          quantity: String(l.quantity), unit: l.unit,
+          total: l.totalCost != null ? M(l.totalCost) : '—',
+          onQty: (e) => { const line = p.recipe.find((x) => x.id === l.id); if (line) { line.quantity = e.target.value === '' ? 0 : +e.target.value; p.updatedAt = today; this.up(); } },
+          onDup: () => { const line = p.recipe.find((x) => x.id === l.id); if (line) { p.recipe.push({ ...line, id: C.uid() }); p.updatedAt = today; this.up(); } },
+          onRemove: () => { p.recipe = p.recipe.filter((x) => x.id !== l.id); p.updatedAt = today; this.up(); },
+        }));
+        vals.recTotal = M(cost.materials);
+      }
+    }
+    if (d && !vals.dMaterial && !vals.dProductForm && !vals.dRecipe) vals.drawerOpen = false;
+
+    return vals;
+  }
+}
+</script>
+</body>
+</html>
