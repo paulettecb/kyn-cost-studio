@@ -748,6 +748,10 @@
           <button class="kyn-btn kyn-btn--primary kyn-btn--md" style="margin-left:auto" onClick="{{ goNewSeed }}">+ Nueva cuenta</button>
         </div>
 
+        <sc-if value="{{ seedSyncOff }}" hint-placeholder-val="{{ false }}">
+          <div style="{{ seedSyncOffStyle }}">La base «KYN Seeding Tracker» aún no está conectada a la integración de Notion, así que esta sección no se está guardando en Notion. En Notion: abre la base → menú ··· → Conexiones → agrega «KYN Cost Studio», y recarga la app.</div>
+        </sc-if>
+
         <!-- resumen del pipeline -->
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <sc-for list="{{ seedStatChips }}" as="c" hint-placeholder-count="7"><button onClick="{{ c.onClick }}" style="{{ c.style }}"><span style="{{ c.dotStyle }}"></span>{{ c.label }} <strong style="margin-left:1px">{{ c.count }}</strong></button></sc-for>
@@ -773,14 +777,14 @@
                     <td style="padding:11px 14px;border-bottom:1px solid #F3F1F5">
                       <div style="display:flex;align-items:center;gap:8px">
                         <button onClick="{{ r.onOpen }}" style="background:none;border:none;cursor:pointer;font-family:var(--font-sans);font-weight:700;font-size:13.5px;color:var(--ink-900);padding:0;text-align:left" style-hover="color:var(--periwinkle-700)">{{ r.cuenta }}</button>
-                        <sc-if value="{{ r.hasIg }}"><a href="{{ r.instagram }}" target="_blank" rel="noopener" title="Abrir Instagram" style="color:var(--ink-300);display:inline-flex" style-hover="color:var(--pop-magenta)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"></circle></svg></a></sc-if>
+                        <sc-if value="{{ r.hasIg }}"><a href="{{ r.instagram }}" target="_blank" rel="noopener" title="Abrir Instagram" aria-label="{{ r.igAria }}" style="color:var(--ink-300);display:inline-flex" style-hover="color:var(--pop-magenta)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"></circle></svg></a></sc-if>
                       </div>
                       <sc-if value="{{ r.nicho }}"><span style="font-size:11.5px;color:var(--ink-500)">{{ r.nicho }}</span></sc-if>
                     </td>
                     <td style="padding:11px 14px;border-bottom:1px solid #F3F1F5;white-space:nowrap">{{ r.ciudadLabel }}</td>
                     <td style="padding:11px 14px;border-bottom:1px solid #F3F1F5;font-weight:700;white-space:nowrap">{{ r.seguidores }}</td>
                     <td style="padding:11px 14px;border-bottom:1px solid #F3F1F5">
-                      <select value="{{ r.statusValue }}" onChange="{{ r.onStatusChange }}" style="{{ r.selectStyle }}"><sc-for list="{{ seedStatusOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+                      <select value="{{ r.statusValue }}" onChange="{{ r.onStatusChange }}" aria-label="{{ r.statusAria }}" style="{{ r.selectStyle }}"><sc-for list="{{ seedStatusOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
                     </td>
                     <td style="padding:11px 14px;border-bottom:1px solid #F3F1F5;color:var(--ink-500);font-size:12.5px;white-space:nowrap">{{ r.fecha }}</td>
                     <td style="padding:11px 14px;border-bottom:1px solid #F3F1F5;color:var(--ink-700);font-size:12.5px">{{ r.colab }}</td>
@@ -798,12 +802,12 @@
               <div class="kyn-card" style="padding:15px;display:flex;flex-direction:column;gap:11px">
                 <div style="display:flex;align-items:center;gap:8px">
                   <button onClick="{{ r.onOpen }}" style="background:none;border:none;cursor:pointer;font-family:var(--font-sans);font-weight:700;font-size:15px;color:var(--ink-900);padding:0;text-align:left">{{ r.cuenta }}</button>
-                  <sc-if value="{{ r.hasIg }}"><a href="{{ r.instagram }}" target="_blank" rel="noopener" style="color:var(--ink-300);display:inline-flex"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"></circle></svg></a></sc-if>
+                  <sc-if value="{{ r.hasIg }}"><a href="{{ r.instagram }}" target="_blank" rel="noopener" title="Abrir Instagram" aria-label="{{ r.igAria }}" style="color:var(--ink-300);display:inline-flex"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"></circle></svg></a></sc-if>
                   <span style="margin-left:auto;font-size:12.5px;color:var(--ink-500)">{{ r.seguidores }}</span>
                 </div>
                 <sc-if value="{{ r.nicho }}"><span style="font-size:12.5px;color:var(--ink-500);margin-top:-5px">{{ r.nicho }}</span></sc-if>
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                  <select value="{{ r.statusValue }}" onChange="{{ r.onStatusChange }}" style="{{ r.selectStyle }}"><sc-for list="{{ seedStatusOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+                  <select value="{{ r.statusValue }}" onChange="{{ r.onStatusChange }}" aria-label="{{ r.statusAria }}" style="{{ r.selectStyle }}"><sc-for list="{{ seedStatusOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
                   <span style="font-size:12px;color:var(--ink-500)">{{ r.ciudadLabel }}</span>
                   <sc-if value="{{ r.hasFecha }}"><span style="font-size:12px;color:var(--ink-500)">· {{ r.fecha }}</span></sc-if>
                 </div>
@@ -2032,6 +2036,9 @@ class Component extends DCLogic {
       vals.seedStatusOptions = STAT.map((x) => ({ value: x.v, label: x.label }));
       vals.seedCols = ['Cuenta', 'Ciudad', 'Seguidores', 'Estatus', 'Contacto', 'Colaboración'];
       vals.goNewSeed = this.newSeed;
+      // Notion sincroniza pero la base de seeding no está conectada → avisar.
+      vals.seedSyncOff = st.syncMode === 'notion' && !!(this._nctx && this._nctx.seedingDisabled);
+      vals.seedSyncOffStyle = this.alertStyle('warn').replace('cursor:pointer;', '');
 
       const q = st.seedSearch.trim().toLowerCase();
       const order = {}; STAT.forEach((x, i) => { order[x.v] = i; });
@@ -2054,11 +2061,13 @@ class Component extends DCLogic {
         return {
           id: s.id, cuenta: s.cuenta,
           instagram: s.instagram || '', hasIg: !!s.instagram,
+          igAria: 'Abrir Instagram de ' + s.cuenta,
+          statusAria: 'Estatus de ' + s.cuenta,
           nicho: s.nicho || '',
           ciudadLabel: cityMap[s.ciudad] ? cityMap[s.ciudad].label : (s.ciudad || '—'),
           seguidores: fmtFollowers(s.seguidores),
           statusValue: s.estatus,
-          selectStyle: 'appearance:none;-webkit-appearance:none;-moz-appearance:none;border:none;border-radius:99px;padding:6px 12px;font-size:12px;font-weight:700;font-family:var(--font-sans);cursor:pointer;background:' + stt.bg + ';color:' + stt.fg,
+          selectStyle: 'appearance:none;-webkit-appearance:none;-moz-appearance:none;border:none;border-radius:99px;padding:' + (isMobile ? '9px 14px' : '6px 12px') + ';font-size:' + (isMobile ? '13px' : '12px') + ';font-weight:700;font-family:var(--font-sans);cursor:pointer;background:' + stt.bg + ';color:' + stt.fg,
           onStatusChange: (e) => this.setSeedStatus(s.id, e.target.value),
           fecha: s.fechaContacto ? C.fmtDate(s.fechaContacto) : '—',
           hasFecha: !!s.fechaContacto,
