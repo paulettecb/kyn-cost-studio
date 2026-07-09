@@ -748,6 +748,10 @@
           <button class="kyn-btn kyn-btn--primary kyn-btn--md" style="margin-left:auto" onClick="{{ goNewSeed }}">+ Nueva cuenta</button>
         </div>
 
+        <sc-if value="{{ seedSyncOff }}" hint-placeholder-val="{{ false }}">
+          <div style="{{ seedSyncOffStyle }}">La base «KYN Seeding Tracker» aún no está conectada a la integración de Notion, así que esta sección no se está guardando en Notion. En Notion: abre la base → menú ··· → Conexiones → agrega «KYN Cost Studio», y recarga la app.</div>
+        </sc-if>
+
         <!-- resumen del pipeline -->
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <sc-for list="{{ seedStatChips }}" as="c" hint-placeholder-count="7"><button onClick="{{ c.onClick }}" style="{{ c.style }}"><span style="{{ c.dotStyle }}"></span>{{ c.label }} <strong style="margin-left:1px">{{ c.count }}</strong></button></sc-for>
@@ -2032,6 +2036,9 @@ class Component extends DCLogic {
       vals.seedStatusOptions = STAT.map((x) => ({ value: x.v, label: x.label }));
       vals.seedCols = ['Cuenta', 'Ciudad', 'Seguidores', 'Estatus', 'Contacto', 'Colaboración'];
       vals.goNewSeed = this.newSeed;
+      // Notion sincroniza pero la base de seeding no está conectada → avisar.
+      vals.seedSyncOff = st.syncMode === 'notion' && !!(this._nctx && this._nctx.seedingDisabled);
+      vals.seedSyncOffStyle = this.alertStyle('warn').replace('cursor:pointer;', '');
 
       const q = st.seedSearch.trim().toLowerCase();
       const order = {}; STAT.forEach((x, i) => { order[x.v] = i; });

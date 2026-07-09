@@ -171,16 +171,24 @@ function seedProps(s) {
 // ---------- carga ----------
 
 export async function loadDB(C) {
-  const [matPages, purPages, prodPages, setPages, seedPages] = await Promise.all([
+  const [matPages, purPages, prodPages, setPages] = await Promise.all([
     queryAll(NOTION_DBS.materials),
     queryAll(NOTION_DBS.purchases),
     queryAll(NOTION_DBS.products),
     queryAll(NOTION_DBS.settings),
-    queryAll(NOTION_DBS.seeding),
   ]);
+  // La base de seeding se carga aparte y su falla NO tumba el resto: si la
+  // integración todavía no está conectada a "KYN Seeding Tracker", los costos
+  // y precios siguen sincronizando y la sección Seeding avisa en la UI.
+  let seedPages = null;
+  try {
+    seedPages = await queryAll(NOTION_DBS.seeding);
+  } catch (e) {
+    console.warn('KYN Seeding Tracker no disponible en Notion — la sección Seeding no sincronizará hasta conectar la base a la integración.', e);
+  }
   const coll = (pages) => pages.map(parseDataRow).filter(Boolean);
   const mats = coll(matPages), purs = coll(purPages), prods = coll(prodPages);
-  const seeds = seedPages.map(parseSeedRow);
+  const seeds = (seedPages || []).map(parseSeedRow);
   const setRow = coll(setPages)[0] || null;
   if (!setRow) throw new Error('No se encontró la fila de ajustes en Notion.');
 
@@ -200,6 +208,9 @@ export async function loadDB(C) {
       seeding: new Map(seeds.map((x) => [x.obj.id, x.pageId])),
     },
     settingsPageId: setRow.pageId,
+    // Sin acceso a la base de seeding no se escribe nada en ella (evita
+    // crear duplicados o archivar filas por error con un estado incompleto).
+    seedingDisabled: seedPages == null,
     propSnaps: { materials: new Map(), purchases: new Map(), products: new Map(), seeding: new Map(), settings: '' },
   };
   snapshotAll(db, ctx, C);
@@ -255,7 +266,7 @@ export async function saveDB(db, ctx, C) {
   writes += await syncColl('materials', db.materials, (m) => matProps(m, C, db), ctx);
   writes += await syncColl('purchases', db.purchases, (p) => purProps(p, C), ctx);
   writes += await syncColl('products', db.products, (p) => prodProps(p, C, db), ctx);
-  writes += await syncColl('seeding', db.seeding || [], (s) => seedProps(s), ctx);
+  if (!ctx.seedingDisabled) writes += await syncColl('seeding', db.seeding || [], (s) => seedProps(s), ctx);
   const setJson = JSON.stringify(db.settings);
   if (setJson !== ctx.propSnaps.settings) {
     await api('pages/' + ctx.settingsPageId, 'PATCH', { properties: { Data: { rich_text: rt(setJson) } } });

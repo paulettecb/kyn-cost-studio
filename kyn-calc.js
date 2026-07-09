@@ -391,21 +391,10 @@ export function makeSeedDB() {
     }),
   ];
 
-  const S = (cuenta, estatus, ciudad, seguidores, nicho, extra) => ({
-    id: uid(), cuenta, estatus, ciudad, seguidores, nicho: nicho || '',
-    instagram: 'https://instagram.com/' + cuenta.replace(/^@/, ''),
-    notas: '', fechaContacto: '', colab: '', createdTime: '2026-06-20',
-    ...(extra || {}),
-  });
-  const seeding = [
-    S('@dogbruno', 'Publico', 'CDMX', 48000, 'Golden retriever · lifestyle', { colab: 'Correa Urban Leash Camel', fechaContacto: '2026-06-10', notas: 'Súper buena onda, ya publicó story y post.' }),
-    S('@lunathefrenchie', 'Enviado', 'Guadalajara', 12500, 'Bulldog francés', { colab: 'Collar + correa Periwinkle', fechaContacto: '2026-06-22' }),
-    S('@maxymolita', 'Respondio', 'Queretaro', 8300, 'Dos salchichas', { fechaContacto: '2026-06-28', notas: 'Pidió tallas, mandarle el catálogo.' }),
-    S('@thecorgidiaries', 'Contactada', 'CDMX', 21000, 'Corgi', { fechaContacto: '2026-07-01' }),
-    S('@paws.and.coffee', 'Por contactar', 'Puebla', 5400, 'Cafetería dog friendly'),
-    S('@rocco.aussie', 'Por contactar', 'Mexico', 15900, 'Pastor australiano'),
-    S('@nala.golden', 'Descartada', 'Otro', 3100, 'Golden', { notas: 'No respondió después de 2 mensajes.' }),
-  ];
+  // Seeding SIN datos de ejemplo, a propósito: son contactos reales y unas
+  // cuentas inventadas aquí se confunden con cuentas verdaderas. La lista
+  // real vive en Notion (KYN Seeding Tracker).
+  const seeding = [];
 
   const db = { materials, purchases, products, seeding, settings };
 
