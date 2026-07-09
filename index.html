@@ -79,6 +79,11 @@
 
     <main style="{{ mainStyle }}">
 
+      <!-- aviso grande cuando NO se está sincronizando con Notion -->
+      <sc-if value="{{ offlineBanner }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ syncNow }}" style="{{ offlineBannerStyle }}">{{ offlineBanner }}</button>
+      </sc-if>
+
       <!-- ============ DASHBOARD ============ -->
       <sc-if value="{{ vDash }}" hint-placeholder-val="{{ true }}">
       <section data-screen-label="Dashboard" style="display:flex;flex-direction:column;gap:28px;animation:kynFade 240ms ease-out">
@@ -515,8 +520,8 @@
                 </div>
               </sc-for>
             </div>
-            <div style="display:flex;justify-content:space-between;font-size:14px;padding-top:4px"><span style="color:var(--ink-500)">Total materiales</span><strong>{{ prd.matTotal }}</strong></div>
-            <div style="background:var(--oat);border-radius:var(--radius-md);padding:12px 14px;font-size:12.5px;color:var(--ink-700);line-height:1.5">Los materiales más caros de este producto: {{ prd.topMaterials }}</div>
+            <div style="display:flex;justify-content:space-between;font-size:14px;padding-top:4px"><span style="color:var(--ink-500)">Total receta</span><strong>{{ prd.matTotal }}</strong></div>
+            <div style="background:var(--oat);border-radius:var(--radius-md);padding:12px 14px;font-size:12.5px;color:var(--ink-700);line-height:1.5">Los componentes más caros de este producto: {{ prd.topMaterials }}</div>
           </div>
         </div>
 
@@ -941,10 +946,15 @@
         <!-- Recipe drawer -->
         <sc-if value="{{ dRecipe }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;flex-direction:column;gap:8px">
-            <input class="kyn-input" value="{{ recSearch }}" onChange="{{ onRecSearch }}" placeholder="Buscar material para agregar…" style="padding:10px 13px">
+            <div style="display:flex;gap:6px">
+              <sc-for list="{{ recModeChips }}" as="c" hint-placeholder-count="2"><button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+            </div>
+            <input class="kyn-input" value="{{ recSearch }}" onChange="{{ onRecSearch }}" placeholder="{{ recPlaceholder }}" style="padding:10px 13px">
+            <sc-if value="{{ recMatMode }}" hint-placeholder-val="{{ true }}">
             <div style="display:flex;flex-wrap:wrap;gap:6px">
               <sc-for list="{{ recCatChips }}" as="c" hint-placeholder-count="4"><button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
             </div>
+            </sc-if>
             <div style="display:flex;flex-direction:column;max-height:200px;overflow-y:auto;border:1px solid var(--ink-100);border-radius:var(--radius-md)">
               <sc-for list="{{ recCandidates }}" as="m" hint-placeholder-count="4">
                 <button onClick="{{ m.onAdd }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:none;background:none;cursor:pointer;border-bottom:1px solid #F3F1F5;font-family:var(--font-sans);text-align:left" style-hover="background:var(--periwinkle-50)">
@@ -956,8 +966,8 @@
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:8px">
-            <label style="font-size:13px;font-weight:600">Materiales en la receta</label>
-            <sc-if value="{{ recEmpty }}"><div style="font-size:13px;color:var(--ink-500);padding:6px 0">Aún no hay materiales. Busca arriba y agrégalos con +.</div></sc-if>
+            <label style="font-size:13px;font-weight:600">Componentes de la receta</label>
+            <sc-if value="{{ recEmpty }}"><div style="font-size:13px;color:var(--ink-500);padding:6px 0">Aún no hay componentes. Busca arriba materiales (o productos, para un bundle) y agrégalos con +.</div></sc-if>
             <sc-for list="{{ recLines }}" as="l" hint-placeholder-count="4">
               <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--ink-100);border-radius:var(--radius-md)">
                 <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0">
@@ -971,7 +981,7 @@
                 <button onClick="{{ l.onRemove }}" title="Eliminar" style="background:none;border:none;cursor:pointer;color:var(--ink-500);font-size:15px;padding:4px" style-hover="color:var(--danger)">✕</button>
               </div>
             </sc-for>
-            <div style="display:flex;justify-content:space-between;font-size:14.5px;padding-top:6px"><span style="color:var(--ink-500)">Total materiales</span><strong>{{ recTotal }}</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:14.5px;padding-top:6px"><span style="color:var(--ink-500)">Total receta</span><strong>{{ recTotal }}</strong></div>
             <button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ closeDrawer }}">Listo</button>
           </div>
         </sc-if>
@@ -1066,7 +1076,7 @@ class Component extends DCLogic {
     matSearch: '', matCat: 'todas',
     prodFilter: 'todos',
     pf: null, pfStep: 1, pfErrors: [],
-    recSearch: '', recCat: 'todas',
+    recSearch: '', recCat: 'todas', recMode: 'mat',
     calc: { productId: '', channel: 'online', method: 'margin', multiplier: '2.5', margin: '47', manualPrice: '', platformFee: '4', paymentFee: '3.6', fixedFee: '0' },
     plSearch: '', plCat: 'todas', plStatus: 'activos', plSort: 'name', plMode: 'table', plCardChannel: 'all',
     seedSearch: '', seedCity: 'todas', seedStatus: 'todas', seedSort: 'recent',
@@ -1494,6 +1504,14 @@ class Component extends DCLogic {
         vals.syncLabel = 'Sin Notion — datos de ejemplo (configura tu token)'; vals.syncDotStyle = dot('var(--ink-300)');
       }
       vals.syncNow = this.syncNow;
+      // Aviso imposible de ignorar cuando lo que se ve NO viene de Notion:
+      // los datos de ejemplo y la copia local se confunden fácil con los reales.
+      vals.offlineBanner = st.syncMode === 'seed'
+        ? '⚠️ Estás viendo DATOS DE EJEMPLO — la app no está conectada a Notion. Nada de lo que veas o captures aquí se guarda en tu Notion. Toca para reintentar.'
+        : (st.syncMode === 'local'
+          ? '⚠️ Sin conexión a Notion — estás viendo la copia local de este navegador y tus cambios NO se están guardando en Notion. Toca para reintentar.'
+          : '');
+      vals.offlineBannerStyle = 'display:block;width:100%;text-align:left;cursor:pointer;background:#FFF1D6;border:1.5px solid #E8B45A;color:#7A5310;border-radius:14px;padding:14px 18px;font-family:var(--font-sans);font-size:13.5px;font-weight:700;line-height:1.55;margin-bottom:20px';
     }
 
     // ---- costos por producto (cache por render) ----
@@ -1723,7 +1741,7 @@ class Component extends DCLogic {
           name: p.name, chipLabel: c.label, chipCls: c.cls,
           sub: p.category + ' · ' + (p.version || 'v1') + (p.description ? ' — ' + p.description : ''),
           costTotal: M(cost.total), matTotal: M(cost.materials),
-          topMaterials: [...cost.lines].filter((l) => l.totalCost != null).sort((a, b) => b.totalCost - a.totalCost).slice(0, 3).map((l) => (l.material ? l.material.name : '—') + ' (' + M(l.totalCost, 0) + ')').join(', ') || '—',
+          topMaterials: [...cost.lines].filter((l) => l.totalCost != null).sort((a, b) => b.totalCost - a.totalCost).slice(0, 3).map((l) => (l.material ? l.material.name : (l.product ? l.product.name : '—')) + ' (' + M(l.totalCost, 0) + ')').join(', ') || '—',
         };
         vals.prdNotes = p.notes || '';
         vals.prdCalc = () => { this.setState({ calc: { ...st.calc, productId: p.id } }); this.nav('calculator'); };
@@ -1763,7 +1781,7 @@ class Component extends DCLogic {
         vals.prdEditRecipe = () => this.setState({ drawer: { type: 'recipe', id: p.id } });
         vals.prdRecipeEmpty = !cost.lines.length;
         vals.prdRecipeRows = cost.lines.map((l) => ({
-          name: l.material ? l.material.name : 'Material eliminado',
+          name: (l.material ? l.material.name : (l.product ? l.product.name : (l.productId ? 'Producto eliminado' : 'Material eliminado'))) + (l.productId ? ' (producto)' : ''),
           detail: l.quantity + ' ' + l.unit + (l.unitCost != null ? ' × ' + M(l.unitCost) : ' · sin costo registrado'),
           total: l.totalCost != null ? M(l.totalCost) : '—',
         }));
@@ -2142,29 +2160,57 @@ class Component extends DCLogic {
         vals.dRecipe = true; vals.drawerTitle = 'Receta — ' + p.name;
         vals.recSearch = st.recSearch;
         vals.onRecSearch = (e) => this.setState({ recSearch: e.target.value });
+        const recMode = st.recMode || 'mat';
+        vals.recMatMode = recMode === 'mat';
+        vals.recPlaceholder = vals.recMatMode ? 'Buscar material para agregar…' : 'Buscar producto para agregar (bundle)…';
+        vals.recModeChips = [['mat', 'Materiales'], ['prod', 'Productos']].map(([id, label]) => ({
+          label, onClick: () => this.setState({ recMode: id, recSearch: '' }), style: this.chipStyle(recMode === id),
+        }));
         const cats = ['todas', ...new Set(db.materials.map((m) => m.category))];
         vals.recCatChips = cats.map((c) => ({ label: c === 'todas' ? 'Todas' : c, onClick: () => this.setState({ recCat: c }), style: this.chipStyle(st.recCat === c) }));
-        const candidates = db.materials.filter((m) =>
-          m.status !== 'archivado' &&
-          (st.recCat === 'todas' || m.category === st.recCat) &&
-          (!st.recSearch || (m.name + ' ' + m.color).toLowerCase().includes(st.recSearch.toLowerCase()))
-        ).slice(0, 30);
-        vals.recCandidates = candidates.map((m) => {
-          const cost = matCostOf[m.id];
-          return {
-            name: m.name, sub: m.category + ' · ' + m.unit + (cost == null ? ' · sin costo' : ''),
-            cost: cost == null ? '—' : M(cost) + '/' + m.unit,
-            onAdd: () => {
-              p.recipe.push({ id: C.uid(), materialId: m.id, quantity: m.unit === 'm' ? 1 : 1, unit: m.unit, notes: '' });
-              p.updatedAt = today; this.up();
-            },
-          };
-        });
+        if (vals.recMatMode) {
+          const candidates = db.materials.filter((m) =>
+            m.status !== 'archivado' &&
+            (st.recCat === 'todas' || m.category === st.recCat) &&
+            (!st.recSearch || (m.name + ' ' + m.color).toLowerCase().includes(st.recSearch.toLowerCase()))
+          ).slice(0, 30);
+          vals.recCandidates = candidates.map((m) => {
+            const cost = matCostOf[m.id];
+            return {
+              name: m.name, sub: m.category + ' · ' + m.unit + (cost == null ? ' · sin costo' : ''),
+              cost: cost == null ? '—' : M(cost) + '/' + m.unit,
+              onAdd: () => {
+                p.recipe.push({ id: C.uid(), materialId: m.id, quantity: m.unit === 'm' ? 1 : 1, unit: m.unit, notes: '' });
+                p.updatedAt = today; this.up();
+              },
+            };
+          });
+        } else {
+          // Productos como componentes (bundles). Se excluye el propio producto
+          // y cualquier producto que ya lo contenga (evita ciclos A→B→A).
+          const candidates = db.products.filter((x) =>
+            x.id !== p.id && x.status !== 'archivado' &&
+            !C.recipeUsesProduct(db, x, p.id) &&
+            (!st.recSearch || (x.name + ' ' + (x.category || '')).toLowerCase().includes(st.recSearch.toLowerCase()))
+          ).slice(0, 30);
+          vals.recCandidates = candidates.map((x) => {
+            const cc = costOf[x.id];
+            const bad = cc.missing.length > 0;
+            return {
+              name: x.name, sub: (x.category || 'Producto') + ' · producto' + (bad ? ' · sin costo completo' : ''),
+              cost: bad ? '—' : M(cc.total),
+              onAdd: () => {
+                p.recipe.push({ id: C.uid(), productId: x.id, quantity: 1, unit: 'pza', notes: '' });
+                p.updatedAt = today; this.up();
+              },
+            };
+          });
+        }
         const cost = C.productCost(db, p, s);
         vals.recEmpty = !p.recipe.length;
         vals.recLines = cost.lines.map((l) => ({
-          name: l.material ? l.material.name : 'Material eliminado',
-          sub: l.unitCost != null ? M(l.unitCost) + '/' + l.unit : 'sin costo registrado',
+          name: l.material ? l.material.name : (l.product ? l.product.name : (l.productId ? 'Producto eliminado' : 'Material eliminado')),
+          sub: l.unitCost != null ? M(l.unitCost) + (l.productId ? ' c/u · producto' : '/' + l.unit) : 'sin costo registrado',
           quantity: String(l.quantity), unit: l.unit,
           total: l.totalCost != null ? M(l.totalCost) : '—',
           onQty: (e) => { const line = p.recipe.find((x) => x.id === l.id); if (line) { line.quantity = e.target.value === '' ? 0 : +e.target.value; p.updatedAt = today; this.up(); } },

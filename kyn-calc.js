@@ -104,27 +104,62 @@ export function materialUnitCost(db, mat) {
 
 // ---------- Productos: costo de producción ----------
 
-export function productCost(db, product, settings) {
+// Una receta acepta dos tipos de línea:
+//  - { materialId, quantity }  → materia prima (como siempre)
+//  - { productId, quantity }   → otro producto terminado (para bundles):
+//    su costo unitario es el costo TOTAL de ese producto (materiales, mano
+//    de obra, merma, empaque). `_path` evita ciclos (A contiene B contiene A).
+export function productCost(db, product, settings, _path) {
   settings = settings || db.settings;
-  let materials = 0;
+  const path = _path || [];
+  let materials = 0;     // total de la receta (materia prima + productos)
+  let rawMaterials = 0;  // solo materia prima — la merma aplica sobre esto
   const missing = [];
   const lines = [];
   for (const l of product.recipe || []) {
+    if (l.productId) {
+      const sub = db.products.find((x) => x.id === l.productId);
+      let unitCost = null;
+      if (sub && sub.id !== product.id && !path.includes(sub.id)) {
+        const sc = productCost(db, sub, settings, [...path, product.id]);
+        if (!sc.missing.length) unitCost = sc.total;
+      }
+      const total = unitCost != null ? unitCost * (+l.quantity || 0) : null;
+      if (total == null) missing.push(sub ? sub.name : 'producto eliminado');
+      else materials += total;
+      lines.push({ ...l, product: sub, unitCost, totalCost: total });
+      continue;
+    }
     const mat = db.materials.find((m) => m.id === l.materialId);
     const unitCost = materialUnitCost(db, mat);
     const total = unitCost != null ? unitCost * (+l.quantity || 0) : null;
     if (total == null) missing.push(mat ? mat.name : 'material eliminado');
-    else materials += total;
+    else { materials += total; rawMaterials += total; }
     lines.push({ ...l, material: mat, unitCost, totalCost: total });
   }
   const rate = product.laborHourlyRate != null ? +product.laborHourlyRate : (+settings.defaultLaborHourlyRate || 0);
   const labor = ((+product.laborTimeMinutes || 0) / 60) * rate;
   const wastePct = product.wastePercentage != null ? +product.wastePercentage : (+settings.defaultWastePercentage || 0);
-  const waste = materials * wastePct;
+  const waste = rawMaterials * wastePct;
   const packaging = +product.packagingCost || 0;
   const other = (+product.customizationCost || 0) + (+product.otherCosts || 0);
   const total = materials + labor + waste + packaging + other;
   return { materials, labor, laborRate: rate, waste, wastePct, packaging, other, total, lines, missing };
+}
+
+// ¿La receta de `product` usa (directa o transitivamente) al producto target?
+// Sirve para no ofrecer como componente algo que crearía un ciclo.
+export function recipeUsesProduct(db, product, targetId, _seen) {
+  const seen = _seen || new Set();
+  for (const l of product.recipe || []) {
+    if (!l.productId) continue;
+    if (l.productId === targetId) return true;
+    if (seen.has(l.productId)) continue;
+    seen.add(l.productId);
+    const sub = db.products.find((x) => x.id === l.productId);
+    if (sub && recipeUsesProduct(db, sub, targetId, seen)) return true;
+  }
+  return false;
 }
 
 // ---------- Precios ----------
@@ -184,12 +219,14 @@ export function productWarnings(db, product, settings, cost) {
   cost = cost || productCost(db, product, settings);
   const w = [];
   if (!(product.recipe || []).length)
-    w.push({ level: 'warn', msg: 'La receta está vacía — agrega materiales para calcular el costo real.' });
+    w.push({ level: 'warn', msg: 'La receta está vacía — agrega materiales o productos para calcular el costo real.' });
   if (cost.missing.length)
-    w.push({ level: 'danger', msg: 'Usa materiales sin costo registrado: ' + cost.missing.join(', ') + '.' });
+    w.push({ level: 'danger', msg: 'Usa componentes sin costo registrado: ' + cost.missing.join(', ') + '.' });
   for (const l of cost.lines) {
     if (l.material && (l.material.status === 'archivado' || l.material.status === 'agotado'))
       w.push({ level: 'warn', msg: '"' + l.material.name + '" está ' + l.material.status + '.' });
+    if (l.product && (l.product.status === 'archivado' || l.product.status === 'agotado' || l.product.status === 'descontinuado'))
+      w.push({ level: 'warn', msg: 'El producto "' + l.product.name + '" del bundle está ' + l.product.status + '.' });
   }
   const sp = product.savedPrices || {};
   for (const chId of Object.keys(settings.channels)) {
