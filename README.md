@@ -37,6 +37,10 @@ En la sección **Lista de precios** hay dos vistas:
 - **Tabla** — costos, márgenes y recalcular por canal, con exportación CSV / copiar / PDF.
 - **Tarjetas** — las tarjetas bonitas por canal (en línea / en persona / familia & amigos), listas para imprimir o compartir.
 
+## Bundles
+
+Un **bundle** es un producto armado con *otros productos* (por ejemplo, collar + correa). Se crea como cualquier producto (categoría *Bundles*) y en su **receta** eliges la pestañita **Productos** para agregar los componentes. Su costo es la suma del costo real de cada componente (más empaque u otros extras que le pongas), se recalcula solo si cambia el costo de un componente, y aparece en la lista de precios y la calculadora como cualquier producto. También puedes mezclar: productos + materiales sueltos en la misma receta (la merma solo aplica a los materiales).
+
 ## Seeding
 
 La sección **Seeding** lleva el control de las cuentas para colaboración (la base *KYN Seeding Tracker* de Notion). Cada cuenta avanza por sus pasos con el estatus: **Por contactar → Contactada → Respondió → Enviado → Publicó** (o *Descartada*).
