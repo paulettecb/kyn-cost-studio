@@ -9,6 +9,10 @@ export const NOTION_DBS = {
   purchases: 'b99a257f-649d-4e75-9b1a-32474c2ca4ab',
   products: 'c0554c5c-f4ec-4461-af6c-c609e462bc9e',
   settings: '6b4fcaea-82a5-46a0-b10c-6bf95f46d69f',
+  // Seeding Tracker — a diferencia de las otras, esta base usa columnas
+  // nativas de Notion (no un blob JSON) para que se vea y edite bien desde
+  // el celular en Notion. Ver seedProps / parseSeedRow más abajo.
+  seeding: '8a8aa4d7-6054-434c-9632-6ee1683ef392',
 };
 
 const r2 = (n) => (n == null || isNaN(n) ? null : Math.round(n * 100) / 100);
@@ -114,17 +118,69 @@ function prodProps(p, C, db) {
   };
 }
 
+// ---------- seeding (columnas nativas de Notion) ----------
+
+// La base "KYN Seeding Tracker" no guarda un blob JSON: cada dato vive en su
+// propia columna de Notion (título, select, url, número, fecha, texto) para
+// que se pueda ver y editar bonito desde Notion. Estos helpers traducen entre
+// esas columnas y el objeto plano que usa la app.
+
+const readSel = (pr) => (pr && pr.select ? pr.select.name : '');
+const readNum = (pr) => (pr && pr.number != null ? pr.number : null);
+const readUrl = (pr) => (pr && pr.url) || '';
+const readTxt = (pr) => (pr && pr.rich_text ? plain(pr.rich_text) : '');
+const readDate = (pr) => (pr && pr.date && pr.date.start ? pr.date.start : '');
+
+function parseSeedRow(page) {
+  const p = page.properties || {};
+  // El id del objeto en la app = el id de la página de Notion (estable entre
+  // recargas). No hay columna "Clave" en esta base.
+  return {
+    pageId: page.id,
+    obj: {
+      id: page.id,
+      createdTime: page.created_time || '',
+      cuenta: p.Cuenta && p.Cuenta.title ? plain(p.Cuenta.title) : '',
+      estatus: readSel(p.Estatus) || 'Por contactar',
+      ciudad: readSel(p.Ciudad) || '',
+      instagram: readUrl(p.Instagram),
+      nicho: readTxt(p['Perro / Nicho']),
+      seguidores: readNum(p.Seguidores),
+      notas: readTxt(p.Notas),
+      fechaContacto: readDate(p['Fecha de contacto']),
+      colab: readTxt(p['Colaboración']),
+    },
+  };
+}
+
+function seedProps(s) {
+  const seg = s.seguidores === '' || s.seguidores == null || isNaN(s.seguidores) ? null : Number(s.seguidores);
+  return {
+    Cuenta: { title: rt(s.cuenta || '') },
+    Estatus: s.estatus ? { select: { name: s.estatus } } : { select: null },
+    Ciudad: s.ciudad ? { select: { name: s.ciudad } } : { select: null },
+    Instagram: { url: s.instagram ? s.instagram : null },
+    'Perro / Nicho': { rich_text: rt(s.nicho || '') },
+    Seguidores: { number: seg },
+    Notas: { rich_text: rt(s.notas || '') },
+    'Fecha de contacto': s.fechaContacto ? { date: { start: s.fechaContacto } } : { date: null },
+    'Colaboración': { rich_text: rt(s.colab || '') },
+  };
+}
+
 // ---------- carga ----------
 
 export async function loadDB(C) {
-  const [matPages, purPages, prodPages, setPages] = await Promise.all([
+  const [matPages, purPages, prodPages, setPages, seedPages] = await Promise.all([
     queryAll(NOTION_DBS.materials),
     queryAll(NOTION_DBS.purchases),
     queryAll(NOTION_DBS.products),
     queryAll(NOTION_DBS.settings),
+    queryAll(NOTION_DBS.seeding),
   ]);
   const coll = (pages) => pages.map(parseDataRow).filter(Boolean);
   const mats = coll(matPages), purs = coll(purPages), prods = coll(prodPages);
+  const seeds = seedPages.map(parseSeedRow);
   const setRow = coll(setPages)[0] || null;
   if (!setRow) throw new Error('No se encontró la fila de ajustes en Notion.');
 
@@ -132,6 +188,7 @@ export async function loadDB(C) {
     materials: mats.map((x) => x.obj),
     purchases: purs.map((x) => x.obj).sort((a, b) => (b.date || '').localeCompare(a.date || '')),
     products: prods.map((x) => x.obj).sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || '')),
+    seeding: seeds.map((x) => x.obj).sort((a, b) => (b.createdTime || '').localeCompare(a.createdTime || '')),
     settings: setRow.obj,
   };
 
@@ -140,9 +197,10 @@ export async function loadDB(C) {
       materials: new Map(mats.map((x) => [x.obj.id, x.pageId])),
       purchases: new Map(purs.map((x) => [x.obj.id, x.pageId])),
       products: new Map(prods.map((x) => [x.obj.id, x.pageId])),
+      seeding: new Map(seeds.map((x) => [x.obj.id, x.pageId])),
     },
     settingsPageId: setRow.pageId,
-    propSnaps: { materials: new Map(), purchases: new Map(), products: new Map(), settings: '' },
+    propSnaps: { materials: new Map(), purchases: new Map(), products: new Map(), seeding: new Map(), settings: '' },
   };
   snapshotAll(db, ctx, C);
   return { db, ctx };
@@ -152,6 +210,7 @@ export function snapshotAll(db, ctx, C) {
   ctx.propSnaps.materials = new Map(db.materials.map((m) => [m.id, JSON.stringify(matProps(m, C, db))]));
   ctx.propSnaps.purchases = new Map(db.purchases.map((p) => [p.id, JSON.stringify(purProps(p, C))]));
   ctx.propSnaps.products = new Map(db.products.map((p) => [p.id, JSON.stringify(prodProps(p, C, db))]));
+  ctx.propSnaps.seeding = new Map((db.seeding || []).map((s) => [s.id, JSON.stringify(seedProps(s))]));
   ctx.propSnaps.settings = JSON.stringify(db.settings);
 }
 
@@ -196,6 +255,7 @@ export async function saveDB(db, ctx, C) {
   writes += await syncColl('materials', db.materials, (m) => matProps(m, C, db), ctx);
   writes += await syncColl('purchases', db.purchases, (p) => purProps(p, C), ctx);
   writes += await syncColl('products', db.products, (p) => prodProps(p, C, db), ctx);
+  writes += await syncColl('seeding', db.seeding || [], (s) => seedProps(s), ctx);
   const setJson = JSON.stringify(db.settings);
   if (setJson !== ctx.propSnaps.settings) {
     await api('pages/' + ctx.settingsPageId, 'PATCH', { properties: { Data: { rich_text: rt(setJson) } } });

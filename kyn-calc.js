@@ -391,7 +391,23 @@ export function makeSeedDB() {
     }),
   ];
 
-  const db = { materials, purchases, products, settings };
+  const S = (cuenta, estatus, ciudad, seguidores, nicho, extra) => ({
+    id: uid(), cuenta, estatus, ciudad, seguidores, nicho: nicho || '',
+    instagram: 'https://instagram.com/' + cuenta.replace(/^@/, ''),
+    notas: '', fechaContacto: '', colab: '', createdTime: '2026-06-20',
+    ...(extra || {}),
+  });
+  const seeding = [
+    S('@dogbruno', 'Publico', 'CDMX', 48000, 'Golden retriever · lifestyle', { colab: 'Correa Urban Leash Camel', fechaContacto: '2026-06-10', notas: 'Súper buena onda, ya publicó story y post.' }),
+    S('@lunathefrenchie', 'Enviado', 'Guadalajara', 12500, 'Bulldog francés', { colab: 'Collar + correa Periwinkle', fechaContacto: '2026-06-22' }),
+    S('@maxymolita', 'Respondio', 'Queretaro', 8300, 'Dos salchichas', { fechaContacto: '2026-06-28', notas: 'Pidió tallas, mandarle el catálogo.' }),
+    S('@thecorgidiaries', 'Contactada', 'CDMX', 21000, 'Corgi', { fechaContacto: '2026-07-01' }),
+    S('@paws.and.coffee', 'Por contactar', 'Puebla', 5400, 'Cafetería dog friendly'),
+    S('@rocco.aussie', 'Por contactar', 'Mexico', 15900, 'Pastor australiano'),
+    S('@nala.golden', 'Descartada', 'Otro', 3100, 'Golden', { notas: 'No respondió después de 2 mensajes.' }),
+  ];
+
+  const db = { materials, purchases, products, seeding, settings };
 
   // Precios finales del Excel, con snapshot del costo actual
   const excelPrices = {
@@ -419,3 +435,24 @@ export function makeSeedDB() {
 export const MATERIAL_CATEGORIES = ['Biothane', 'Herrajes', 'Mosquetones', 'Argollas', 'Hebillas', 'Remaches', 'Hilo', 'Paracord', 'Empaque', 'Etiquetas', 'Consumibles', 'Herramientas', 'Otros'];
 export const PRODUCT_CATEGORIES = ['Correas', 'Collares', 'Sistemas modulares', 'Bundles', 'Accesorios', 'Personalizado', 'Otros'];
 export const UNITS = ['m', 'cm', 'pza', 'par', 'rollo', 'kg', 'g', 'ml', 'hr'];
+
+// ---------- Seeding ----------
+// `v` = valor EXACTO de la opción en Notion (sin acentos, para no crear
+// opciones duplicadas al sincronizar). `label` = como se muestra en la app.
+// `bg`/`fg` = colores del chip, alineados con los colores de Notion.
+export const SEEDING_STATUS = [
+  { v: 'Por contactar', label: 'Por contactar', bg: '#EFEDF1', fg: '#6B6873' },
+  { v: 'Contactada',    label: 'Contactada',    bg: '#FBF0D0', fg: '#8A6D1F' },
+  { v: 'Respondio',     label: 'Respondió',     bg: '#DCE6FB', fg: '#3A5BB0' },
+  { v: 'Enviado',       label: 'Enviado',       bg: '#FBE3CE', fg: '#9C5A22' },
+  { v: 'Publico',       label: 'Publicó',       bg: '#D6F0DE', fg: '#2E7D4F' },
+  { v: 'Descartada',    label: 'Descartada',    bg: '#FBDCE4', fg: '#9B4D67' },
+];
+export const SEEDING_CITIES = [
+  { v: 'Guadalajara', label: 'Guadalajara' },
+  { v: 'Queretaro',   label: 'Querétaro' },
+  { v: 'CDMX',        label: 'CDMX' },
+  { v: 'Puebla',      label: 'Puebla' },
+  { v: 'Mexico',      label: 'México' },
+  { v: 'Otro',        label: 'Otro' },
+];
