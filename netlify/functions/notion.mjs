@@ -21,8 +21,8 @@ export default async (req) => {
     return json(503, { code: 'no_token', message: 'Falta NOTION_TOKEN en Netlify (Site configuration → Environment variables).' });
   }
 
-  const pin = process.env.KYN_PIN || '';
-  if (pin && (req.headers.get('x-kyn-pin') || '') !== pin) {
+  const pin = (process.env.KYN_PIN || '').trim();
+  if (pin && (req.headers.get('x-kyn-pin') || '').trim() !== pin) {
     return json(401, { code: 'need_pin', message: 'PIN incorrecto o faltante.' });
   }
 

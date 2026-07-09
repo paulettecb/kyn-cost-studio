@@ -17,25 +17,47 @@ export const NOTION_DBS = {
 
 const r2 = (n) => (n == null || isNaN(n) ? null : Math.round(n * 100) / 100);
 
-// Si el sitio público (Netlify) tiene KYN_PIN configurado, el puente pide un
-// PIN: se pregunta una sola vez y se recuerda en este navegador. Con varias
-// peticiones en paralelo solo se abre un prompt (todas esperan el mismo).
-let pinPrompt = null;
-function askPin() {
-  if (!pinPrompt) {
-    pinPrompt = Promise.resolve().then(() => {
-      const p = window.prompt('PIN de KYN Cost Studio (el valor de KYN_PIN en Netlify):') || '';
+// Si el sitio público (Netlify) tiene KYN_PIN configurado, el puente responde
+// 401 need_pin hasta recibir el PIN correcto. Reglas para no hacer spam:
+//  - un solo prompt aunque haya varias peticiones fallando en paralelo
+//    (las demás reutilizan el PIN recién tecleado sin volver a preguntar);
+//  - el reintento usa el PIN tecleado directamente, así funciona aunque el
+//    navegador bloquee localStorage (p. ej. navegación privada);
+//  - cancelar el prompt deja de insistir durante esta sesión;
+//  - solo se vuelve a preguntar si el PIN que falló es el mismo que ya se tenía.
+let pinMemo = null;
+let pinDeclined = false;
+let pinPromptOpen = null;
+
+function currentPin() {
+  if (pinMemo != null) return pinMemo;
+  try { return localStorage.getItem('kyn-pin') || ''; } catch (e) { return ''; }
+}
+
+function askPin(failedPin) {
+  const known = currentPin();
+  if (known && known !== failedPin) return Promise.resolve(known);
+  if (pinDeclined) return Promise.resolve(null);
+  if (!pinPromptOpen) {
+    pinPromptOpen = Promise.resolve().then(() => {
+      pinPromptOpen = null;
+      // mientras esta petición esperaba su turno, otra pudo conseguir el PIN
+      const fresh = currentPin();
+      if (fresh && fresh !== failedPin) return fresh;
+      if (pinDeclined) return null;
+      const raw = window.prompt('PIN de KYN Cost Studio (el valor de KYN_PIN en Netlify):');
+      if (raw == null) { pinDeclined = true; return null; }
+      const p = raw.trim();
+      pinMemo = p;
       try { localStorage.setItem('kyn-pin', p); } catch (e) {}
-      pinPrompt = null;
       return p;
     });
   }
-  return pinPrompt;
+  return pinPromptOpen;
 }
 
-async function api(path, method = 'GET', body = null, retried = false) {
-  let pin = '';
-  try { pin = localStorage.getItem('kyn-pin') || ''; } catch (e) {}
+async function api(path, method = 'GET', body = null, pinOverride = null) {
+  const pin = pinOverride != null ? pinOverride : currentPin();
   const res = await fetch('/api/notion/' + path, {
     method,
     headers: { 'Content-Type': 'application/json', 'X-KYN-Pin': pin },
@@ -43,9 +65,9 @@ async function api(path, method = 'GET', body = null, retried = false) {
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
-    if (res.status === 401 && json && json.code === 'need_pin' && !retried) {
-      await askPin();
-      return api(path, method, body, true);
+    if (res.status === 401 && json && json.code === 'need_pin' && pinOverride == null) {
+      const fresh = await askPin(pin);
+      if (fresh != null && fresh !== pin) return api(path, method, body, fresh);
     }
     const msg = json && json.message ? json.message : 'Error ' + res.status;
     const err = new Error(msg);
