@@ -41,6 +41,18 @@ En la sección **Lista de precios** hay dos vistas:
 
 Un **bundle** es un producto armado con *otros productos* (por ejemplo, collar + correa). Se crea como cualquier producto (categoría *Bundles*) y en su **receta** eliges la pestañita **Productos** para agregar los componentes. Su costo es la suma del costo real de cada componente (más empaque u otros extras que le pongas), se recalcula solo si cambia el costo de un componente, y aparece en la lista de precios y la calculadora como cualquier producto. También puedes mezclar: productos + materiales sueltos en la misma receta (la merma solo aplica a los materiales).
 
+## Crecimiento
+
+La sección **Crecimiento** mide los seguidores de **@kynstudio** y **@soykenna** (Instagram y TikTok) con fecha, guardados en la base *KYN Crecimiento* de Notion (vive debajo de la página KYN Cost Studio, así que hereda la conexión de la integración).
+
+- **+ Registrar medición** abre un modal con la fecha y las 4 cuentas: llenas las que quieras (las vacías no se registran) y si repites cuenta+fecha se actualiza en vez de duplicarse.
+- Cada tarjeta muestra el número actual, cuánto cambió desde la medición anterior, el cambio de ~30 días y la mini-gráfica de tendencia.
+- Los números los capturas tú (Instagram/TikTok no permiten leerlos automáticamente); el historial completo se puede editar o borrar fila por fila.
+
+## En tu iPhone (pantalla de inicio)
+
+La app tiene ícono propio (el corazón KYN 💗) y es instalable: en Safari abre el sitio → botón compartir → **Agregar a pantalla de inicio**. Se abre a pantalla completa, como app.
+
 ## Seeding
 
 La sección **Seeding** lleva el control de las cuentas para colaboración (la base *KYN Seeding Tracker* de Notion). Cada cuenta avanza por sus pasos con el estatus: **Por contactar → Contactada → Respondió → Enviado → Publicó** (o *Descartada*).

@@ -13,6 +13,9 @@ export const NOTION_DBS = {
   // nativas de Notion (no un blob JSON) para que se vea y edite bien desde
   // el celular en Notion. Ver seedProps / parseSeedRow más abajo.
   seeding: '8a8aa4d7-6054-434c-9632-6ee1683ef392',
+  // KYN Crecimiento — mediciones de seguidores. También columnas nativas.
+  // Vive debajo de la página KYN Cost Studio, así que hereda la conexión.
+  growth: 'd8cd7267-b81b-4c30-b591-75014f417cc1',
 };
 
 const r2 = (n) => (n == null || isNaN(n) ? null : Math.round(n * 100) / 100);
@@ -173,7 +176,9 @@ const readSel = (pr) => (pr && pr.select ? pr.select.name : '');
 const readNum = (pr) => (pr && pr.number != null ? pr.number : null);
 const readUrl = (pr) => (pr && pr.url) || '';
 const readTxt = (pr) => (pr && pr.rich_text ? plain(pr.rich_text) : '');
-const readDate = (pr) => (pr && pr.date && pr.date.start ? pr.date.start : '');
+// Notion puede devolver la fecha con hora ("2026-07-09T09:00:00.000-06:00")
+// si la fila se editó desde Notion; la app solo maneja días → se recorta.
+const readDate = (pr) => (pr && pr.date && pr.date.start ? String(pr.date.start).slice(0, 10) : '');
 
 function parseSeedRow(page) {
   const p = page.properties || {};
@@ -194,6 +199,36 @@ function parseSeedRow(page) {
       fechaContacto: readDate(p['Fecha de contacto']),
       colab: readTxt(p['Colaboración']),
     },
+  };
+}
+
+// ---------- Crecimiento (columnas nativas de Notion) ----------
+
+function parseGrowthRow(page) {
+  const p = page.properties || {};
+  return {
+    pageId: page.id,
+    obj: {
+      id: page.id,
+      createdTime: page.created_time || '',
+      fecha: readDate(p.Fecha),
+      cuenta: readSel(p.Cuenta),
+      plataforma: readSel(p.Plataforma),
+      seguidores: readNum(p.Seguidores),
+      notas: readTxt(p.Notas),
+    },
+  };
+}
+
+function growthProps(g) {
+  const seg = g.seguidores === '' || g.seguidores == null || isNaN(g.seguidores) ? null : Number(g.seguidores);
+  return {
+    Registro: { title: rt([g.cuenta, g.plataforma, g.fecha].filter(Boolean).join(' · ') || 'Medición') },
+    Fecha: g.fecha ? { date: { start: g.fecha } } : { date: null },
+    Cuenta: g.cuenta ? { select: { name: g.cuenta } } : { select: null },
+    Plataforma: g.plataforma ? { select: { name: g.plataforma } } : { select: null },
+    Seguidores: { number: seg },
+    Notas: { rich_text: rt(g.notas || '') },
   };
 }
 
@@ -230,9 +265,16 @@ export async function loadDB(C) {
   } catch (e) {
     console.warn('KYN Seeding Tracker no disponible en Notion — la sección Seeding no sincronizará hasta conectar la base a la integración.', e);
   }
+  let growthPages = null;
+  try {
+    growthPages = await queryAll(NOTION_DBS.growth);
+  } catch (e) {
+    console.warn('KYN Crecimiento no disponible en Notion — la sección Crecimiento no sincronizará hasta conectar la base a la integración.', e);
+  }
   const coll = (pages) => pages.map(parseDataRow).filter(Boolean);
   const mats = coll(matPages), purs = coll(purPages), prods = coll(prodPages);
   const seeds = (seedPages || []).map(parseSeedRow);
+  const grows = (growthPages || []).map(parseGrowthRow);
   const setRow = coll(setPages)[0] || null;
   if (!setRow) throw new Error('No se encontró la fila de ajustes en Notion.');
 
@@ -241,6 +283,7 @@ export async function loadDB(C) {
     purchases: purs.map((x) => x.obj).sort((a, b) => (b.date || '').localeCompare(a.date || '')),
     products: prods.map((x) => x.obj).sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || '')),
     seeding: seeds.map((x) => x.obj).sort((a, b) => (b.createdTime || '').localeCompare(a.createdTime || '')),
+    growth: grows.map((x) => x.obj).sort((a, b) => (b.fecha || '').localeCompare(a.fecha || '')),
     settings: setRow.obj,
   };
 
@@ -250,12 +293,14 @@ export async function loadDB(C) {
       purchases: new Map(purs.map((x) => [x.obj.id, x.pageId])),
       products: new Map(prods.map((x) => [x.obj.id, x.pageId])),
       seeding: new Map(seeds.map((x) => [x.obj.id, x.pageId])),
+      growth: new Map(grows.map((x) => [x.obj.id, x.pageId])),
     },
     settingsPageId: setRow.pageId,
-    // Sin acceso a la base de seeding no se escribe nada en ella (evita
-    // crear duplicados o archivar filas por error con un estado incompleto).
+    // Sin acceso a una base no se escribe nada en ella (evita crear
+    // duplicados o archivar filas por error con un estado incompleto).
     seedingDisabled: seedPages == null,
-    propSnaps: { materials: new Map(), purchases: new Map(), products: new Map(), seeding: new Map(), settings: '' },
+    growthDisabled: growthPages == null,
+    propSnaps: { materials: new Map(), purchases: new Map(), products: new Map(), seeding: new Map(), growth: new Map(), settings: '' },
   };
   snapshotAll(db, ctx, C);
   return { db, ctx };
@@ -266,6 +311,7 @@ export function snapshotAll(db, ctx, C) {
   ctx.propSnaps.purchases = new Map(db.purchases.map((p) => [p.id, JSON.stringify(purProps(p, C))]));
   ctx.propSnaps.products = new Map(db.products.map((p) => [p.id, JSON.stringify(prodProps(p, C, db))]));
   ctx.propSnaps.seeding = new Map((db.seeding || []).map((s) => [s.id, JSON.stringify(seedProps(s))]));
+  ctx.propSnaps.growth = new Map((db.growth || []).map((g) => [g.id, JSON.stringify(growthProps(g))]));
   ctx.propSnaps.settings = JSON.stringify(db.settings);
 }
 
@@ -311,6 +357,7 @@ export async function saveDB(db, ctx, C) {
   writes += await syncColl('purchases', db.purchases, (p) => purProps(p, C), ctx);
   writes += await syncColl('products', db.products, (p) => prodProps(p, C, db), ctx);
   if (!ctx.seedingDisabled) writes += await syncColl('seeding', db.seeding || [], (s) => seedProps(s), ctx);
+  if (!ctx.growthDisabled) writes += await syncColl('growth', db.growth || [], (g) => growthProps(g), ctx);
   const setJson = JSON.stringify(db.settings);
   if (setJson !== ctx.propSnaps.settings) {
     await api('pages/' + ctx.settingsPageId, 'PATCH', { properties: { Data: { rich_text: rt(setJson) } } });
