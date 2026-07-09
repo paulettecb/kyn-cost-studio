@@ -3,6 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KYN Cost Studio</title>
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<link rel="icon" href="./icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#FBFAF7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="KYN Cost">
 <script src="./support.js"></script>
 </head>
 <body>
@@ -825,6 +834,79 @@
       </section>
       </sc-if>
 
+      <!-- ============ CRECIMIENTO ============ -->
+      <sc-if value="{{ vGrowth }}" hint-placeholder-val="{{ false }}">
+      <section data-screen-label="Crecimiento" style="display:flex;flex-direction:column;gap:18px;animation:kynFade 240ms ease-out">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+          <div>
+            <h1 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em">Crecimiento</h1>
+            <p style="margin:4px 0 0;color:var(--ink-500);font-size:14px">Seguidores de @kynstudio y @soykenna en Instagram y TikTok, medidos con fecha.</p>
+          </div>
+          <button class="kyn-btn kyn-btn--primary kyn-btn--md" style="margin-left:auto" onClick="{{ goNewGrowth }}">+ Registrar medición</button>
+        </div>
+
+        <sc-if value="{{ growthSyncOff }}" hint-placeholder-val="{{ false }}">
+          <div style="{{ growthSyncOffStyle }}">La base «KYN Crecimiento» no está disponible en Notion, así que esta sección no se está guardando. Revisa que la integración tenga acceso a la página KYN Cost Studio y recarga.</div>
+        </sc-if>
+
+        <div style="{{ growthGridStyle }}">
+          <sc-for list="{{ growthCards }}" as="g" hint-placeholder-count="4">
+            <div class="kyn-card" style="padding:20px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <span style="{{ g.cuentaChipStyle }}">{{ g.cuenta }}</span>
+                <span style="font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-500)">{{ g.plataforma }}</span>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:8px">
+                <span style="font-size:32px;font-weight:800;letter-spacing:-0.02em;line-height:1">{{ g.current }}</span>
+                <span style="font-size:12.5px;color:var(--ink-500)">seguidores</span>
+              </div>
+              <sc-if value="{{ g.hasDeltas }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;flex-direction:column;gap:3px;font-size:13px">
+                  <sc-if value="{{ g.deltaPrev }}"><div><span style="{{ g.deltaPrevStyle }}">{{ g.deltaPrev }}</span> <span style="color:var(--ink-500)">desde la medición anterior</span></div></sc-if>
+                  <sc-if value="{{ g.delta30 }}"><div><span style="{{ g.delta30Style }}">{{ g.delta30 }}</span> <span style="color:var(--ink-500)">{{ g.rangeLabel }}</span></div></sc-if>
+                </div>
+              </sc-if>
+              <sc-if value="{{ g.hasSpark }}" hint-placeholder-val="{{ true }}">
+                <svg viewBox="0 0 220 56" style="width:100%;height:56px;overflow:visible" role="img" aria-label="{{ g.sparkAria }}">
+                  <!-- sc-camel-* en los atributos geométricos: el parser de SVG valida
+                       números y se quejaría en consola del "{{ … }}" crudo -->
+                  <polyline fill="none" stroke="#5562A4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" sc-camel-points="{{ g.sparkPoints }}"></polyline>
+                  <sc-for list="{{ g.sparkDots }}" as="d"><circle sc-camel-cx="{{ d.x }}" sc-camel-cy="{{ d.y }}" sc-camel-r="{{ d.r }}" fill="{{ d.fill }}"><title>{{ d.tip }}</title></circle></sc-for>
+                </svg>
+              </sc-if>
+              <sc-if value="{{ g.empty }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:13px;color:var(--ink-500);background:var(--oat);border-radius:10px;padding:10px 12px">Sin mediciones aún — regístrala con “+ Registrar medición”.</div>
+              </sc-if>
+              <sc-if value="{{ g.lastDate }}"><span style="font-size:11.5px;color:var(--ink-300)">Última medición: {{ g.lastDate }}</span></sc-if>
+            </div>
+          </sc-for>
+        </div>
+
+        <div class="kyn-card" style="padding:22px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+            <h2 style="margin:0;font-size:16px;font-weight:700">Historial de mediciones</h2>
+            <span style="font-size:12.5px;color:var(--ink-500)">{{ growthCount }}</span>
+          </div>
+          <sc-if value="{{ growthEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:28px 0;text-align:center;color:var(--ink-500);font-size:14px">Todavía no hay mediciones. Registra la primera y aquí verás el historial completo.</div>
+          </sc-if>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ growthRows }}" as="r" hint-placeholder-count="6">
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid #F3F1F5;font-size:13.5px;flex-wrap:wrap">
+                <span style="color:var(--ink-500);font-size:12.5px;width:88px;flex:none">{{ r.fecha }}</span>
+                <span style="{{ r.cuentaChipStyle }}">{{ r.cuenta }}</span>
+                <span style="font-size:12px;color:var(--ink-500);width:72px">{{ r.plataforma }}</span>
+                <span style="font-weight:700;margin-left:auto">{{ r.seguidores }}</span>
+                <sc-if value="{{ r.delta }}"><span style="{{ r.deltaStyle }}">{{ r.delta }}</span></sc-if>
+                <button onClick="{{ r.onEdit }}" title="Editar medición" aria-label="{{ r.editAria }}" style="background:none;border:none;cursor:pointer;color:var(--ink-500);font-size:14px;padding:4px" style-hover="color:var(--periwinkle-700)">✎</button>
+                <button onClick="{{ r.onDelete }}" title="Eliminar medición" aria-label="{{ r.delAria }}" style="background:none;border:none;cursor:pointer;color:var(--ink-500);font-size:14px;padding:4px" style-hover="color:var(--danger)">✕</button>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+      </sc-if>
+
       <!-- ============ AJUSTES ============ -->
       <sc-if value="{{ vSettings }}" hint-placeholder-val="{{ false }}">
       <section data-screen-label="Ajustes" style="display:flex;flex-direction:column;gap:20px;max-width:860px;animation:kynFade 240ms ease-out">
@@ -1035,6 +1117,55 @@
           <sc-if value="{{ dsfIsEdit }}"><button class="kyn-btn kyn-btn--ghost kyn-btn--sm" onClick="{{ dsfDelete }}" style="color:var(--danger)">Eliminar cuenta</button></sc-if>
         </sc-if>
 
+        <!-- Growth capture drawer: una fecha, las 4 series de una vez -->
+        <sc-if value="{{ dGrowthCapture }}" hint-placeholder-val="{{ false }}">
+          <p style="margin:0;font-size:13px;color:var(--ink-500);line-height:1.5">Anota los seguidores que ves hoy en cada app. Puedes llenar solo las que quieras — las vacías no se registran.</p>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label style="font-size:13px;font-weight:600">Fecha de la medición</label>
+            <input class="kyn-input" type="date" value="{{ dgc.fecha }}" onChange="{{ dgcSetFecha }}" style="padding:10px 13px">
+          </div>
+          <sc-for list="{{ dgcFields }}" as="f" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <label style="font-size:13px;font-weight:600">{{ f.label }}</label>
+              <input class="kyn-input" type="number" min="0" step="1" inputmode="numeric" value="{{ f.value }}" onChange="{{ f.onChange }}" placeholder="{{ f.placeholder }}" aria-label="{{ f.aria }}" style="padding:10px 13px">
+            </div>
+          </sc-for>
+          <sc-if value="{{ dgcError }}"><div style="font-size:13px;color:var(--danger);font-weight:600">{{ dgcError }}</div></sc-if>
+          <button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ dgcSave }}">Guardar medición</button>
+          <p style="margin:0;font-size:12px;color:var(--ink-500)">Si ya había una medición de la misma cuenta y fecha, se actualiza en lugar de duplicarse.</p>
+        </sc-if>
+
+        <!-- Growth edit drawer: una medición individual -->
+        <sc-if value="{{ dGrowthEdit }}" hint-placeholder-val="{{ false }}">
+          <div style="{{ formGridStyle }}">
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+              <label style="font-size:13px;font-weight:600">Fecha</label>
+              <input class="kyn-input" type="date" value="{{ dge.fecha }}" onChange="{{ dgeSet.fecha }}" style="padding:10px 13px">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+              <label style="font-size:13px;font-weight:600">Seguidores</label>
+              <input class="kyn-input" type="number" min="0" step="1" inputmode="numeric" value="{{ dge.seguidores }}" onChange="{{ dgeSet.seguidores }}" style="padding:10px 13px">
+            </div>
+          </div>
+          <div style="{{ formGridStyle }}">
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+              <label style="font-size:13px;font-weight:600">Cuenta</label>
+              <select class="kyn-input" value="{{ dge.cuenta }}" onChange="{{ dgeSet.cuenta }}" style="padding:10px 13px"><sc-for list="{{ dgeCuentaOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+              <label style="font-size:13px;font-weight:600">Plataforma</label>
+              <select class="kyn-input" value="{{ dge.plataforma }}" onChange="{{ dgeSet.plataforma }}" style="padding:10px 13px"><sc-for list="{{ dgePlatOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label style="font-size:13px;font-weight:600">Notas</label>
+            <textarea class="kyn-input" rows="2" value="{{ dge.notas }}" onChange="{{ dgeSet.notas }}" style="padding:10px 13px;resize:vertical;font-family:var(--font-sans)"></textarea>
+          </div>
+          <sc-if value="{{ dgeError }}"><div style="font-size:13px;color:var(--danger);font-weight:600">{{ dgeError }}</div></sc-if>
+          <button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ dgeSave }}">Guardar cambios</button>
+          <button class="kyn-btn kyn-btn--ghost kyn-btn--sm" onClick="{{ dgeDelete }}" style="color:var(--danger)">Eliminar medición</button>
+        </sc-if>
+
       </div>
     </div>
   </sc-if>
@@ -1062,7 +1193,7 @@
 </sc-if>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{
-  &quot;startView&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;dashboard&quot;, &quot;purchases&quot;, &quot;materials&quot;, &quot;products&quot;, &quot;calculator&quot;, &quot;prices&quot;, &quot;seeding&quot;, &quot;settings&quot;], &quot;default&quot;: &quot;dashboard&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Comportamiento&quot; },
+  &quot;startView&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;dashboard&quot;, &quot;purchases&quot;, &quot;materials&quot;, &quot;products&quot;, &quot;calculator&quot;, &quot;prices&quot;, &quot;seeding&quot;, &quot;growth&quot;, &quot;settings&quot;], &quot;default&quot;: &quot;dashboard&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Comportamiento&quot; },
   &quot;forceMobile&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Comportamiento&quot; }
 }">
 class Component extends DCLogic {
@@ -1170,6 +1301,7 @@ class Component extends DCLogic {
       list: 'M8 6h13M8 12h13M8 18h13M3.5 6h0M3.5 12h0M3.5 18h0',
       gear: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm8.5 3a8.5 8.5 0 0 0-.15-1.6l2-1.55-2-3.46-2.35 1a8.6 8.6 0 0 0-2.75-1.6L14.9 2.3H9.1l-.35 2.5a8.6 8.6 0 0 0-2.75 1.6l-2.35-1-2 3.46 2 1.55A8.5 8.5 0 0 0 3.5 12c0 .55.05 1.08.15 1.6l-2 1.55 2 3.46 2.35-1a8.6 8.6 0 0 0 2.75 1.6l.35 2.5h5.8l.35-2.5a8.6 8.6 0 0 0 2.75-1.6l2.35 1 2-3.46-2-1.55c.1-.52.15-1.05.15-1.6Z',
       seed: 'M22 2 11 13M22 2l-7 20-4-9-9-4Z',
+      trend: 'M3 17l6-6 4 4 8-8M15 7h6v6',
     };
     return R.createElement('svg', { viewBox: '0 0 24 24', width: s, height: s, fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flex: 'none' } },
       R.createElement('path', { d: paths[name] || paths.home }));
@@ -1296,6 +1428,51 @@ class Component extends DCLogic {
       this.nav('productDetail', { id: p.id });
       this.setState({ drawer: { type: 'recipe', id: p.id } });
     }
+  };
+
+  // ---------- crecimiento ops ----------
+  // Geometría de la mini-gráfica (línea de tendencia): últimas 12 mediciones
+  // en un viewBox fijo de 220×56. Devuelve null con menos de 2 puntos.
+  spark(serie) {
+    const pts = (serie || []).slice(-12);
+    if (pts.length < 2) return null;
+    const W = 220, H = 56, P = 6;
+    const nums = pts.map((g) => +g.seguidores);
+    const min = Math.min(...nums), max = Math.max(...nums);
+    const xs = pts.map((_, i) => P + (i * (W - 2 * P)) / (pts.length - 1));
+    const ys = nums.map((v) => (max === min ? H / 2 : H - P - ((v - min) * (H - 2 * P)) / (max - min)));
+    return {
+      points: xs.map((x, i) => x.toFixed(1) + ',' + ys[i].toFixed(1)).join(' '),
+      dots: pts.map((g, i) => ({
+        x: xs[i].toFixed(1), y: ys[i].toFixed(1),
+        r: i === pts.length - 1 ? '3.5' : '2.5',
+        fill: i === pts.length - 1 ? '#E85DA0' : '#5562A4',
+        tip: this.C.fmtDate(g.fecha) + ': ' + this.C.fmtInt(g.seguidores),
+      })),
+    };
+  }
+
+  saveGrowthCapture = () => {
+    const d = this.state.drawer, f = d.form, db = this.state.db;
+    if (!f.fecha) { d.error = 'Elige la fecha de la medición.'; this.up(); return; }
+    const entries = [];
+    for (const a of this.C.GROWTH_ACCOUNTS) {
+      const raw = f.values[a.cuenta + '|' + a.plataforma];
+      if (raw == null || String(raw).trim() === '') continue;
+      const n = +raw;
+      if (isNaN(n) || n < 0) { d.error = 'Revisa el número de ' + a.cuenta + ' · ' + a.plataforma + '.'; this.up(); return; }
+      entries.push({ cuenta: a.cuenta, plataforma: a.plataforma, seguidores: Math.round(n) });
+    }
+    if (!entries.length) { d.error = 'Llena al menos una de las cuentas.'; this.up(); return; }
+    if (!db.growth) db.growth = [];
+    for (const e of entries) {
+      // misma cuenta+plataforma+fecha → se actualiza en vez de duplicar
+      const existing = db.growth.find((g) => g.fecha === f.fecha && g.cuenta === e.cuenta && g.plataforma === e.plataforma);
+      if (existing) existing.seguidores = e.seguidores;
+      else db.growth.push({ id: this.C.uid(), fecha: f.fecha, cuenta: e.cuenta, plataforma: e.plataforma, seguidores: e.seguidores, notas: '', createdTime: new Date().toISOString() });
+    }
+    this.setState({ drawer: null });
+    this.showToast('Medición registrada 📈');
   };
 
   // ---------- seeding ops ----------
@@ -1433,7 +1610,7 @@ class Component extends DCLogic {
     const navDef = [
       ['dashboard', 'Inicio', 'home'], ['purchases', 'Compras', 'cart'], ['materials', 'Materiales', 'box'],
       ['products', 'Productos', 'tag'], ['calculator', 'Calculadora', 'calc'], ['prices', 'Lista de precios', 'list'],
-      ['seeding', 'Seeding', 'seed'],
+      ['seeding', 'Seeding', 'seed'], ['growth', 'Crecimiento', 'trend'],
     ];
     const viewGroup = { purchaseDetail: 'purchases', purchaseForm: 'purchases', productDetail: 'products' }[st.view] || st.view;
     const navBtn = ([id, label, ic]) => {
@@ -1447,11 +1624,11 @@ class Component extends DCLogic {
     };
     const navMain = navDef.map(navBtn);
     const navBottom = [navBtn(['settings', 'Ajustes', 'gear'])];
-    const navMobile = [['dashboard', 'Inicio', 'home'], ['purchases', 'Compras', 'cart'], ['materials', 'Material', 'box'], ['products', 'Productos', 'tag'], ['prices', 'Precios', 'list'], ['seeding', 'Seeding', 'seed']].map(([id, label, ic]) => {
+    const navMobile = [['dashboard', 'Inicio', 'home'], ['purchases', 'Compras', 'cart'], ['materials', 'Material', 'box'], ['products', 'Productos', 'tag'], ['prices', 'Precios', 'list'], ['seeding', 'Seeding', 'seed'], ['growth', 'Crecer', 'trend']].map(([id, label, ic]) => {
       const active = viewGroup === id;
       return {
         label, icon: this.icon(ic, 21), onClick: () => this.nav(id),
-        style: 'display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;cursor:pointer;font-family:var(--font-sans);padding:6px 10px;border-radius:12px;min-width:56px;' +
+        style: 'display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;cursor:pointer;font-family:var(--font-sans);padding:6px 4px;border-radius:12px;min-width:44px;' +
           (active ? 'color:var(--periwinkle-700)' : 'color:var(--ink-500)'),
       };
     });
@@ -1467,7 +1644,7 @@ class Component extends DCLogic {
       prodGridStyle: 'display:grid;gap:16px;grid-template-columns:' + (isMobile ? '1fr' : 'repeat(auto-fill,minmax(280px,1fr))'),
       vDash: st.view === 'dashboard', vPurchases: st.view === 'purchases', vPurchaseDetail: st.view === 'purchaseDetail',
       vPurchaseForm: st.view === 'purchaseForm', vMaterials: st.view === 'materials', vProducts: st.view === 'products',
-      vProductDetail: st.view === 'productDetail', vCalc: st.view === 'calculator', vPrices: st.view === 'prices', vSeeding: st.view === 'seeding', vSettings: st.view === 'settings',
+      vProductDetail: st.view === 'productDetail', vCalc: st.view === 'calculator', vPrices: st.view === 'prices', vSeeding: st.view === 'seeding', vGrowth: st.view === 'growth', vSettings: st.view === 'settings',
       goPurchases: () => this.nav('purchases'), goProducts: () => this.nav('products'),
       goCalc: () => this.nav('calculator'), goSettings: () => this.nav('settings'),
       goNewPurchase: () => { this.setState({ pf: this.blankPurchaseForm(), pfStep: 1, pfErrors: [] }); this.nav('purchaseForm'); },
@@ -1480,7 +1657,7 @@ class Component extends DCLogic {
       confirmYes: () => { const a = st.confirm && st.confirm.action; this.setState({ confirm: null }); if (a) a(); },
       closeDrawer: () => this.setState({ drawer: null }),
       drawerOpen: !!st.drawer,
-      drawerTitle: '', dMaterial: false, dProductForm: false, dRecipe: false, dSeedForm: false,
+      drawerTitle: '', dMaterial: false, dProductForm: false, dRecipe: false, dSeedForm: false, dGrowthCapture: false, dGrowthEdit: false,
       drawerPanelStyle: isMobile
         ? 'position:fixed;left:0;right:0;bottom:0;z-index:95;max-height:88dvh;background:var(--paper);border-radius:20px 20px 0 0;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:kynSheetUp 240ms ease-out;padding-bottom:env(safe-area-inset-bottom)'
         : 'position:fixed;top:0;right:0;bottom:0;z-index:95;width:min(540px,92vw);background:var(--paper);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:kynSlideIn 240ms ease-out',
@@ -2097,6 +2274,61 @@ class Component extends DCLogic {
       vals.seedEmpty = !rows.length;
     }
 
+    // ============ CRECIMIENTO ============
+    if (vals.vGrowth) {
+      const chipFor = (cuenta) => 'font-size:12px;font-weight:700;border-radius:99px;padding:3px 10px;' +
+        (cuenta === '@soykenna' ? 'background:#EDE4FB;color:#6B4D9B' : 'background:#FBDCE4;color:#9B4D67');
+      const deltaTxt = (n) => (n == null ? '' : (n > 0 ? '+' : '') + C.fmtInt(n));
+      const deltaStyle = (n) => 'font-weight:700;color:' + (n > 0 ? 'var(--success)' : (n < 0 ? 'var(--danger)' : 'var(--ink-500)'));
+      vals.goNewGrowth = () => this.setState({ drawer: { type: 'growthCapture', form: { fecha: today, values: {} } } });
+      vals.growthGridStyle = 'display:grid;gap:14px;grid-template-columns:' + (isMobile ? '1fr' : '1fr 1fr');
+      vals.growthCards = C.GROWTH_ACCOUNTS.map((a) => {
+        const g = C.growthStats(db, a.cuenta, a.plataforma);
+        const spark = this.spark(g.serie);
+        const pctTxt = g.pct30 != null ? ' (' + (g.pct30 > 0 ? '+' : '') + C.round2(g.pct30 * 100) + '%)' : '';
+        return {
+          cuenta: a.cuenta, plataforma: a.plataforma, cuentaChipStyle: chipFor(a.cuenta),
+          current: g.last ? C.fmtInt(g.last.seguidores) : '—',
+          hasDeltas: g.deltaPrev != null || g.delta30 != null,
+          deltaPrev: g.deltaPrev != null ? deltaTxt(g.deltaPrev) : '',
+          deltaPrevStyle: deltaStyle(g.deltaPrev),
+          delta30: g.delta30 != null ? deltaTxt(g.delta30) + pctTxt : '',
+          delta30Style: deltaStyle(g.delta30),
+          rangeLabel: g.full30 ? 'en los últimos 30 días' : (g.base30 ? 'desde ' + C.fmtDate(g.base30.fecha) : ''),
+          hasSpark: !!spark,
+          sparkPoints: spark ? spark.points : '',
+          sparkDots: spark ? spark.dots : [],
+          sparkAria: 'Tendencia de seguidores de ' + a.cuenta + ' en ' + a.plataforma,
+          empty: !g.last,
+          lastDate: g.last ? C.fmtDate(g.last.fecha) : '',
+        };
+      });
+      const hist = [...(db.growth || [])].sort((a, b) =>
+        (b.fecha || '').localeCompare(a.fecha || '') || (b.createdTime || '').localeCompare(a.createdTime || ''));
+      vals.growthCount = hist.length + (hist.length === 1 ? ' medición' : ' mediciones');
+      vals.growthEmpty = !hist.length;
+      vals.growthRows = hist.slice(0, 80).map((g) => {
+        const serie = C.growthSeries(db, g.cuenta, g.plataforma);
+        const idx = serie.indexOf(g);
+        const prev = idx > 0 ? serie[idx - 1] : null;
+        const delta = prev != null ? +g.seguidores - +prev.seguidores : null;
+        const who = (g.cuenta || '') + ' (' + (g.plataforma || '') + ') del ' + C.fmtDate(g.fecha);
+        return {
+          fecha: C.fmtDate(g.fecha), cuenta: g.cuenta || '—', cuentaChipStyle: chipFor(g.cuenta),
+          plataforma: g.plataforma || '—', seguidores: C.fmtInt(g.seguidores),
+          delta: delta != null ? deltaTxt(delta) : '',
+          deltaStyle: deltaStyle(delta) + ';font-size:12px',
+          editAria: 'Editar medición de ' + who, delAria: 'Eliminar medición de ' + who,
+          onEdit: () => this.setState({ drawer: { type: 'growthEdit', id: g.id } }),
+          onDelete: () => this.ask('Eliminar medición', 'Se eliminará la medición de ' + who + '. En Notion quedará recuperable en la papelera.', 'Eliminar', () => {
+            db.growth = (db.growth || []).filter((x) => x.id !== g.id); this.up(); this.showToast('Medición eliminada');
+          }),
+        };
+      });
+      vals.growthSyncOff = st.syncMode === 'notion' && !!(this._nctx && this._nctx.growthDisabled);
+      vals.growthSyncOffStyle = this.alertStyle('warn').replace('cursor:pointer;', '');
+    }
+
     // ============ DRAWERS ============
     const d = st.drawer;
     if (d && d.type === 'material') {
@@ -2250,7 +2482,54 @@ class Component extends DCLogic {
       vals.dsfSave = this.saveSeedForm;
       vals.dsfDelete = this.deleteSeedForm;
     }
-    if (d && !vals.dMaterial && !vals.dProductForm && !vals.dRecipe && !vals.dSeedForm) vals.drawerOpen = false;
+    if (d && d.type === 'growthCapture') {
+      vals.dGrowthCapture = true; vals.drawerTitle = 'Registrar medición';
+      const f = d.form;
+      vals.dgc = { fecha: f.fecha || today };
+      vals.dgcSetFecha = (e) => { f.fecha = e.target.value; d.error = ''; this.up(); };
+      vals.dgcFields = C.GROWTH_ACCOUNTS.map((a) => {
+        const key = a.cuenta + '|' + a.plataforma;
+        const last = C.growthStats(db, a.cuenta, a.plataforma).last;
+        return {
+          label: a.cuenta + ' · ' + a.plataforma,
+          value: f.values[key] == null ? '' : String(f.values[key]),
+          placeholder: last ? 'última: ' + C.fmtInt(last.seguidores) : 'seguidores hoy',
+          aria: 'Seguidores de ' + a.cuenta + ' en ' + a.plataforma,
+          onChange: (e) => { f.values[key] = e.target.value; d.error = ''; this.up(); },
+        };
+      });
+      vals.dgcError = d.error || '';
+      vals.dgcSave = this.saveGrowthCapture;
+    }
+    if (d && d.type === 'growthEdit') {
+      const g = (db.growth || []).find((x) => x.id === d.id);
+      if (g) {
+        vals.dGrowthEdit = true; vals.drawerTitle = 'Editar medición';
+        vals.dge = {
+          fecha: g.fecha || '', seguidores: g.seguidores == null ? '' : String(g.seguidores),
+          cuenta: g.cuenta || '', plataforma: g.plataforma || '', notas: g.notas || '',
+        };
+        const setG = (k, transform) => (e) => { g[k] = transform ? transform(e.target.value) : e.target.value; d.error = ''; this.up(); };
+        vals.dgeSet = {
+          fecha: setG('fecha'),
+          seguidores: setG('seguidores', (v) => (v === '' ? null : +v)),
+          cuenta: setG('cuenta'), plataforma: setG('plataforma'), notas: setG('notas'),
+        };
+        vals.dgeCuentaOptions = [...new Set(C.GROWTH_ACCOUNTS.map((a) => a.cuenta).concat(g.cuenta || []))].map((c) => ({ value: c, label: c }));
+        vals.dgePlatOptions = [...new Set(['Instagram', 'TikTok'].concat(g.plataforma || []))].map((c) => ({ value: c, label: c }));
+        vals.dgeError = d.error || '';
+        vals.dgeSave = () => {
+          if (!g.fecha) { d.error = 'La medición necesita fecha.'; this.up(); return; }
+          if (g.seguidores == null || isNaN(+g.seguidores) || +g.seguidores < 0) { d.error = 'Pon el número de seguidores.'; this.up(); return; }
+          this.setState({ drawer: null }); this.showToast('Medición actualizada');
+        };
+        vals.dgeDelete = () => this.ask('Eliminar medición', 'Se eliminará esta medición. En Notion quedará recuperable en la papelera.', 'Eliminar', () => {
+          db.growth = (db.growth || []).filter((x) => x.id !== g.id);
+          this.setState({ drawer: null }); this.up(); this.showToast('Medición eliminada');
+        });
+      }
+    }
+    if (d && !vals.dMaterial && !vals.dProductForm && !vals.dRecipe && !vals.dSeedForm && !vals.dGrowthCapture && !vals.dGrowthEdit) vals.drawerOpen = false;
 
     return vals;
   }

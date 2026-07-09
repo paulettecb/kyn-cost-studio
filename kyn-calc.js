@@ -433,7 +433,11 @@ export function makeSeedDB() {
   // real vive en Notion (KYN Seeding Tracker).
   const seeding = [];
 
-  const db = { materials, purchases, products, seeding, settings };
+  // Crecimiento SIN datos de ejemplo, igual que seeding: las mediciones de
+  // seguidores son datos reales que captura la usuaria; inventarlas confunde.
+  const growth = [];
+
+  const db = { materials, purchases, products, seeding, growth, settings };
 
   // Precios finales del Excel, con snapshot del costo actual
   const excelPrices = {
@@ -482,3 +486,55 @@ export const SEEDING_CITIES = [
   { v: 'Mexico',      label: 'México' },
   { v: 'Otro',        label: 'Otro' },
 ];
+
+// ---------- Crecimiento (seguidores) ----------
+// Las 4 series que se miden. `v` de cuenta/plataforma = valor EXACTO de la
+// opción en la base "KYN Crecimiento" de Notion.
+export const GROWTH_ACCOUNTS = [
+  { cuenta: '@kynstudio', plataforma: 'Instagram' },
+  { cuenta: '@kynstudio', plataforma: 'TikTok' },
+  { cuenta: '@soykenna',  plataforma: 'Instagram' },
+  { cuenta: '@soykenna',  plataforma: 'TikTok' },
+];
+
+export const fmtInt = (n) =>
+  n == null || isNaN(n) ? '—' : Math.round(+n).toLocaleString('es-MX');
+
+// suma días a una fecha 'YYYY-MM-DD' (en UTC, sin sorpresas de zona horaria)
+export function addDaysISO(iso, days) {
+  const d = new Date(iso + 'T00:00:00Z');
+  if (isNaN(d)) return '';
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+// Mediciones de una serie (cuenta+plataforma) ordenadas por fecha ascendente.
+// Si hay dos del mismo día gana la más reciente por orden de creación.
+export function growthSeries(db, cuenta, plataforma) {
+  return (db.growth || [])
+    .filter((g) => g.cuenta === cuenta && g.plataforma === plataforma && g.fecha && g.seguidores != null && !isNaN(+g.seguidores))
+    .sort((a, b) => (a.fecha === b.fecha ? (a.createdTime || '').localeCompare(b.createdTime || '') : a.fecha.localeCompare(b.fecha)));
+}
+
+// Resumen de una serie: último valor, cambio vs medición anterior y cambio
+// vs la medición más cercana a 30 días atrás (si existe alguna anterior).
+export function growthStats(db, cuenta, plataforma) {
+  const serie = growthSeries(db, cuenta, plataforma);
+  if (!serie.length) return { serie, last: null, prev: null, deltaPrev: null, base30: null, delta30: null, pct30: null };
+  const last = serie[serie.length - 1];
+  const prev = serie.length > 1 ? serie[serie.length - 2] : null;
+  const cutoff = addDaysISO(last.fecha, -30);
+  // referencia: la última medición con fecha ≤ 30 días antes de la última;
+  // si el historial es más corto, la más antigua disponible.
+  let base30 = null;
+  for (const g of serie) {
+    if (g === last) break;
+    if (g.fecha <= cutoff) base30 = g;
+  }
+  if (!base30 && serie.length > 1) base30 = serie[0];
+  const full30 = !!(base30 && base30.fecha <= cutoff);
+  const deltaPrev = prev ? +last.seguidores - +prev.seguidores : null;
+  const delta30 = base30 ? +last.seguidores - +base30.seguidores : null;
+  const pct30 = base30 && +base30.seguidores > 0 ? (+last.seguidores - +base30.seguidores) / +base30.seguidores : null;
+  return { serie, last, prev, deltaPrev, base30, delta30, pct30, full30 };
+}
