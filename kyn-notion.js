@@ -17,14 +17,36 @@ export const NOTION_DBS = {
 
 const r2 = (n) => (n == null || isNaN(n) ? null : Math.round(n * 100) / 100);
 
-async function api(path, method = 'GET', body = null) {
+// Si el sitio público (Netlify) tiene KYN_PIN configurado, el puente pide un
+// PIN: se pregunta una sola vez y se recuerda en este navegador. Con varias
+// peticiones en paralelo solo se abre un prompt (todas esperan el mismo).
+let pinPrompt = null;
+function askPin() {
+  if (!pinPrompt) {
+    pinPrompt = Promise.resolve().then(() => {
+      const p = window.prompt('PIN de KYN Cost Studio (el valor de KYN_PIN en Netlify):') || '';
+      try { localStorage.setItem('kyn-pin', p); } catch (e) {}
+      pinPrompt = null;
+      return p;
+    });
+  }
+  return pinPrompt;
+}
+
+async function api(path, method = 'GET', body = null, retried = false) {
+  let pin = '';
+  try { pin = localStorage.getItem('kyn-pin') || ''; } catch (e) {}
   const res = await fetch('/api/notion/' + path, {
     method,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-KYN-Pin': pin },
     body: body ? JSON.stringify(body) : undefined,
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
+    if (res.status === 401 && json && json.code === 'need_pin' && !retried) {
+      await askPin();
+      return api(path, method, body, true);
+    }
     const msg = json && json.message ? json.message : 'Error ' + res.status;
     const err = new Error(msg);
     err.status = res.status;
