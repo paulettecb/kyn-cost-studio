@@ -6,6 +6,12 @@ App de costos y precios de KYN Studio, conectada a Notion.
 
 Doble clic en **`Iniciar KYN Cost Studio.command`** — se abre la app en tu navegador (http://localhost:4321). Deja la ventana de Terminal abierta mientras la uses.
 
+## Usarla desde internet / el celular (Netlify)
+
+El sitio de Netlify también sincroniza con Notion: la función `netlify/functions/notion.mjs` hace de puente (igual que `server.js` en tu compu), leyendo el token de la variable de ambiente **`NOTION_TOKEN`** (en Netlify: *Site configuration → Environment variables*).
+
+**Recomendado:** agrega también una variable **`KYN_PIN`** con un PIN que tú elijas (por ejemplo `2468`). Sin PIN, cualquier persona que descubra la URL del sitio puede leer y escribir tus bases de Notion. Con PIN, la app te lo pregunta una sola vez en cada dispositivo y lo recuerda. Después de agregar o cambiar variables, haz *redeploy* del sitio (Deploys → Trigger deploy) para que apliquen.
+
 ## Conectar Notion (una sola vez)
 
 Los datos viven en Notion, en la página **KYN Studio → KYN Cost Studio** (bases *Materiales*, *Compras*, *Productos* y *Ajustes*) y en la base *KYN Seeding Tracker*. Para que la app pueda leer y escribir ahí:
