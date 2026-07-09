@@ -737,6 +737,85 @@
       </section>
       </sc-if>
 
+      <!-- ============ SEEDING ============ -->
+      <sc-if value="{{ vSeeding }}" hint-placeholder-val="{{ false }}">
+      <section data-screen-label="Seeding" style="display:flex;flex-direction:column;gap:18px;animation:kynFade 240ms ease-out">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+          <div>
+            <h1 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em">Seeding</h1>
+            <p style="margin:4px 0 0;color:var(--ink-500);font-size:14px">Cuentas para colaboración — lleva el paso de cada una: contactada, respondió, enviado, publicó.</p>
+          </div>
+          <button class="kyn-btn kyn-btn--primary kyn-btn--md" style="margin-left:auto" onClick="{{ goNewSeed }}">+ Nueva cuenta</button>
+        </div>
+
+        <!-- resumen del pipeline -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <sc-for list="{{ seedStatChips }}" as="c" hint-placeholder-count="7"><button onClick="{{ c.onClick }}" style="{{ c.style }}"><span style="{{ c.dotStyle }}"></span>{{ c.label }} <strong style="margin-left:1px">{{ c.count }}</strong></button></sc-for>
+        </div>
+
+        <!-- filtros -->
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+          <input class="kyn-input" value="{{ seedSearch }}" onChange="{{ onSeedSearch }}" placeholder="Buscar cuenta o nicho…" style="padding:10px 14px;max-width:240px">
+          <select class="kyn-input" value="{{ seedCity }}" onChange="{{ onSeedCity }}" style="padding:10px 14px;max-width:190px"><sc-for list="{{ seedCityOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+          <select class="kyn-input" value="{{ seedSort }}" onChange="{{ onSeedSort }}" style="padding:10px 14px;max-width:200px"><sc-for list="{{ seedSortOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+        </div>
+
+        <!-- tabla (escritorio) -->
+        <sc-if value="{{ isDesktop }}">
+          <div class="kyn-card" style="padding:0;overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:13.5px">
+              <thead><tr>
+                <sc-for list="{{ seedCols }}" as="h"><th style="text-align:left;padding:12px 14px;font-size:10.5px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--ink-500);border-bottom:1px solid var(--ink-100);white-space:nowrap">{{ h }}</th></sc-for>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{ seedRows }}" as="r" hint-placeholder-count="6">
+                  <tr style-hover="background:var(--periwinkle-50)">
+                    <td style="padding:11px 14px;border-bottom:1px solid #F3F1F5">
+                      <div style="display:flex;align-items:center;gap:8px">
+                        <button onClick="{{ r.onOpen }}" style="background:none;border:none;cursor:pointer;font-family:var(--font-sans);font-weight:700;font-size:13.5px;color:var(--ink-900);padding:0;text-align:left" style-hover="color:var(--periwinkle-700)">{{ r.cuenta }}</button>
+                        <sc-if value="{{ r.hasIg }}"><a href="{{ r.instagram }}" target="_blank" rel="noopener" title="Abrir Instagram" style="color:var(--ink-300);display:inline-flex" style-hover="color:var(--pop-magenta)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"></circle></svg></a></sc-if>
+                      </div>
+                      <sc-if value="{{ r.nicho }}"><span style="font-size:11.5px;color:var(--ink-500)">{{ r.nicho }}</span></sc-if>
+                    </td>
+                    <td style="padding:11px 14px;border-bottom:1px solid #F3F1F5;white-space:nowrap">{{ r.ciudadLabel }}</td>
+                    <td style="padding:11px 14px;border-bottom:1px solid #F3F1F5;font-weight:700;white-space:nowrap">{{ r.seguidores }}</td>
+                    <td style="padding:11px 14px;border-bottom:1px solid #F3F1F5">
+                      <select value="{{ r.statusValue }}" onChange="{{ r.onStatusChange }}" style="{{ r.selectStyle }}"><sc-for list="{{ seedStatusOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+                    </td>
+                    <td style="padding:11px 14px;border-bottom:1px solid #F3F1F5;color:var(--ink-500);font-size:12.5px;white-space:nowrap">{{ r.fecha }}</td>
+                    <td style="padding:11px 14px;border-bottom:1px solid #F3F1F5;color:var(--ink-700);font-size:12.5px">{{ r.colab }}</td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </sc-if>
+
+        <!-- tarjetas (celular) -->
+        <sc-if value="{{ isMobile }}">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ seedRows }}" as="r" hint-placeholder-count="6">
+              <div class="kyn-card" style="padding:15px;display:flex;flex-direction:column;gap:11px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <button onClick="{{ r.onOpen }}" style="background:none;border:none;cursor:pointer;font-family:var(--font-sans);font-weight:700;font-size:15px;color:var(--ink-900);padding:0;text-align:left">{{ r.cuenta }}</button>
+                  <sc-if value="{{ r.hasIg }}"><a href="{{ r.instagram }}" target="_blank" rel="noopener" style="color:var(--ink-300);display:inline-flex"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"></circle></svg></a></sc-if>
+                  <span style="margin-left:auto;font-size:12.5px;color:var(--ink-500)">{{ r.seguidores }}</span>
+                </div>
+                <sc-if value="{{ r.nicho }}"><span style="font-size:12.5px;color:var(--ink-500);margin-top:-5px">{{ r.nicho }}</span></sc-if>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <select value="{{ r.statusValue }}" onChange="{{ r.onStatusChange }}" style="{{ r.selectStyle }}"><sc-for list="{{ seedStatusOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+                  <span style="font-size:12px;color:var(--ink-500)">{{ r.ciudadLabel }}</span>
+                  <sc-if value="{{ r.hasFecha }}"><span style="font-size:12px;color:var(--ink-500)">· {{ r.fecha }}</span></sc-if>
+                </div>
+                <sc-if value="{{ r.hasColab }}"><div style="font-size:12.5px;color:var(--ink-700);background:var(--oat);border-radius:10px;padding:8px 10px">📦 {{ r.colab }}</div></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ seedEmpty }}"><div style="padding:48px;text-align:center;color:var(--ink-500);font-size:14.5px">No hay cuentas que coincidan. Agrega una con “+ Nueva cuenta”.</div></sc-if>
+      </section>
+      </sc-if>
+
       <!-- ============ AJUSTES ============ -->
       <sc-if value="{{ vSettings }}" hint-placeholder-val="{{ false }}">
       <section data-screen-label="Ajustes" style="display:flex;flex-direction:column;gap:20px;max-width:860px;animation:kynFade 240ms ease-out">
@@ -893,6 +972,55 @@
           </div>
         </sc-if>
 
+        <!-- Seeding form drawer -->
+        <sc-if value="{{ dSeedForm }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label style="font-size:13px;font-weight:600">Cuenta</label>
+            <input class="kyn-input" value="{{ dsf.cuenta }}" onChange="{{ dsfSet.cuenta }}" placeholder="@usuario" style="padding:10px 13px">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="font-size:13px;font-weight:600">Paso / estatus</label>
+            <div style="display:flex;flex-wrap:wrap;gap:7px">
+              <sc-for list="{{ dsfStatusPills }}" as="p" hint-placeholder-count="6"><button onClick="{{ p.onClick }}" style="{{ p.style }}">{{ p.label }}</button></sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label style="font-size:13px;font-weight:600">Instagram</label>
+            <input class="kyn-input" value="{{ dsf.instagram }}" onChange="{{ dsfSet.instagram }}" placeholder="@usuario o https://instagram.com/…" style="padding:10px 13px">
+          </div>
+          <div style="{{ formGridStyle }}">
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+              <label style="font-size:13px;font-weight:600">Ciudad</label>
+              <select class="kyn-input" value="{{ dsf.ciudad }}" onChange="{{ dsfSet.ciudad }}" style="padding:10px 13px"><sc-for list="{{ dsfCityOptions }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+              <label style="font-size:13px;font-weight:600">Seguidores</label>
+              <input class="kyn-input" type="number" step="any" value="{{ dsf.seguidores }}" onChange="{{ dsfSet.seguidores }}" placeholder="0" style="padding:10px 13px">
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label style="font-size:13px;font-weight:600">Perro / nicho</label>
+            <input class="kyn-input" value="{{ dsf.nicho }}" onChange="{{ dsfSet.nicho }}" placeholder="Ej. Golden retriever · lifestyle" style="padding:10px 13px">
+          </div>
+          <div style="{{ formGridStyle }}">
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+              <label style="font-size:13px;font-weight:600">Fecha de contacto</label>
+              <input class="kyn-input" type="date" value="{{ dsf.fechaContacto }}" onChange="{{ dsfSet.fechaContacto }}" style="padding:10px 13px">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+              <label style="font-size:13px;font-weight:600">Colaboración / producto enviado</label>
+              <input class="kyn-input" value="{{ dsf.colab }}" onChange="{{ dsfSet.colab }}" placeholder="Ej. Correa Urban Leash Camel" style="padding:10px 13px">
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label style="font-size:13px;font-weight:600">Notas</label>
+            <textarea class="kyn-input" rows="3" value="{{ dsf.notas }}" onChange="{{ dsfSet.notas }}" style="padding:10px 13px;resize:vertical;font-family:var(--font-sans)"></textarea>
+          </div>
+          <sc-if value="{{ dsfError }}"><div style="font-size:13px;color:var(--danger);font-weight:600">{{ dsfError }}</div></sc-if>
+          <button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ dsfSave }}">{{ dsfSaveLabel }}</button>
+          <sc-if value="{{ dsfIsEdit }}"><button class="kyn-btn kyn-btn--ghost kyn-btn--sm" onClick="{{ dsfDelete }}" style="color:var(--danger)">Eliminar cuenta</button></sc-if>
+        </sc-if>
+
       </div>
     </div>
   </sc-if>
@@ -920,7 +1048,7 @@
 </sc-if>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{
-  &quot;startView&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;dashboard&quot;, &quot;purchases&quot;, &quot;materials&quot;, &quot;products&quot;, &quot;calculator&quot;, &quot;prices&quot;, &quot;settings&quot;], &quot;default&quot;: &quot;dashboard&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Comportamiento&quot; },
+  &quot;startView&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;dashboard&quot;, &quot;purchases&quot;, &quot;materials&quot;, &quot;products&quot;, &quot;calculator&quot;, &quot;prices&quot;, &quot;seeding&quot;, &quot;settings&quot;], &quot;default&quot;: &quot;dashboard&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Comportamiento&quot; },
   &quot;forceMobile&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Comportamiento&quot; }
 }">
 class Component extends DCLogic {
@@ -937,6 +1065,7 @@ class Component extends DCLogic {
     recSearch: '', recCat: 'todas',
     calc: { productId: '', channel: 'online', method: 'margin', multiplier: '2.5', margin: '47', manualPrice: '', platformFee: '4', paymentFee: '3.6', fixedFee: '0' },
     plSearch: '', plCat: 'todas', plStatus: 'activos', plSort: 'name', plMode: 'table', plCardChannel: 'all',
+    seedSearch: '', seedCity: 'todas', seedStatus: 'todas', seedSort: 'recent',
     confirm: null, toast: null,
     syncMode: 'seed',        // 'notion' | 'local' | 'seed'
     syncState: 'off',        // 'ok' | 'saving' | 'error' | 'off'
@@ -1026,6 +1155,7 @@ class Component extends DCLogic {
       calc: 'M6 2.5h12A1.5 1.5 0 0 1 19.5 4v16a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 20V4A1.5 1.5 0 0 1 6 2.5ZM8 7h8M8.5 12h0M12 12h0M15.5 12h0M8.5 16.5h0M12 16.5h0M15.5 16.5h0',
       list: 'M8 6h13M8 12h13M8 18h13M3.5 6h0M3.5 12h0M3.5 18h0',
       gear: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm8.5 3a8.5 8.5 0 0 0-.15-1.6l2-1.55-2-3.46-2.35 1a8.6 8.6 0 0 0-2.75-1.6L14.9 2.3H9.1l-.35 2.5a8.6 8.6 0 0 0-2.75 1.6l-2.35-1-2 3.46 2 1.55A8.5 8.5 0 0 0 3.5 12c0 .55.05 1.08.15 1.6l-2 1.55 2 3.46 2.35-1a8.6 8.6 0 0 0 2.75 1.6l.35 2.5h5.8l.35-2.5a8.6 8.6 0 0 0 2.75-1.6l2.35 1 2-3.46-2-1.55c.1-.52.15-1.05.15-1.6Z',
+      seed: 'M22 2 11 13M22 2l-7 20-4-9-9-4Z',
     };
     return R.createElement('svg', { viewBox: '0 0 24 24', width: s, height: s, fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flex: 'none' } },
       R.createElement('path', { d: paths[name] || paths.home }));
@@ -1153,6 +1283,49 @@ class Component extends DCLogic {
       this.setState({ drawer: { type: 'recipe', id: p.id } });
     }
   };
+
+  // ---------- seeding ops ----------
+  blankSeed() {
+    return { id: null, cuenta: '', estatus: 'Por contactar', ciudad: '', instagram: '', nicho: '', seguidores: '', notas: '', fechaContacto: '', colab: '' };
+  }
+  newSeed = () => this.setState({ drawer: { type: 'seedForm', form: this.blankSeed(), error: '' } });
+  openSeed(id) {
+    const s = (this.state.db.seeding || []).find((x) => x.id === id);
+    if (s) this.setState({ drawer: { type: 'seedForm', form: { ...s }, error: '' } });
+  }
+  setSeedStatus(id, estatus) {
+    const s = (this.state.db.seeding || []).find((x) => x.id === id);
+    if (s) { s.estatus = estatus; this.up(); }
+  }
+  saveSeedForm = () => {
+    const d = this.state.drawer, f = d.form, db = this.state.db;
+    if (!f.cuenta.trim()) { d.error = 'Ponle el nombre o @ de la cuenta.'; this.up(); return; }
+    if (!db.seeding) db.seeding = [];
+    let ig = (f.instagram || '').trim();
+    // si solo escribió el @usuario, arma el link completo
+    if (ig && !/^https?:\/\//i.test(ig)) ig = 'https://instagram.com/' + ig.replace(/^@/, '');
+    const clean = {
+      cuenta: f.cuenta.trim(), estatus: f.estatus || 'Por contactar', ciudad: f.ciudad || '',
+      instagram: ig, nicho: (f.nicho || '').trim(),
+      seguidores: f.seguidores === '' || f.seguidores == null ? null : +f.seguidores,
+      notas: f.notas || '', fechaContacto: f.fechaContacto || '', colab: (f.colab || '').trim(),
+    };
+    if (f.id) {
+      const s = db.seeding.find((x) => x.id === f.id);
+      if (s) Object.assign(s, clean);
+      this.setState({ drawer: null }); this.showToast('Cuenta actualizada');
+    } else {
+      db.seeding.unshift({ id: this.C.uid(), createdTime: new Date().toISOString(), ...clean });
+      this.setState({ drawer: null }); this.showToast('Cuenta agregada');
+    }
+  };
+  deleteSeedForm = () => {
+    const f = this.state.drawer.form, db = this.state.db;
+    this.ask('¿Eliminar cuenta?', 'Se quita de la lista y se archiva en Notion (recuperable desde la papelera).', 'Eliminar', () => {
+      db.seeding = (db.seeding || []).filter((x) => x.id !== f.id);
+      this.setState({ drawer: null }); this.up(); this.showToast('Cuenta eliminada');
+    });
+  };
   duplicateProduct(p) {
     const db = this.state.db;
     const copy = JSON.parse(JSON.stringify(p));
@@ -1246,6 +1419,7 @@ class Component extends DCLogic {
     const navDef = [
       ['dashboard', 'Inicio', 'home'], ['purchases', 'Compras', 'cart'], ['materials', 'Materiales', 'box'],
       ['products', 'Productos', 'tag'], ['calculator', 'Calculadora', 'calc'], ['prices', 'Lista de precios', 'list'],
+      ['seeding', 'Seeding', 'seed'],
     ];
     const viewGroup = { purchaseDetail: 'purchases', purchaseForm: 'purchases', productDetail: 'products' }[st.view] || st.view;
     const navBtn = ([id, label, ic]) => {
@@ -1259,7 +1433,7 @@ class Component extends DCLogic {
     };
     const navMain = navDef.map(navBtn);
     const navBottom = [navBtn(['settings', 'Ajustes', 'gear'])];
-    const navMobile = [['dashboard', 'Inicio', 'home'], ['purchases', 'Compras', 'cart'], ['materials', 'Material', 'box'], ['products', 'Productos', 'tag'], ['prices', 'Precios', 'list']].map(([id, label, ic]) => {
+    const navMobile = [['dashboard', 'Inicio', 'home'], ['purchases', 'Compras', 'cart'], ['materials', 'Material', 'box'], ['products', 'Productos', 'tag'], ['prices', 'Precios', 'list'], ['seeding', 'Seeding', 'seed']].map(([id, label, ic]) => {
       const active = viewGroup === id;
       return {
         label, icon: this.icon(ic, 21), onClick: () => this.nav(id),
@@ -1279,7 +1453,7 @@ class Component extends DCLogic {
       prodGridStyle: 'display:grid;gap:16px;grid-template-columns:' + (isMobile ? '1fr' : 'repeat(auto-fill,minmax(280px,1fr))'),
       vDash: st.view === 'dashboard', vPurchases: st.view === 'purchases', vPurchaseDetail: st.view === 'purchaseDetail',
       vPurchaseForm: st.view === 'purchaseForm', vMaterials: st.view === 'materials', vProducts: st.view === 'products',
-      vProductDetail: st.view === 'productDetail', vCalc: st.view === 'calculator', vPrices: st.view === 'prices', vSettings: st.view === 'settings',
+      vProductDetail: st.view === 'productDetail', vCalc: st.view === 'calculator', vPrices: st.view === 'prices', vSeeding: st.view === 'seeding', vSettings: st.view === 'settings',
       goPurchases: () => this.nav('purchases'), goProducts: () => this.nav('products'),
       goCalc: () => this.nav('calculator'), goSettings: () => this.nav('settings'),
       goNewPurchase: () => { this.setState({ pf: this.blankPurchaseForm(), pfStep: 1, pfErrors: [] }); this.nav('purchaseForm'); },
@@ -1292,7 +1466,7 @@ class Component extends DCLogic {
       confirmYes: () => { const a = st.confirm && st.confirm.action; this.setState({ confirm: null }); if (a) a(); },
       closeDrawer: () => this.setState({ drawer: null }),
       drawerOpen: !!st.drawer,
-      drawerTitle: '', dMaterial: false, dProductForm: false, dRecipe: false,
+      drawerTitle: '', dMaterial: false, dProductForm: false, dRecipe: false, dSeedForm: false,
       drawerPanelStyle: isMobile
         ? 'position:fixed;left:0;right:0;bottom:0;z-index:95;max-height:88dvh;background:var(--paper);border-radius:20px 20px 0 0;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:kynSheetUp 240ms ease-out;padding-bottom:env(safe-area-inset-bottom)'
         : 'position:fixed;top:0;right:0;bottom:0;z-index:95;width:min(540px,92vw);background:var(--paper);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:kynSlideIn 240ms ease-out',
@@ -1819,6 +1993,83 @@ class Component extends DCLogic {
       vals.settingsGroups = groups;
     }
 
+    // ============ SEEDING ============
+    if (vals.vSeeding) {
+      const list = db.seeding || [];
+      const STAT = C.SEEDING_STATUS, CITY = C.SEEDING_CITIES;
+      const statMap = {}; for (const x of STAT) statMap[x.v] = x;
+      const cityMap = {}; for (const x of CITY) cityMap[x.v] = x;
+      const fmtFollowers = (n) => (n == null || n === '') ? '—' : (n >= 1000 ? (Math.round(n / 100) / 10) + 'k' : String(n));
+
+      // chips de resumen del pipeline (también filtran)
+      const counts = {}; for (const x of STAT) counts[x.v] = 0;
+      for (const s of list) if (counts[s.estatus] != null) counts[s.estatus]++;
+      const chipBase = 'display:inline-flex;align-items:center;gap:7px;border-radius:99px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:var(--font-sans);white-space:nowrap;border:1.5px solid transparent';
+      const allActive = st.seedStatus === 'todas';
+      vals.seedStatChips = [{
+        label: 'Todas', count: list.length, dotStyle: 'display:none',
+        onClick: () => this.setState({ seedStatus: 'todas' }),
+        style: chipBase + ';background:' + (allActive ? 'var(--ink-900)' : 'var(--white)') + ';color:' + (allActive ? '#fff' : 'var(--ink-700)') + ';border-color:' + (allActive ? 'var(--ink-900)' : 'var(--ink-100)'),
+      }].concat(STAT.map((x) => {
+        const active = st.seedStatus === x.v;
+        return {
+          label: x.label, count: counts[x.v],
+          dotStyle: 'flex:none;width:9px;height:9px;border-radius:99px;background:' + x.fg,
+          onClick: () => this.setState({ seedStatus: active ? 'todas' : x.v }),
+          style: chipBase + ';background:' + x.bg + ';color:' + x.fg + ';border-color:' + (active ? x.fg : 'transparent'),
+        };
+      }));
+
+      // filtros
+      vals.seedSearch = st.seedSearch;
+      vals.onSeedSearch = (e) => this.setState({ seedSearch: e.target.value });
+      vals.seedCity = st.seedCity;
+      vals.onSeedCity = (e) => this.setState({ seedCity: e.target.value });
+      vals.seedCityOptions = [{ value: 'todas', label: 'Todas las ciudades' }].concat(CITY.map((x) => ({ value: x.v, label: x.label })));
+      vals.seedSort = st.seedSort;
+      vals.onSeedSort = (e) => this.setState({ seedSort: e.target.value });
+      vals.seedSortOptions = this.opt([['recent', 'Recientes'], ['followers', 'Seguidores ↓'], ['status', 'Por estatus'], ['name', 'Nombre A–Z']]);
+      vals.seedStatusOptions = STAT.map((x) => ({ value: x.v, label: x.label }));
+      vals.seedCols = ['Cuenta', 'Ciudad', 'Seguidores', 'Estatus', 'Contacto', 'Colaboración'];
+      vals.goNewSeed = this.newSeed;
+
+      const q = st.seedSearch.trim().toLowerCase();
+      const order = {}; STAT.forEach((x, i) => { order[x.v] = i; });
+      const ord = (v) => (order[v] == null ? 99 : order[v]);
+      let rows = list.filter((s) =>
+        (st.seedStatus === 'todas' || s.estatus === st.seedStatus) &&
+        (st.seedCity === 'todas' || s.ciudad === st.seedCity) &&
+        (!q || (s.cuenta + ' ' + (s.nicho || '') + ' ' + (s.colab || '')).toLowerCase().includes(q))
+      );
+      const sorters = {
+        recent: (a, b) => (b.createdTime || '').localeCompare(a.createdTime || ''),
+        followers: (a, b) => (b.seguidores || 0) - (a.seguidores || 0),
+        status: (a, b) => ord(a.estatus) - ord(b.estatus),
+        name: (a, b) => a.cuenta.toLowerCase().localeCompare(b.cuenta.toLowerCase()),
+      };
+      rows = rows.slice().sort(sorters[st.seedSort] || sorters.recent);
+
+      vals.seedRows = rows.map((s) => {
+        const stt = statMap[s.estatus] || { label: s.estatus, bg: '#EFEDF1', fg: '#6B6873' };
+        return {
+          id: s.id, cuenta: s.cuenta,
+          instagram: s.instagram || '', hasIg: !!s.instagram,
+          nicho: s.nicho || '',
+          ciudadLabel: cityMap[s.ciudad] ? cityMap[s.ciudad].label : (s.ciudad || '—'),
+          seguidores: fmtFollowers(s.seguidores),
+          statusValue: s.estatus,
+          selectStyle: 'appearance:none;-webkit-appearance:none;-moz-appearance:none;border:none;border-radius:99px;padding:6px 12px;font-size:12px;font-weight:700;font-family:var(--font-sans);cursor:pointer;background:' + stt.bg + ';color:' + stt.fg,
+          onStatusChange: (e) => this.setSeedStatus(s.id, e.target.value),
+          fecha: s.fechaContacto ? C.fmtDate(s.fechaContacto) : '—',
+          hasFecha: !!s.fechaContacto,
+          colab: s.colab || '—',
+          hasColab: !!s.colab,
+          onOpen: () => this.openSeed(s.id),
+        };
+      });
+      vals.seedEmpty = !rows.length;
+    }
+
     // ============ DRAWERS ============
     const d = st.drawer;
     if (d && d.type === 'material') {
@@ -1914,7 +2165,37 @@ class Component extends DCLogic {
         vals.recTotal = M(cost.materials);
       }
     }
-    if (d && !vals.dMaterial && !vals.dProductForm && !vals.dRecipe) vals.drawerOpen = false;
+    if (d && d.type === 'seedForm') {
+      vals.dSeedForm = true;
+      vals.drawerTitle = d.form.id ? 'Editar cuenta' : 'Nueva cuenta';
+      vals.dsfIsEdit = !!d.form.id;
+      const f = d.form;
+      const set = (k) => (e) => { f[k] = e.target.value; d.error = ''; this.up(); };
+      vals.dsf = {
+        cuenta: f.cuenta || '', instagram: f.instagram || '', ciudad: f.ciudad || '',
+        seguidores: f.seguidores == null ? '' : String(f.seguidores),
+        nicho: f.nicho || '', fechaContacto: f.fechaContacto || '', colab: f.colab || '', notas: f.notas || '',
+      };
+      vals.dsfSet = {
+        cuenta: set('cuenta'), instagram: set('instagram'), ciudad: set('ciudad'),
+        seguidores: set('seguidores'), nicho: set('nicho'), fechaContacto: set('fechaContacto'),
+        colab: set('colab'), notas: set('notas'),
+      };
+      vals.dsfCityOptions = [{ value: '', label: '— Ciudad —' }].concat(C.SEEDING_CITIES.map((x) => ({ value: x.v, label: x.label })));
+      vals.dsfStatusPills = C.SEEDING_STATUS.map((x) => {
+        const active = (f.estatus || 'Por contactar') === x.v;
+        return {
+          label: x.label,
+          onClick: () => { f.estatus = x.v; d.error = ''; this.up(); },
+          style: 'border-radius:99px;padding:7px 13px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--font-sans);white-space:nowrap;border:1.5px solid ' + (active ? x.fg : 'var(--ink-100)') + ';background:' + (active ? x.bg : 'var(--white)') + ';color:' + (active ? x.fg : 'var(--ink-500)'),
+        };
+      });
+      vals.dsfError = d.error || '';
+      vals.dsfSaveLabel = d.form.id ? 'Guardar cambios' : 'Agregar cuenta';
+      vals.dsfSave = this.saveSeedForm;
+      vals.dsfDelete = this.deleteSeedForm;
+    }
+    if (d && !vals.dMaterial && !vals.dProductForm && !vals.dRecipe && !vals.dSeedForm) vals.drawerOpen = false;
 
     return vals;
   }
