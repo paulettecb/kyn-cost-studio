@@ -907,6 +907,246 @@
       </section>
       </sc-if>
 
+      <!-- ============ EVENTOS (lista) ============ -->
+      <sc-if value="{{ vEvents }}" hint-placeholder-val="{{ false }}">
+      <section data-screen-label="Eventos" style="display:flex;flex-direction:column;gap:18px;animation:kynFade 240ms ease-out">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+          <div>
+            <h1 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em">Eventos</h1>
+            <p style="margin:4px 0 0;color:var(--ink-500);font-size:14px">Bazares, ferias y pop-ups: qué llevar, cuánto tienes que vender para que valga la pena y qué material te falta.</p>
+          </div>
+          <button class="kyn-btn kyn-btn--primary kyn-btn--md" style="margin-left:auto" onClick="{{ goNewEvent }}">+ Nuevo evento</button>
+        </div>
+
+        <sc-if value="{{ eventsSyncOff }}" hint-placeholder-val="{{ false }}">
+          <div style="{{ eventsSyncOffStyle }}">{{ eventsSyncOffMsg }}</div>
+        </sc-if>
+
+        <sc-if value="{{ eventsEmpty }}" hint-placeholder-val="{{ false }}">
+          <div class="kyn-card" style="padding:34px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center">
+            <span style="font-size:15px;font-weight:700">Todavía no hay eventos</span>
+            <p style="margin:0;max-width:440px;font-size:13.5px;color:var(--ink-500);line-height:1.55">Crea uno con el costo del lugar y los días. Luego eliges qué piezas llevas y la app te dice cuántas tienes que vender para pagarlo y qué material te falta comprar.</p>
+            <button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ goNewEvent }}">+ Nuevo evento</button>
+          </div>
+        </sc-if>
+
+        <div style="{{ eventGridStyle }}">
+          <sc-for list="{{ eventCards }}" as="e" hint-placeholder-count="2">
+            <button onClick="{{ e.onOpen }}" class="kyn-card" style="text-align:left;cursor:pointer;border:1px solid var(--ink-100);padding:22px;display:flex;flex-direction:column;gap:14px;font-family:var(--font-sans)" style-hover="box-shadow:var(--shadow-md)">
+              <div style="display:flex;align-items:flex-start;gap:10px">
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+                  <span style="font-size:17px;font-weight:800;letter-spacing:-0.01em">{{ e.name }}</span>
+                  <span style="font-size:12.5px;color:var(--ink-500)">{{ e.sub }}</span>
+                </div>
+                <span style="{{ e.chipStyle }}">{{ e.chipLabel }}</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div style="display:flex;flex-direction:column;gap:2px">
+                  <span style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--ink-500)">Te cuesta estar ahí</span>
+                  <span style="font-size:20px;font-weight:800;letter-spacing:-0.02em">{{ e.fixed }}</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:2px">
+                  <span style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--ink-500)">Para salir tablas</span>
+                  <span style="{{ e.beStyle }}">{{ e.be }}</span>
+                </div>
+              </div>
+              <sc-if value="{{ e.note }}"><span style="font-size:12.5px;color:var(--ink-500);line-height:1.5">{{ e.note }}</span></sc-if>
+            </button>
+          </sc-for>
+        </div>
+      </section>
+      </sc-if>
+
+      <!-- ============ DETALLE DE EVENTO ============ -->
+      <sc-if value="{{ vEventDetail }}" hint-placeholder-val="{{ false }}">
+      <section data-screen-label="Detalle de evento" style="display:flex;flex-direction:column;gap:22px;animation:kynFade 240ms ease-out">
+        <button onClick="{{ goEvents }}" style="align-self:flex-start;background:none;border:none;cursor:pointer;color:var(--periwinkle-700);font-weight:600;font-size:13.5px;font-family:var(--font-sans);padding:0">← Eventos</button>
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px">
+          <div style="flex:1;min-width:240px">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <h1 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em">{{ ev.name }}</h1>
+              <span style="{{ ev.chipStyle }}">{{ ev.chipLabel }}</span>
+            </div>
+            <p style="margin:6px 0 0;color:var(--ink-500);font-size:14px">{{ ev.sub }}</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" onClick="{{ evEdit }}">Editar datos</button>
+            <button class="kyn-btn kyn-btn--ghost kyn-btn--sm" onClick="{{ evDelete }}" style="color:var(--danger)">Eliminar</button>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div style="{{ kpiGridStyle }}">
+          <sc-for list="{{ evKpis }}" as="k" hint-placeholder-count="4">
+            <div class="kyn-card" style="border:1px solid var(--ink-100);padding:20px;display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-500)">{{ k.label }}</span>
+              <span style="{{ k.valStyle }}">{{ k.value }}</span>
+              <span style="font-size:12.5px;color:var(--ink-500);line-height:1.45">{{ k.sub }}</span>
+            </div>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ evPlanEmpty }}" hint-placeholder-val="{{ false }}">
+          <div class="kyn-card" style="padding:28px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center">
+            <span style="font-size:15px;font-weight:700">Todavía no eliges qué llevar</span>
+            <p style="margin:0;max-width:430px;font-size:13.5px;color:var(--ink-500);line-height:1.55">Agrega las piezas que piensas llevar y aquí aparecen el punto de equilibrio, las horas de taller y el material que te falta comprar.</p>
+            <button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ evAddPlan }}">+ Agregar piezas</button>
+          </div>
+        </sc-if>
+
+        <div style="{{ twoColStyle }}">
+          <!-- QUÉ LLEVAS -->
+          <div class="kyn-card" style="padding:22px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:baseline;gap:10px">
+              <h2 style="margin:0;font-size:16px;font-weight:700">Qué llevas</h2>
+              <span style="font-size:12.5px;color:var(--ink-500)">{{ evPlanCount }}</span>
+              <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" style="margin-left:auto" onClick="{{ evAddPlan }}">+ Agregar</button>
+            </div>
+            <sc-for list="{{ evPlanRows }}" as="r" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--ink-100);border-radius:var(--radius-md)">
+                <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0">
+                  <span style="font-weight:600;font-size:13.5px">{{ r.name }}</span>
+                  <span style="font-size:11.5px;color:var(--ink-500)">{{ r.sub }}</span>
+                </div>
+                <input class="kyn-input" type="number" min="0" step="1" value="{{ r.quantity }}" onChange="{{ r.onQty }}" aria-label="{{ r.qtyAria }}" style="padding:8px 10px;width:70px;text-align:right">
+                <span style="font-weight:700;font-size:13.5px;white-space:nowrap;width:86px;text-align:right">{{ r.revenue }}</span>
+                <button onClick="{{ r.onRemove }}" title="Quitar" aria-label="{{ r.delAria }}" style="background:none;border:none;cursor:pointer;color:var(--ink-500);font-size:15px;padding:4px" style-hover="color:var(--danger)">✕</button>
+              </div>
+            </sc-for>
+            <sc-if value="{{ evPlanWarn }}"><div style="{{ evPlanWarnStyle }}">{{ evPlanWarn }}</div></sc-if>
+          </div>
+
+          <!-- LOS NÚMEROS -->
+          <div class="kyn-card" style="padding:22px;display:flex;flex-direction:column;gap:10px">
+            <h2 style="margin:0 0 2px;font-size:16px;font-weight:700">Los números, si vendes todo</h2>
+            <sc-for list="{{ evMoneyRows }}" as="m" hint-placeholder-count="7">
+              <div style="{{ m.rowStyle }}">
+                <span style="{{ m.labelStyle }}">{{ m.label }}</span>
+                <span style="{{ m.valueStyle }}">{{ m.value }}</span>
+              </div>
+            </sc-for>
+            <p style="margin:6px 0 0;font-size:12.5px;color:var(--ink-500);line-height:1.55">{{ evMoneyNote }}</p>
+          </div>
+        </div>
+
+        <!-- MATERIAL QUE FALTA -->
+        <div class="kyn-card" style="padding:22px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+            <h2 style="margin:0;font-size:16px;font-weight:700">Material para producirlo</h2>
+            <span style="font-size:12.5px;color:var(--ink-500)">{{ evNeedsSummary }}</span>
+          </div>
+          <sc-if value="{{ evNeedsEmpty }}"><div style="font-size:13.5px;color:var(--ink-500)">Agrega piezas al plan y aquí aparece cuánto material pide y cuánto tienes.</div></sc-if>
+          <sc-for list="{{ evNeedRows }}" as="n" hint-placeholder-count="6">
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid #F3F1F5;font-size:13.5px;flex-wrap:wrap">
+              <span style="flex:1;min-width:140px;font-weight:600">{{ n.name }}</span>
+              <span style="font-size:12.5px;color:var(--ink-500);width:96px;text-align:right">{{ n.needed }}</span>
+              <span style="font-size:12.5px;color:var(--ink-500);width:96px;text-align:right">{{ n.have }}</span>
+              <span style="{{ n.shortStyle }}">{{ n.short }}</span>
+              <span style="font-size:12.5px;width:84px;text-align:right;color:var(--ink-700)">{{ n.restock }}</span>
+            </div>
+          </sc-for>
+          <sc-if value="{{ evNeedsFooter }}">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:6px;font-size:14.5px">
+              <span style="color:var(--ink-500)">Invertir para completar el plan</span>
+              <strong>{{ evRestockCost }}</strong>
+            </div>
+          </sc-if>
+          <p style="margin:2px 0 0;font-size:12.5px;color:var(--ink-500);line-height:1.55">“Tengo” es todo lo que has comprado según tus compras registradas — la app no descuenta lo que ya usaste en piezas hechas, así que tómalo como techo y verifica en el taller.</p>
+        </div>
+
+        <!-- PEDIDOS DE COMPRA -->
+        <div class="kyn-card" style="padding:22px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+            <h2 style="margin:0;font-size:16px;font-weight:700">Pedidos de compra</h2>
+            <span style="font-size:12.5px;color:var(--ink-500)">{{ evOrdersSub }}</span>
+            <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" style="margin-left:auto" onClick="{{ evAddOrder }}">+ Nuevo pedido</button>
+          </div>
+          <sc-if value="{{ evOrdersEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:13.5px;color:var(--ink-500)">Arma pedidos con los materiales de proveedor externo (por ahora, Buckleguy) y aquí ves si cada uno se pasa del límite antes de dar clic en pagar.</div>
+          </sc-if>
+          <sc-for list="{{ evOrderCards }}" as="o" hint-placeholder-count="3">
+            <div style="border:1px solid var(--ink-100);border-radius:var(--radius-md);padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <input class="kyn-input" value="{{ o.label }}" onChange="{{ o.onLabel }}" aria-label="Nombre del pedido" style="max-width:150px;padding:7px 10px;font-weight:700;font-size:13.5px">
+                <sc-if value="{{ o.badge }}"><span style="{{ o.badgeStyle }}">{{ o.badge }}</span></sc-if>
+                <span style="margin-left:auto;font-weight:800;font-size:15px;{{ o.totalColor }}">{{ o.subtotal }}</span>
+                <button class="kyn-btn kyn-btn--ghost kyn-btn--sm" onClick="{{ o.onAddLine }}">+ material</button>
+                <button onClick="{{ o.onDelete }}" title="Eliminar pedido" aria-label="Eliminar {{ o.label }}" style="background:none;border:none;cursor:pointer;color:var(--ink-500);font-size:15px;padding:4px" style-hover="color:var(--danger)">✕</button>
+              </div>
+              <sc-if value="{{ o.empty }}"><div style="font-size:12.5px;color:var(--ink-500)">Sin materiales — agrega con “+ material”.</div></sc-if>
+              <sc-for list="{{ o.lines }}" as="l" hint-placeholder-count="2">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid #F3F1F5">
+                  <a href="{{ l.url }}" target="_blank" rel="noopener" style="flex:1;min-width:120px;font-weight:600;font-size:13px;color:var(--periwinkle-700);text-decoration:none" style-hover="text-decoration:underline">{{ l.name }} ↗</a>
+                  <input class="kyn-input" type="number" min="0" step="1" value="{{ l.quantity }}" onChange="{{ l.onQty }}" aria-label="Cantidad de {{ l.name }}" style="width:58px;padding:6px 8px;text-align:right;font-size:13px">
+                  <span style="font-size:11.5px;color:var(--ink-500);width:64px">{{ l.qtyUnit }}</span>
+                  <span style="font-size:12px;color:var(--ink-500);width:60px;text-align:right">{{ l.unitPrice }}</span>
+                  <span style="font-size:13px;font-weight:700;width:66px;text-align:right">{{ l.subtotal }}</span>
+                  <select class="kyn-input" value="{{ l.moveTo }}" onChange="{{ l.onMove }}" aria-label="Mover {{ l.name }} a otro pedido" style="padding:5px 6px;font-size:12px;width:100px">
+                    <sc-for list="{{ l.moveOptions }}" as="mo"><option value="{{ mo.value }}">{{ mo.label }}</option></sc-for>
+                  </select>
+                  <button onClick="{{ l.onRemove }}" title="Quitar" aria-label="Quitar {{ l.name }}" style="background:none;border:none;cursor:pointer;color:var(--ink-500);font-size:14px;padding:4px" style-hover="color:var(--danger)">✕</button>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+          <sc-if value="{{ evOrdersFooter }}">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:6px;font-size:14.5px">
+              <span style="color:var(--ink-500)">Total de los {{ evOrdersCount }} pedidos</span>
+              <strong>{{ evOrdersGrandTotal }}</strong>
+            </div>
+          </sc-if>
+          <p style="margin:2px 0 0;font-size:12.5px;color:var(--ink-500);line-height:1.55">El precio por volumen aplica solo a la cantidad de ESE material en ESE pedido — partirlo entre varios no acumula. Los pedidos no pueden traslaparse: uno sale hasta que llega el anterior.</p>
+        </div>
+
+        <div style="{{ twoColStyle }}">
+          <!-- PREPARACIÓN -->
+          <div class="kyn-card" style="padding:22px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:baseline;gap:10px">
+              <h2 style="margin:0;font-size:16px;font-weight:700">Preparación</h2>
+              <span style="font-size:12.5px;color:var(--ink-500)">{{ evCheckCount }}</span>
+            </div>
+            <sc-for list="{{ evChecklist }}" as="c" hint-placeholder-count="9">
+              <div style="display:flex;align-items:center;gap:10px">
+                <button onClick="{{ c.onToggle }}" aria-label="{{ c.aria }}" style="{{ c.boxStyle }}">{{ c.mark }}</button>
+                <input class="kyn-input" value="{{ c.text }}" onChange="{{ c.onText }}" style="padding:7px 10px;flex:1;min-width:0;font-size:13px;{{ c.textStyle }}">
+                <button onClick="{{ c.onRemove }}" title="Quitar" aria-label="{{ c.delAria }}" style="background:none;border:none;cursor:pointer;color:var(--ink-300);font-size:14px;padding:4px" style-hover="color:var(--danger)">✕</button>
+              </div>
+            </sc-for>
+            <button class="kyn-btn kyn-btn--ghost kyn-btn--sm" style="align-self:flex-start" onClick="{{ evAddCheck }}">+ Agregar pendiente</button>
+          </div>
+
+          <!-- RESULTADO REAL -->
+          <div class="kyn-card" style="padding:22px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:baseline;gap:10px">
+              <h2 style="margin:0;font-size:16px;font-weight:700">Lo que se vendió</h2>
+              <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" style="margin-left:auto" onClick="{{ evAddActual }}">+ Registrar</button>
+            </div>
+            <sc-if value="{{ evActualEmpty }}" hint-placeholder-val="{{ true }}">
+              <p style="margin:0;font-size:13.5px;color:var(--ink-500);line-height:1.55">Cuando termine el evento, registra aquí lo que de verdad se vendió. Así el siguiente bazar lo planeas con datos y no con corazonadas.</p>
+            </sc-if>
+            <sc-for list="{{ evActualRows }}" as="r" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--ink-100);border-radius:var(--radius-md)">
+                <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0">
+                  <span style="font-weight:600;font-size:13.5px">{{ r.name }}</span>
+                  <span style="font-size:11.5px;color:var(--ink-500)">{{ r.sub }}</span>
+                </div>
+                <input class="kyn-input" type="number" min="0" step="1" value="{{ r.quantity }}" onChange="{{ r.onQty }}" aria-label="{{ r.qtyAria }}" style="padding:8px 10px;width:70px;text-align:right">
+                <span style="font-weight:700;font-size:13.5px;white-space:nowrap;width:86px;text-align:right">{{ r.revenue }}</span>
+                <button onClick="{{ r.onRemove }}" title="Quitar" aria-label="{{ r.delAria }}" style="background:none;border:none;cursor:pointer;color:var(--ink-500);font-size:15px;padding:4px" style-hover="color:var(--danger)">✕</button>
+              </div>
+            </sc-for>
+            <sc-if value="{{ evActualHas }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:8px;padding-top:4px">
+                <sc-for list="{{ evActualRowsMoney }}" as="m" hint-placeholder-count="3">
+                  <div style="{{ m.rowStyle }}"><span style="{{ m.labelStyle }}">{{ m.label }}</span><span style="{{ m.valueStyle }}">{{ m.value }}</span></div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </section>
+      </sc-if>
+
       <!-- ============ AJUSTES ============ -->
       <sc-if value="{{ vSettings }}" hint-placeholder-val="{{ false }}">
       <section data-screen-label="Ajustes" style="display:flex;flex-direction:column;gap:20px;max-width:860px;animation:kynFade 240ms ease-out">
@@ -942,7 +1182,7 @@
     <!-- ============ BOTTOM NAV (mobile) ============ -->
     <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
       <div style="height:calc(76px + env(safe-area-inset-bottom))"></div>
-      <nav style="position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(255,255,255,0.96);backdrop-filter:blur(12px);border-top:1px solid var(--ink-100);display:flex;justify-content:space-around;padding:8px 4px calc(8px + env(safe-area-inset-bottom))">
+      <nav style="position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(255,255,255,0.96);backdrop-filter:blur(12px);border-top:1px solid var(--ink-100);display:flex;justify-content:space-around;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:8px 4px calc(8px + env(safe-area-inset-bottom))">
         <sc-for list="{{ navMobile }}" as="n" hint-placeholder-count="5">
           <button onClick="{{ n.onClick }}" style="{{ n.style }}">{{ n.icon }}<span style="font-size:10.5px;font-weight:600">{{ n.label }}</span></button>
         </sc-for>
@@ -1166,6 +1406,62 @@
           <button class="kyn-btn kyn-btn--ghost kyn-btn--sm" onClick="{{ dgeDelete }}" style="color:var(--danger)">Eliminar medición</button>
         </sc-if>
 
+        <!-- Event form drawer -->
+        <sc-if value="{{ dEventForm }}" hint-placeholder-val="{{ false }}">
+          <sc-for list="{{ defFields }}" as="f" hint-placeholder-count="6">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <label style="font-size:13px;font-weight:600">{{ f.label }}</label>
+              <sc-if value="{{ f.isSelect }}" hint-placeholder-val="{{ false }}">
+                <select class="kyn-input" value="{{ f.value }}" onChange="{{ f.onChange }}" style="padding:10px 13px"><sc-for list="{{ f.options }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+              </sc-if>
+              <sc-if value="{{ f.isInput }}" hint-placeholder-val="{{ true }}">
+                <input class="kyn-input" type="{{ f.type }}" step="any" value="{{ f.value }}" onChange="{{ f.onChange }}" placeholder="{{ f.placeholder }}" style="padding:10px 13px">
+              </sc-if>
+              <sc-if value="{{ f.hint }}"><span style="font-size:12px;color:var(--ink-500);line-height:1.45">{{ f.hint }}</span></sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ defError }}"><div style="font-size:13px;color:var(--danger);font-weight:600">{{ defError }}</div></sc-if>
+          <button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ defSave }}">{{ defSaveLabel }}</button>
+        </sc-if>
+
+        <!-- Event plan drawer: elegir qué piezas llevar / registrar lo vendido -->
+        <sc-if value="{{ dEventPlan }}" hint-placeholder-val="{{ false }}">
+          <p style="margin:0;font-size:13px;color:var(--ink-500);line-height:1.5">{{ depIntro }}</p>
+          <input class="kyn-input" value="{{ depSearch }}" onChange="{{ depOnSearch }}" placeholder="Buscar producto…" style="padding:10px 13px">
+          <div style="display:flex;flex-direction:column;max-height:260px;overflow-y:auto;border:1px solid var(--ink-100);border-radius:var(--radius-md)">
+            <sc-if value="{{ depNoResults }}"><div style="padding:14px;font-size:13px;color:var(--ink-500)">Ningún producto coincide con esa búsqueda.</div></sc-if>
+            <sc-for list="{{ depCandidates }}" as="c" hint-placeholder-count="6">
+              <button onClick="{{ c.onAdd }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:none;background:none;cursor:pointer;border-bottom:1px solid #F3F1F5;font-family:var(--font-sans);text-align:left" style-hover="background:var(--periwinkle-50)">
+                <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0">
+                  <span style="font-weight:600;font-size:13.5px">{{ c.name }}</span>
+                  <span style="font-size:11.5px;color:var(--ink-500)">{{ c.sub }}</span>
+                </div>
+                <span style="{{ c.qtyStyle }}">{{ c.qtyLabel }}</span>
+                <span style="color:var(--periwinkle-700);font-weight:800;font-size:16px">+</span>
+              </button>
+            </sc-for>
+          </div>
+          <button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ closeDrawer }}">Listo</button>
+        </sc-if>
+
+        <!-- Order pick drawer: agregar material de proveedor a un pedido -->
+        <sc-if value="{{ dOrderPick }}" hint-placeholder-val="{{ false }}">
+          <p style="margin:0;font-size:13px;color:var(--ink-500);line-height:1.5">Toca para agregar a {{ opOrderLabel }}. Si ya está, suma 1 — ajusta la cantidad exacta después en la lista.</p>
+          <input class="kyn-input" value="{{ opSearch }}" onChange="{{ opOnSearch }}" placeholder="Buscar material…" style="padding:10px 13px">
+          <div style="display:flex;flex-direction:column;max-height:300px;overflow-y:auto;border:1px solid var(--ink-100);border-radius:var(--radius-md)">
+            <sc-if value="{{ opNoResults }}"><div style="padding:14px;font-size:13px;color:var(--ink-500)">Ningún material de proveedor coincide.</div></sc-if>
+            <sc-for list="{{ opCandidates }}" as="c" hint-placeholder-count="6">
+              <button onClick="{{ c.onAdd }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:none;background:none;cursor:pointer;border-bottom:1px solid #F3F1F5;font-family:var(--font-sans);text-align:left" style-hover="background:var(--periwinkle-50)">
+                <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0"><span style="font-weight:600;font-size:13.5px">{{ c.name }}</span><span style="font-size:11.5px;color:var(--ink-500)">{{ c.sub }}</span></div>
+                <span style="{{ c.qtyStyle }}">{{ c.qtyLabel }}</span>
+                <span style="color:var(--periwinkle-700);font-weight:800;font-size:16px">+</span>
+              </button>
+            </sc-for>
+          </div>
+          <button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ closeDrawer }}">Listo</button>
+          <p style="margin:0;font-size:12px;color:var(--ink-500)">Sin liga de proveedor no aparece aquí — captúrala en el material primero.</p>
+        </sc-if>
+
       </div>
     </div>
   </sc-if>
@@ -1193,7 +1489,7 @@
 </sc-if>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{
-  &quot;startView&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;dashboard&quot;, &quot;purchases&quot;, &quot;materials&quot;, &quot;products&quot;, &quot;calculator&quot;, &quot;prices&quot;, &quot;seeding&quot;, &quot;growth&quot;, &quot;settings&quot;], &quot;default&quot;: &quot;dashboard&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Comportamiento&quot; },
+  &quot;startView&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;dashboard&quot;, &quot;purchases&quot;, &quot;materials&quot;, &quot;products&quot;, &quot;calculator&quot;, &quot;prices&quot;, &quot;events&quot;, &quot;seeding&quot;, &quot;growth&quot;, &quot;settings&quot;], &quot;default&quot;: &quot;dashboard&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Comportamiento&quot; },
   &quot;forceMobile&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Comportamiento&quot; }
 }">
 class Component extends DCLogic {
@@ -1302,6 +1598,7 @@ class Component extends DCLogic {
       gear: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm8.5 3a8.5 8.5 0 0 0-.15-1.6l2-1.55-2-3.46-2.35 1a8.6 8.6 0 0 0-2.75-1.6L14.9 2.3H9.1l-.35 2.5a8.6 8.6 0 0 0-2.75 1.6l-2.35-1-2 3.46 2 1.55A8.5 8.5 0 0 0 3.5 12c0 .55.05 1.08.15 1.6l-2 1.55 2 3.46 2.35-1a8.6 8.6 0 0 0 2.75 1.6l.35 2.5h5.8l.35-2.5a8.6 8.6 0 0 0 2.75-1.6l2.35 1 2-3.46-2-1.55c.1-.52.15-1.05.15-1.6Z',
       seed: 'M22 2 11 13M22 2l-7 20-4-9-9-4Z',
       trend: 'M3 17l6-6 4 4 8-8M15 7h6v6',
+      stand: 'M3 9.5 5.5 4h13L21 9.5M3 9.5h18M3 9.5v10.5h18V9.5M8.7 9.5 10 4M15.3 9.5 14 4M9 20v-5.5h6V20',
     };
     return R.createElement('svg', { viewBox: '0 0 24 24', width: s, height: s, fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flex: 'none' } },
       R.createElement('path', { d: paths[name] || paths.home }));
@@ -1539,6 +1836,79 @@ class Component extends DCLogic {
     this.up(); this.showToast('Precios recalculados para ' + p.name);
   }
 
+  // ---------- eventos ops ----------
+  blankEventForm(e) {
+    const s = this.state.db.settings;
+    const firstChannel = Object.keys(s.channels || {})[0] || 'inPerson';
+    if (!e) {
+      return {
+        id: null, name: '', venue: '', startDate: this.today(), endDate: '',
+        boothCost: '', setupCost: '', otherCost: '',
+        channel: s.channels && s.channels.inPerson ? 'inPerson' : firstChannel,
+        cardSharePct: '70', status: 'planeado', notes: '',
+        orderCapUSD: String(this.C.DEFAULT_ORDER_CAP_USD),
+      };
+    }
+    return {
+      id: e.id, name: e.name || '', venue: e.venue || '',
+      startDate: e.startDate || '', endDate: e.endDate || '',
+      boothCost: e.boothCost == null ? '' : String(e.boothCost),
+      setupCost: e.setupCost == null ? '' : String(e.setupCost),
+      otherCost: e.otherCost == null ? '' : String(e.otherCost),
+      channel: e.channel || firstChannel,
+      cardSharePct: e.cardSharePct == null ? '' : String(Math.round(+e.cardSharePct * 100)),
+      status: e.status || 'planeado', notes: e.notes || '',
+      orderCapUSD: e.orderCapUSD == null ? String(this.C.DEFAULT_ORDER_CAP_USD) : String(e.orderCapUSD),
+    };
+  }
+
+  saveEventForm = () => {
+    const d = this.state.drawer, f = d.form, db = this.state.db;
+    if (!f.name.trim()) { d.error = 'Ponle nombre al evento.'; this.up(); return; }
+    if (f.startDate && f.endDate && f.endDate < f.startDate) { d.error = 'La fecha de fin va después de la de inicio.'; this.up(); return; }
+    for (const [k, label] of [['boothCost', 'costo del lugar'], ['setupCost', 'montaje'], ['otherCost', 'otros gastos']]) {
+      if (f[k] !== '' && (isNaN(+f[k]) || +f[k] < 0)) { d.error = 'Revisa el ' + label + ' — debe ser un número mayor o igual a cero.'; this.up(); return; }
+    }
+    if (f.orderCapUSD !== '' && (isNaN(+f.orderCapUSD) || +f.orderCapUSD <= 0)) { d.error = 'El límite por pedido debe ser mayor a cero.'; this.up(); return; }
+    const share = f.cardSharePct === '' ? null : Math.min(100, Math.max(0, +f.cardSharePct || 0)) / 100;
+    const patch = {
+      name: f.name.trim(), venue: f.venue.trim(),
+      startDate: f.startDate, endDate: f.endDate,
+      boothCost: +f.boothCost || 0, setupCost: +f.setupCost || 0, otherCost: +f.otherCost || 0,
+      channel: f.channel, cardSharePct: share, status: f.status, notes: f.notes,
+      orderCapUSD: f.orderCapUSD === '' ? this.C.DEFAULT_ORDER_CAP_USD : +f.orderCapUSD,
+      updatedAt: this.today(),
+    };
+    if (f.id) {
+      const e = (db.events || []).find((x) => x.id === f.id);
+      if (e) Object.assign(e, patch);
+      this.setState({ drawer: null }); this.up(); this.showToast('Evento actualizado');
+      return;
+    }
+    const ev = {
+      id: this.C.uid(), ...patch, plan: [], actual: [], orders: [],
+      checklist: this.C.EVENT_CHECKLIST_BASE.map((text) => ({ id: this.C.uid(), text, done: false })),
+      createdAt: this.today(),
+    };
+    if (!db.events) db.events = [];
+    db.events.unshift(ev);
+    this.setState({ drawer: null });
+    this.showToast('Evento creado — ahora elige qué llevas');
+    this.nav('eventDetail', { id: ev.id });
+    this.setState({ drawer: { type: 'eventPlan', id: ev.id, which: 'plan', search: '' } });
+  };
+
+  // agrega (o suma 1 a) una pieza en la lista `which` del evento
+  eventAddLine(e, which, productId) {
+    const key = which === 'actual' ? 'actual' : 'plan';
+    if (!e[key]) e[key] = [];
+    const found = e[key].find((l) => l.productId === productId);
+    if (found) found.quantity = (+found.quantity || 0) + 1;
+    else e[key].push({ id: this.C.uid(), productId, quantity: 1 });
+    e.updatedAt = this.today();
+    this.up();
+  }
+
   // ---------- exports ----------
   plComputedRows() {
     const { db, plSearch, plCat, plStatus, plSort } = this.state, C = this.C, s = db.settings;
@@ -1610,9 +1980,9 @@ class Component extends DCLogic {
     const navDef = [
       ['dashboard', 'Inicio', 'home'], ['purchases', 'Compras', 'cart'], ['materials', 'Materiales', 'box'],
       ['products', 'Productos', 'tag'], ['calculator', 'Calculadora', 'calc'], ['prices', 'Lista de precios', 'list'],
-      ['seeding', 'Seeding', 'seed'], ['growth', 'Crecimiento', 'trend'],
+      ['events', 'Eventos', 'stand'], ['seeding', 'Seeding', 'seed'], ['growth', 'Crecimiento', 'trend'],
     ];
-    const viewGroup = { purchaseDetail: 'purchases', purchaseForm: 'purchases', productDetail: 'products' }[st.view] || st.view;
+    const viewGroup = { purchaseDetail: 'purchases', purchaseForm: 'purchases', productDetail: 'products', eventDetail: 'events' }[st.view] || st.view;
     const navBtn = ([id, label, ic]) => {
       const active = viewGroup === id;
       return {
@@ -1624,11 +1994,13 @@ class Component extends DCLogic {
     };
     const navMain = navDef.map(navBtn);
     const navBottom = [navBtn(['settings', 'Ajustes', 'gear'])];
-    const navMobile = [['dashboard', 'Inicio', 'home'], ['purchases', 'Compras', 'cart'], ['materials', 'Material', 'box'], ['products', 'Productos', 'tag'], ['prices', 'Precios', 'list'], ['seeding', 'Seeding', 'seed'], ['growth', 'Crecer', 'trend']].map(([id, label, ic]) => {
+    const navMobile = [['dashboard', 'Inicio', 'home'], ['purchases', 'Compras', 'cart'], ['materials', 'Material', 'box'], ['products', 'Productos', 'tag'], ['prices', 'Precios', 'list'], ['events', 'Bazar', 'stand'], ['seeding', 'Seeding', 'seed'], ['growth', 'Crecer', 'trend']].map(([id, label, ic]) => {
       const active = viewGroup === id;
       return {
         label, icon: this.icon(ic, 21), onClick: () => this.nav(id),
-        style: 'display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;cursor:pointer;font-family:var(--font-sans);padding:6px 4px;border-radius:12px;min-width:44px;' +
+        // flex:none + la barra con overflow-x:auto → con 8 secciones la barra se
+        // desliza en pantallas angostas en vez de encimar los textos.
+        style: 'display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;cursor:pointer;font-family:var(--font-sans);padding:6px 4px;border-radius:12px;min-width:44px;flex:none;' +
           (active ? 'color:var(--periwinkle-700)' : 'color:var(--ink-500)'),
       };
     });
@@ -1645,6 +2017,9 @@ class Component extends DCLogic {
       vDash: st.view === 'dashboard', vPurchases: st.view === 'purchases', vPurchaseDetail: st.view === 'purchaseDetail',
       vPurchaseForm: st.view === 'purchaseForm', vMaterials: st.view === 'materials', vProducts: st.view === 'products',
       vProductDetail: st.view === 'productDetail', vCalc: st.view === 'calculator', vPrices: st.view === 'prices', vSeeding: st.view === 'seeding', vGrowth: st.view === 'growth', vSettings: st.view === 'settings',
+      vEvents: st.view === 'events', vEventDetail: st.view === 'eventDetail',
+      goEvents: () => this.nav('events'),
+      goNewEvent: () => this.setState({ drawer: { type: 'eventForm', form: this.blankEventForm() } }),
       goPurchases: () => this.nav('purchases'), goProducts: () => this.nav('products'),
       goCalc: () => this.nav('calculator'), goSettings: () => this.nav('settings'),
       goNewPurchase: () => { this.setState({ pf: this.blankPurchaseForm(), pfStep: 1, pfErrors: [] }); this.nav('purchaseForm'); },
@@ -1657,7 +2032,7 @@ class Component extends DCLogic {
       confirmYes: () => { const a = st.confirm && st.confirm.action; this.setState({ confirm: null }); if (a) a(); },
       closeDrawer: () => this.setState({ drawer: null }),
       drawerOpen: !!st.drawer,
-      drawerTitle: '', dMaterial: false, dProductForm: false, dRecipe: false, dSeedForm: false, dGrowthCapture: false, dGrowthEdit: false,
+      drawerTitle: '', dMaterial: false, dProductForm: false, dRecipe: false, dSeedForm: false, dGrowthCapture: false, dGrowthEdit: false, dEventForm: false, dEventPlan: false, dOrderPick: false,
       drawerPanelStyle: isMobile
         ? 'position:fixed;left:0;right:0;bottom:0;z-index:95;max-height:88dvh;background:var(--paper);border-radius:20px 20px 0 0;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:kynSheetUp 240ms ease-out;padding-bottom:env(safe-area-inset-bottom)'
         : 'position:fixed;top:0;right:0;bottom:0;z-index:95;width:min(540px,92vw);background:var(--paper);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:kynSlideIn 240ms ease-out',
@@ -2173,6 +2548,16 @@ class Component extends DCLogic {
             { ...this.fld('Ganancia mínima (%)', C.round2(s.minProfitPct * 100), setS('minProfitPct', pctT), { type: 'number' }), hint: 'Para el punto mínimo de venta' },
           ],
         },
+        {
+          title: 'Notion',
+          desc: 'Las bases de materiales, compras, productos, seeding y crecimiento ya vienen configuradas. Eventos es la única que se conecta desde aquí.',
+          fields: [
+            {
+              ...this.fld('ID de la base «KYN Eventos»', s.eventsDbId || '', setS('eventsDbId', (v) => v.trim()), { placeholder: 'Pega aquí el ID de la base' }),
+              hint: 'Crea en Notion una base con las columnas Name (título) y Data (texto), conéctala a la integración KYN Cost Studio y pega su ID (los 32 caracteres de su URL). Sin esto, los eventos se guardan solo en este navegador.',
+            },
+          ],
+        },
       ];
       for (const chId of Object.keys(s.channels)) {
         const cfg = s.channels[chId];
@@ -2327,6 +2712,265 @@ class Component extends DCLogic {
       });
       vals.growthSyncOff = st.syncMode === 'notion' && !!(this._nctx && this._nctx.growthDisabled);
       vals.growthSyncOffStyle = this.alertStyle('warn').replace('cursor:pointer;', '');
+    }
+
+    // ============ EVENTOS ============
+    const evChip = (status) => {
+      const def = C.EVENT_STATUS.find((x) => x.v === status) || C.EVENT_STATUS[0];
+      return { label: def.label, style: 'font-size:12px;font-weight:700;border-radius:99px;padding:3px 10px;flex:none;background:' + def.bg + ';color:' + def.fg };
+    };
+    const evDatesLabel = (e) => {
+      const days = C.eventDays(e);
+      const d1 = e.startDate ? C.fmtDate(e.startDate) : '';
+      const d2 = e.endDate && e.endDate !== e.startDate ? ' – ' + C.fmtDate(e.endDate) : '';
+      return [(d1 ? d1 + d2 : 'Sin fecha'), days + (days === 1 ? ' día' : ' días')].join(' · ');
+    };
+
+    if (vals.vEventDetail) {
+      const e = (db.events || []).find((x) => x.id === st.params.id);
+      if (!e) { vals.vEventDetail = false; vals.vEvents = true; }
+      else {
+        const r = C.eventPlan(db, e, s);
+        const ra = C.eventPlan(db, e, s, 'actual');
+        const needs = C.eventMaterialNeeds(db, e);
+        const chip = evChip(e.status);
+        const chName = (s.channels[e.channel || 'inPerson'] || {}).label || 'En persona';
+        vals.ev = {
+          name: e.name, chipLabel: chip.label, chipStyle: chip.style,
+          sub: [evDatesLabel(e), e.venue, 'Precios de ' + chName].filter(Boolean).join(' · '),
+        };
+        vals.evEdit = () => this.setState({ drawer: { type: 'eventForm', form: this.blankEventForm(e) } });
+        vals.evDelete = () => this.ask('Eliminar evento', 'Se eliminará “' + e.name + '” con su plan y su lista de pendientes. En Notion queda recuperable en la papelera.', 'Eliminar', () => {
+          db.events = (db.events || []).filter((x) => x.id !== e.id);
+          this.nav('events'); this.up(); this.showToast('Evento eliminado');
+        });
+        vals.evAddPlan = () => this.setState({ drawer: { type: 'eventPlan', id: e.id, which: 'plan', search: '' } });
+        vals.evAddActual = () => this.setState({ drawer: { type: 'eventPlan', id: e.id, which: 'actual', search: '' } });
+
+        // --- KPIs ---
+        const hrs = (n) => (Math.round(n * 10) / 10).toLocaleString('es-MX');
+        const val = (accent) => 'font-size:28px;font-weight:800;letter-spacing:-0.02em;color:' + (accent || 'var(--ink-900)');
+        const costParts = [
+          (+e.boothCost || 0) ? M(+e.boothCost, 0) + ' lugar' : '',
+          (+e.setupCost || 0) ? M(+e.setupCost, 0) + ' montaje' : '',
+          (+e.otherCost || 0) ? M(+e.otherCost, 0) + ' otros' : '',
+        ].filter(Boolean).join(' + ');
+        vals.evKpis = [
+          {
+            label: 'Te cuesta estar ahí', value: M(r.fixed, 0), valStyle: val(),
+            sub: costParts || 'Captura el costo del lugar en “Editar datos”',
+          },
+          {
+            label: 'Para salir tablas', value: r.bePieces != null ? r.bePieces + (r.bePieces === 1 ? ' pieza' : ' piezas') : '—',
+            valStyle: val(r.bePieces == null ? 'var(--ink-300)' : (r.viable ? 'var(--success)' : 'var(--danger)')),
+            sub: r.bePieces == null ? 'Agrega piezas al plan'
+              : (r.viable
+                ? 'Vender ' + C.pct(r.sellThrough, 0) + ' de lo que llevas · ' + M(r.beRevenue, 0)
+                : 'Solo llevas ' + r.totals.units + ' — con este mix necesitas ' + r.bePieces),
+          },
+          {
+            label: 'Si vendes todo', value: M(r.net, 0),
+            valStyle: val(r.net > 0 ? 'var(--success)' : (r.net < 0 ? 'var(--danger)' : 'var(--ink-900)')),
+            sub: 'Ya pagado el lugar y tus ' + hrs(r.laborHours) + ' h de taller',
+          },
+          {
+            label: 'Taller', value: hrs(r.laborHours) + ' h', valStyle: val(),
+            sub: r.totals.units + (r.totals.units === 1 ? ' pieza por hacer' : ' piezas por hacer'),
+          },
+        ];
+
+        // --- lista del plan ---
+        const lineRows = (which) => {
+          const list = which === 'actual' ? ra.lines : r.lines;
+          return list.map((l) => {
+            const nm = l.product ? l.product.name : 'Producto eliminado';
+            const sub = !l.product ? 'Quítalo del plan'
+              : l.missingCost ? 'Costo incompleto — no entra en los números'
+              : l.price == null ? 'Sin precio en este canal'
+              : M(l.price, 0) + ' c/u · costo ' + M(l.unitCost, 0) + (l.suggested ? ' · precio sugerido' : '');
+            return {
+              name: nm, sub,
+              quantity: String(l.quantity == null ? '' : l.quantity),
+              revenue: l.revenue == null ? '—' : M(l.revenue, 0),
+              qtyAria: 'Cantidad de ' + nm, delAria: 'Quitar ' + nm,
+              onQty: (ev2) => {
+                const target = (which === 'actual' ? e.actual : e.plan).find((x) => x.id === l.id);
+                if (target) { target.quantity = ev2.target.value === '' ? '' : Math.max(0, +ev2.target.value || 0); e.updatedAt = today; }
+                this.up();
+              },
+              onRemove: () => {
+                if (which === 'actual') e.actual = (e.actual || []).filter((x) => x.id !== l.id);
+                else e.plan = (e.plan || []).filter((x) => x.id !== l.id);
+                e.updatedAt = today; this.up();
+              },
+            };
+          });
+        };
+        vals.evPlanRows = lineRows('plan');
+        vals.evPlanCount = r.totals.units + (r.totals.units === 1 ? ' pieza' : ' piezas');
+        vals.evPlanEmpty = !(e.plan || []).length;
+        vals.evPlanWarn = r.hasIncomplete ? 'Hay piezas sin precio o sin costo completo — no entran en los números de abajo.' : '';
+        vals.evPlanWarnStyle = this.alertStyle('warn').replace('cursor:pointer;', '');
+
+        // --- los números ---
+        const row = (label, value, kind) => ({
+          label, value,
+          rowStyle: 'display:flex;justify-content:space-between;align-items:baseline;gap:12px' + (kind === 'total' ? ';border-top:1px solid var(--ink-100);padding-top:10px;margin-top:2px' : ''),
+          labelStyle: 'font-size:' + (kind === 'total' ? '14px;font-weight:700' : '13.5px;color:var(--ink-500)'),
+          valueStyle: 'font-size:' + (kind === 'total' ? '17px;font-weight:800' : '14px;font-weight:600') +
+            (kind === 'total' ? ';color:' + (r.net > 0 ? 'var(--success)' : (r.net < 0 ? 'var(--danger)' : 'var(--ink-900)')) : ''),
+        });
+        const rate = +s.defaultLaborHourlyRate || 0;
+        vals.evMoneyRows = [
+          row('Venta', M(r.totals.revenue, 0)),
+          row('− Materiales y empaque', M(r.totals.materials, 0)),
+          row('− Tus horas (' + hrs(r.laborHours) + ' h a ' + M(rate, 0) + ')', M(r.totals.labor, 0)),
+          row('− Comisión de cobro (' + C.pct(r.feePct) + ')', M(r.totals.fees, 0)),
+          row('= Utilidad de las piezas', M(r.totals.profit, 0)),
+          row('− Costo del evento', M(r.fixed, 0)),
+          row('= Te queda', M(r.net, 0), 'total'),
+        ];
+        vals.evMoneyNote = !r.totals.units
+          ? 'Agrega piezas al plan para ver el punto de equilibrio.'
+          : (r.viable
+            ? 'En efectivo puro —sin descontarte las horas— entran ' + M(r.netCash, 0) + '. El lugar se paga con ' + r.bePieces + (r.bePieces === 1 ? ' pieza' : ' piezas') + ' de este mismo mix.'
+            : 'Aun vendiendo todo lo que llevas no se cubre el evento: la utilidad del plan (' + M(r.totals.profit, 0) + ') queda debajo de los ' + M(r.fixed, 0) + ' que cuesta estar ahí. Lleva más piezas.');
+
+        // --- material faltante ---
+        vals.evNeedRows = needs.rows.map((n) => ({
+          name: n.name,
+          needed: 'pide ' + C.round2(n.needed) + ' ' + n.unit,
+          have: 'tengo ' + C.round2(n.have) + ' ' + n.unit,
+          short: n.short > 0 ? 'faltan ' + C.round2(n.short) + ' ' + n.unit : (n.tight ? 'justo' : 'alcanza'),
+          shortStyle: 'font-size:12.5px;font-weight:700;width:110px;text-align:right;color:' +
+            (n.short > 0 ? 'var(--danger)' : (n.tight ? 'var(--warning)' : 'var(--success)')),
+          restock: n.short <= 0 ? '' : (n.unknownCost ? 'sin costo' : M(n.restockCost, 0)),
+        }));
+        vals.evNeedsEmpty = !needs.rows.length;
+        vals.evNeedsFooter = needs.shortCount > 0;
+        vals.evRestockCost = M(needs.restockCost, 0) + (needs.anyUnknown ? ' + material sin costo registrado' : '');
+        vals.evNeedsSummary = !needs.rows.length ? ''
+          : (needs.shortCount
+            ? needs.shortCount + (needs.shortCount === 1 ? ' material te falta' : ' materiales te faltan')
+            : 'Tienes todo el material' ) + (needs.tightCount ? ' · ' + needs.tightCount + ' van justos' : '');
+
+        // --- pedidos de compra (proveedor externo, USD) ---
+        if (!e.orders) e.orders = [];
+        const os = C.eventOrdersSummary(db, e);
+        vals.evAddOrder = () => {
+          e.orders.push({ id: C.uid(), label: 'Pedido ' + (e.orders.length + 1), lines: [] });
+          e.updatedAt = today; this.up();
+        };
+        vals.evOrdersEmpty = !os.orders.length;
+        vals.evOrdersFooter = os.orders.length > 0;
+        vals.evOrdersCount = os.orders.length;
+        vals.evOrdersGrandTotal = C.usd(os.grandTotalUSD);
+        vals.evOrdersSub = !os.orders.length
+          ? 'límite ' + C.usd(os.cap) + ' por pedido, sin envío'
+          : os.orders.length + (os.orders.length === 1 ? ' pedido' : ' pedidos') + ' · ' + C.usd(os.grandTotalUSD) +
+            ' en total' + (os.overCount ? ' · ' + os.overCount + ' se pasa' + (os.overCount === 1 ? '' : 'n') + ' del límite' : '');
+        vals.evOrderCards = os.orders.map((od) => {
+          const realOrder = e.orders.find((x) => x.id === od.id);
+          return {
+            label: od.label,
+            onLabel: (ev2) => { realOrder.label = ev2.target.value; e.updatedAt = today; this.up(); },
+            badge: od.overCap ? 'se pasa del límite' : (od.nearCap ? 'cerca del límite' : ''),
+            badgeStyle: 'font-size:11px;font-weight:700;border-radius:99px;padding:3px 9px;' +
+              (od.overCap ? 'background:#FBEDEC;color:var(--danger)' : 'background:#FBF4E4;color:#8A6D1F'),
+            subtotal: C.usd(od.subtotalUSD),
+            totalColor: 'color:' + (od.overCap ? 'var(--danger)' : 'var(--ink-900)'),
+            onAddLine: () => this.setState({ drawer: { type: 'orderPick', eventId: e.id, orderId: od.id, search: '' } }),
+            onDelete: () => this.ask('Eliminar pedido', 'Se eliminará “' + od.label + '” con sus ' + od.lines.length + ' línea(s).', 'Eliminar', () => {
+              e.orders = e.orders.filter((x) => x.id !== od.id); e.updatedAt = today; this.up(); this.showToast('Pedido eliminado');
+            }),
+            empty: !od.lines.length,
+            lines: od.lines.map((l) => {
+              const nm = l.material ? l.material.name : 'material eliminado';
+              return {
+                name: nm, url: l.material ? l.material.vendor.url : '#',
+                quantity: String(l.quantity == null ? '' : l.quantity),
+                qtyUnit: l.packSize > 1 ? 'bolsa' + (l.qty === 1 ? '' : 's') + ' (' + C.round2(l.pieces) + ' pza)' : (l.material ? l.material.unit : 'pza'),
+                unitPrice: l.unitPrice == null ? '—' : C.usd(l.unitPrice),
+                subtotal: l.subtotal == null ? '—' : C.usd(l.subtotal),
+                moveTo: od.id,
+                moveOptions: os.orders.map((oo) => ({ value: oo.id, label: oo.label })),
+                onMove: (ev2) => {
+                  const targetId = ev2.target.value;
+                  if (targetId === od.id) return;
+                  const src = e.orders.find((x) => x.id === od.id);
+                  const idx = src.lines.findIndex((x) => x.id === l.id);
+                  if (idx < 0) return;
+                  const [moved] = src.lines.splice(idx, 1);
+                  const dst = e.orders.find((x) => x.id === targetId);
+                  if (dst) dst.lines.push(moved); else src.lines.splice(idx, 0, moved);
+                  e.updatedAt = today; this.up();
+                },
+                onQty: (ev2) => {
+                  const real = realOrder.lines.find((x) => x.id === l.id);
+                  if (real) real.quantity = ev2.target.value === '' ? '' : Math.max(0, +ev2.target.value || 0);
+                  e.updatedAt = today; this.up();
+                },
+                onRemove: () => { realOrder.lines = realOrder.lines.filter((x) => x.id !== l.id); e.updatedAt = today; this.up(); },
+              };
+            }),
+          };
+        });
+
+        // --- checklist ---
+        const cl = e.checklist || (e.checklist = []);
+        vals.evChecklist = cl.map((c) => ({
+          text: c.text, mark: c.done ? '✓' : '',
+          aria: (c.done ? 'Desmarcar: ' : 'Marcar como listo: ') + c.text, delAria: 'Quitar pendiente: ' + c.text,
+          boxStyle: 'flex:none;width:22px;height:22px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:800;line-height:1;display:flex;align-items:center;justify-content:center;font-family:var(--font-sans);' +
+            (c.done ? 'background:var(--periwinkle-500);border:1.5px solid var(--periwinkle-500);color:#fff' : 'background:var(--white);border:1.5px solid var(--ink-300);color:transparent'),
+          textStyle: c.done ? 'color:var(--ink-300);text-decoration:line-through' : '',
+          onToggle: () => { c.done = !c.done; e.updatedAt = today; this.up(); },
+          onText: (ev2) => { c.text = ev2.target.value; e.updatedAt = today; this.up(); },
+          onRemove: () => { e.checklist = cl.filter((x) => x.id !== c.id); e.updatedAt = today; this.up(); },
+        }));
+        vals.evCheckCount = cl.length ? cl.filter((c) => c.done).length + ' de ' + cl.length + ' listos' : '';
+        vals.evAddCheck = () => { cl.push({ id: C.uid(), text: '', done: false }); e.updatedAt = today; this.up(); };
+
+        // --- resultado real ---
+        vals.evActualRows = lineRows('actual');
+        vals.evActualEmpty = !(e.actual || []).length;
+        vals.evActualHas = (e.actual || []).length > 0;
+        vals.evActualRowsMoney = [
+          row('Vendido', M(ra.totals.revenue, 0)),
+          row('Utilidad de las piezas', M(ra.totals.profit, 0)),
+          row('Después del costo del evento', M(ra.net, 0), 'total'),
+        ];
+      }
+    }
+
+    if (vals.vEvents) {
+      const list = [...(db.events || [])].sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''));
+      vals.eventGridStyle = 'display:grid;gap:16px;grid-template-columns:' + (isMobile ? '1fr' : 'repeat(auto-fill,minmax(320px,1fr))');
+      vals.eventsEmpty = !list.length;
+      vals.eventCards = list.map((e) => {
+        const r = C.eventPlan(db, e, s);
+        const needs = C.eventMaterialNeeds(db, e);
+        const chip = evChip(e.status);
+        let note = '';
+        if (!(e.plan || []).length) note = 'Todavía sin plan — elige qué llevas.';
+        else if (needs.shortCount) note = 'Te falta material: ' + M(needs.restockCost, 0) + ' para completar el plan.';
+        else note = 'Tienes el material · si vendes todo te quedan ' + M(r.net, 0) + '.';
+        return {
+          name: e.name, chipLabel: chip.label, chipStyle: chip.style,
+          sub: [evDatesLabel(e), e.venue].filter(Boolean).join(' · '),
+          fixed: M(r.fixed, 0),
+          be: r.bePieces != null ? r.bePieces + (r.bePieces === 1 ? ' pieza' : ' piezas') : '—',
+          beStyle: 'font-size:20px;font-weight:800;letter-spacing:-0.02em;color:' +
+            (r.bePieces == null ? 'var(--ink-300)' : (r.viable ? 'var(--success)' : 'var(--danger)')),
+          note,
+          onOpen: () => this.nav('eventDetail', { id: e.id }),
+        };
+      });
+      vals.eventsSyncOff = st.syncMode === 'notion' && !!(this._nctx && this._nctx.eventsDisabled);
+      vals.eventsSyncOffMsg = this._nctx && this._nctx.eventsDbId
+        ? 'La base «KYN Eventos» no respondió, así que esta sección no se está guardando en Notion. En Notion: abre la base → menú ··· → Conexiones → agrega «KYN Cost Studio», y recarga la app.'
+        : 'Los eventos todavía no se guardan en Notion. Crea una base «KYN Eventos» con las columnas Name y Data (texto), conéctala a la integración y pega su ID en Ajustes → Notion. Mientras tanto quedan guardados en este navegador.';
+      vals.eventsSyncOffStyle = this.alertStyle('warn').replace('cursor:pointer;', '');
     }
 
     // ============ DRAWERS ============
@@ -2529,7 +3173,97 @@ class Component extends DCLogic {
         });
       }
     }
-    if (d && !vals.dMaterial && !vals.dProductForm && !vals.dRecipe && !vals.dSeedForm && !vals.dGrowthCapture && !vals.dGrowthEdit) vals.drawerOpen = false;
+    if (d && d.type === 'eventForm') {
+      const f = d.form;
+      vals.dEventForm = true;
+      vals.drawerTitle = f.id ? 'Editar evento' : 'Nuevo evento';
+      vals.defSaveLabel = f.id ? 'Guardar cambios' : 'Crear evento';
+      const set = (k) => (ev2) => { f[k] = ev2.target.value; d.error = ''; this.up(); };
+      const F = (label, key, opts) => ({ ...this.fld(label, f[key], set(key), opts) });
+      vals.defFields = [
+        F('Nombre del evento', 'name', { placeholder: 'Bazar artesanal de octubre' }),
+        F('Lugar', 'venue', { placeholder: 'Dónde es' }),
+        F('Empieza', 'startDate', { type: 'date' }),
+        F('Termina', 'endDate', { type: 'date', hint: 'Déjalo vacío si es un solo día.' }),
+        F('Costo del lugar', 'boothCost', { type: 'number', placeholder: '1200', hint: 'Lo que pagas por el spot, completo.' }),
+        F('Montaje', 'setupCost', { type: 'number', placeholder: '1200', hint: 'Mantel, exhibidores, letrero, bolsas. Casi todo se reusa en el siguiente bazar, pero la primera vez sí se paga.' }),
+        F('Otros gastos', 'otherCost', { type: 'number', placeholder: '0', hint: 'Gasolina, estacionamiento, comidas de los días del evento.' }),
+        F('Precios que vas a usar', 'channel', { options: Object.keys(s.channels).map((k) => ({ value: k, label: s.channels[k].label })) }),
+        F('% que cobras con terminal', 'cardSharePct', { type: 'number', placeholder: '70', hint: 'El efectivo no paga comisión, así que esto ajusta el cálculo. 70 = siete de cada diez ventas con tarjeta.' }),
+        F('Límite por pedido de material (USD)', 'orderCapUSD', { type: 'number', placeholder: '50', hint: 'Lo que puede sumar un pedido de proveedor externo sin envío — ajusta si tu límite de importación es otro.' }),
+        F('Estado', 'status', { options: C.EVENT_STATUS.map((x) => ({ value: x.v, label: x.label })) }),
+        F('Notas', 'notes', { placeholder: 'Lo que quieras recordar' }),
+      ];
+      vals.defError = d.error || '';
+      vals.defSave = this.saveEventForm;
+    }
+    if (d && d.type === 'eventPlan') {
+      const e = (db.events || []).find((x) => x.id === d.id);
+      if (e) {
+        const which = d.which === 'actual' ? 'actual' : 'plan';
+        vals.dEventPlan = true;
+        vals.drawerTitle = which === 'actual' ? 'Registrar lo vendido' : 'Qué llevas al evento';
+        vals.depIntro = which === 'actual'
+          ? 'Agrega cada pieza que se vendió. Toca varias veces para sumar cantidad — luego la ajustas en la lista.'
+          : 'Agrega las piezas que piensas llevar. Toca varias veces para sumar cantidad — luego la ajustas en la lista.';
+        vals.depSearch = d.search || '';
+        vals.depOnSearch = (ev2) => { d.search = ev2.target.value; this.up(); };
+        const q = (d.search || '').toLowerCase();
+        const current = e[which] || [];
+        const cands = db.products.filter((p) => {
+          if (p.status === 'archivado' || p.status === 'descontinuado') return false;
+          return !q || p.name.toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q);
+        });
+        vals.depCandidates = cands.map((p) => {
+          const line = current.find((l) => l.productId === p.id);
+          const { price } = C.eventUnitPrice(db, p, e, s);
+          // Un producto con materiales sin costo registrado no tiene precio
+          // confiable — mejor decirlo que enseñar una cifra inventada.
+          const incomplete = costOf[p.id].missing.length > 0;
+          return {
+            name: p.name,
+            sub: p.category + ' · ' + (incomplete
+              ? 'costo incompleto (falta ' + costOf[p.id].missing.join(', ') + ')'
+              : (price == null ? 'sin precio en este canal' : M(price, 0)) + ' · costo ' + M(costOf[p.id].total, 0)),
+            qtyLabel: line ? '×' + (+line.quantity || 0) : '',
+            qtyStyle: 'font-size:12px;font-weight:700;color:var(--periwinkle-700);white-space:nowrap',
+            onAdd: () => this.eventAddLine(e, which, p.id),
+          };
+        });
+        vals.depNoResults = !cands.length;
+      }
+    }
+    if (d && d.type === 'orderPick') {
+      const e = (db.events || []).find((x) => x.id === d.eventId);
+      const order = e && (e.orders || []).find((x) => x.id === d.orderId);
+      if (e && order) {
+        vals.dOrderPick = true;
+        vals.drawerTitle = 'Agregar material';
+        vals.opOrderLabel = '“' + order.label + '”';
+        vals.opSearch = d.search || '';
+        vals.opOnSearch = (ev2) => { d.search = ev2.target.value; this.up(); };
+        const q = (d.search || '').toLowerCase();
+        const catalog = C.vendorCatalog(db).filter((m) => !q || m.name.toLowerCase().includes(q));
+        vals.opCandidates = catalog.map((m) => {
+          const line = (order.lines || []).find((l) => l.materialId === m.id);
+          const unit = m.vendor.packSize > 1 ? '/bolsa de ' + m.vendor.packSize : '/pza';
+          return {
+            name: m.name,
+            sub: M ? (C.usd(m.vendor.tiers[0].price) + ' ' + unit + (m.size ? ' · ' + m.size : '')) : '',
+            qtyLabel: line ? '×' + (+line.quantity || 0) : '',
+            qtyStyle: 'font-size:12px;font-weight:700;color:var(--periwinkle-700);white-space:nowrap',
+            onAdd: () => {
+              const found = order.lines.find((l) => l.materialId === m.id);
+              if (found) found.quantity = (+found.quantity || 0) + 1;
+              else order.lines.push({ id: C.uid(), materialId: m.id, quantity: 1 });
+              e.updatedAt = today; this.up();
+            },
+          };
+        });
+        vals.opNoResults = !catalog.length;
+      }
+    }
+    if (d && !vals.dMaterial && !vals.dProductForm && !vals.dRecipe && !vals.dSeedForm && !vals.dGrowthCapture && !vals.dGrowthEdit && !vals.dEventForm && !vals.dEventPlan && !vals.dOrderPick) vals.drawerOpen = false;
 
     return vals;
   }

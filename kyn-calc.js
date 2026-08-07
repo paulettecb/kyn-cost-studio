@@ -6,8 +6,13 @@
 export const uid = () => 'k' + Math.random().toString(36).slice(2, 10);
 export const round2 = (n) => Math.round(n * 100) / 100;
 
-export const money = (n, d = 2) =>
-  n == null || isNaN(n) ? '—' : '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: d, maximumFractionDigits: d });
+// El signo va ANTES del $ ("-$474", no "$-474"): los números de un evento sí
+// pueden salir negativos y "$-474" se lee como error de la app.
+export const money = (n, d = 2) => {
+  if (n == null || isNaN(n)) return '—';
+  const v = Number(n);
+  return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('es-MX', { minimumFractionDigits: d, maximumFractionDigits: d });
+};
 
 export const pct = (n, d = 1) =>
   n == null || isNaN(n) ? '—' : (n * 100).toFixed(d).replace(/\.0$/, '') + '%';
@@ -212,6 +217,271 @@ export function channelSuggestedPrice(cost, ch, settings) {
   return roundPrice(p, settings.defaultRoundingRule);
 }
 
+// ---------- Eventos: bazares, ferias y pop-ups ----------
+
+export const EVENT_STATUS = [
+  { v: 'planeado',   label: 'Planeado',   bg: '#EFEDF1', fg: '#6B6873' },
+  { v: 'confirmado', label: 'Confirmado', bg: '#DCE6FB', fg: '#3A5BB0' },
+  { v: 'cerrado',    label: 'Cerrado',    bg: '#D6F0DE', fg: '#2E7D4F' },
+  { v: 'cancelado',  label: 'Cancelado',  bg: '#FBDCE4', fg: '#9B4D67' },
+];
+
+// Lista de preparación que se le pone a cada evento nuevo. Son los pendientes
+// que de verdad tumban un bazar si se olvidan (el material tarda en llegar,
+// el cambio en efectivo no se consigue el mismo día).
+export const EVENT_CHECKLIST_BASE = [
+  'Confirmar medidas de la mesa, horario y si hay luz',
+  'Pedir el material que falta (lo que viene de fuera, primero)',
+  'Producir el inventario del plan',
+  'Etiquetas de precio y letrero de marca',
+  'Exhibidores: algo vertical + niveles en la mesa',
+  'Terminal de pago probada',
+  'Cambio en efectivo (billetes chicos)',
+  'Empaque, bolsas y tarjetas con QR',
+  'Montaje de prueba en casa y foto',
+];
+
+// Inventario por material. OJO: es la suma de TODO lo comprado, sin descontar
+// lo que ya se usó en piezas hechas — la app no lleva consumo. Es un techo,
+// no el inventario real del taller.
+export function materialStock(db) {
+  const stock = {};
+  for (const p of db.purchases || []) {
+    for (const it of computePurchaseItems(p)) {
+      if (!it.materialId) continue;
+      stock[it.materialId] = (stock[it.materialId] || 0) + (+it.quantity || 0);
+    }
+  }
+  return stock;
+}
+
+// Materia prima que consumen `qty` unidades de `product`, expandiendo los
+// bundles hasta llegar a materiales. `_path` evita ciclos.
+export function expandRawMaterials(db, product, qty, out, _path) {
+  out = out || {};
+  const path = _path || [];
+  if (!product || path.includes(product.id)) return out;
+  for (const l of product.recipe || []) {
+    const q = (+l.quantity || 0) * (+qty || 0);
+    if (l.productId) {
+      const sub = (db.products || []).find((x) => x.id === l.productId);
+      if (sub) expandRawMaterials(db, sub, q, out, [...path, product.id]);
+      continue;
+    }
+    if (!l.materialId) continue;
+    out[l.materialId] = (out[l.materialId] || 0) + q;
+  }
+  return out;
+}
+
+// Mano de obra contenida en un producto, incluida la de los componentes de un
+// bundle. Se resta del costo total para saber qué sale de verdad del bolsillo.
+export function productLaborCost(db, product, settings, _path) {
+  settings = settings || db.settings;
+  const path = _path || [];
+  if (!product || path.includes(product.id)) return 0;
+  const rate = product.laborHourlyRate != null ? +product.laborHourlyRate : (+settings.defaultLaborHourlyRate || 0);
+  let total = ((+product.laborTimeMinutes || 0) / 60) * rate;
+  for (const l of product.recipe || []) {
+    if (!l.productId) continue;
+    const sub = (db.products || []).find((x) => x.id === l.productId);
+    if (sub) total += productLaborCost(db, sub, settings, [...path, product.id]) * (+l.quantity || 0);
+  }
+  return total;
+}
+
+export function productLaborMinutes(db, product, _path) {
+  const path = _path || [];
+  if (!product || path.includes(product.id)) return 0;
+  let mins = +product.laborTimeMinutes || 0;
+  for (const l of product.recipe || []) {
+    if (!l.productId) continue;
+    const sub = (db.products || []).find((x) => x.id === l.productId);
+    if (sub) mins += productLaborMinutes(db, sub, [...path, product.id]) * (+l.quantity || 0);
+  }
+  return mins;
+}
+
+export function eventDays(e) {
+  if (e.days != null && e.days !== '' && +e.days > 0) return Math.round(+e.days);
+  if (e.startDate && e.endDate) {
+    const a = new Date(e.startDate + 'T00:00:00Z'), b = new Date(e.endDate + 'T00:00:00Z');
+    if (!isNaN(a) && !isNaN(b) && b >= a) return Math.round((b - a) / 86400000) + 1;
+  }
+  return 1;
+}
+
+// Lo que cuesta estar ahí, se venda o no.
+export function eventFixedCost(e) {
+  return (+e.boothCost || 0) + (+e.setupCost || 0) + (+e.otherCost || 0);
+}
+
+// Comisión efectiva: la del canal, ponderada por qué tanto se cobra con
+// terminal — el efectivo no paga comisión.
+export function eventFeePct(e, settings) {
+  const ch = (settings.channels || {})[e.channel || 'inPerson'];
+  if (!ch) return 0;
+  const share = e.cardSharePct == null || e.cardSharePct === '' ? 1 : Math.min(1, Math.max(0, +e.cardSharePct || 0));
+  return channelFeesPct(ch) * share;
+}
+
+// Precio del producto en el canal del evento; si no hay precio guardado, el
+// sugerido por el canal (así una pieza nueva no rompe el cálculo).
+export function eventUnitPrice(db, product, event, settings) {
+  const chId = event.channel || 'inPerson';
+  const sp = (product.savedPrices || {})[chId];
+  if (sp && sp.price != null && sp.price !== '' && !isNaN(+sp.price)) return { price: +sp.price, suggested: false };
+  const ch = (settings.channels || {})[chId];
+  if (!ch) return { price: null, suggested: false };
+  const p = channelSuggestedPrice(productCost(db, product, settings).total, ch, settings);
+  return { price: p, suggested: true };
+}
+
+// Corre los números de un evento sobre una de sus dos listas:
+//   'plan'   → lo que piensas llevar
+//   'actual' → lo que de verdad se vendió (para cerrar el evento)
+// `profit` descuenta tu mano de obra (ya te pagaste tus horas);
+// `cash` NO la descuenta — es lo que realmente entra a la bolsa.
+export function eventPlan(db, event, settings, which) {
+  settings = settings || db.settings;
+  const key = which === 'actual' ? 'actual' : 'plan';
+  const feePct = eventFeePct(event, settings);
+  const lines = [];
+  const t = { units: 0, revenue: 0, materials: 0, labor: 0, laborMinutes: 0, cost: 0, fees: 0, profit: 0, cash: 0 };
+  for (const l of event[key] || []) {
+    const p = (db.products || []).find((x) => x.id === l.productId);
+    const qty = +l.quantity || 0;
+    if (!p) { lines.push({ ...l, product: null, qty, missing: true }); continue; }
+    const c = productCost(db, p, settings);
+    const laborCost = productLaborCost(db, p, settings);
+    const { price, suggested } = eventUnitPrice(db, p, event, settings);
+    const ok = price != null && !c.missing.length;
+    const fees = ok ? price * feePct : 0;
+    const profit = ok ? price - c.total - fees : null;
+    const cash = ok ? price - (c.total - laborCost) - fees : null;
+    const minutes = productLaborMinutes(db, p);
+    lines.push({
+      ...l, product: p, qty, price, suggested, unitCost: c.total, unitCash: c.total - laborCost,
+      unitProfit: profit, unitCashProfit: cash, minutes,
+      revenue: ok ? price * qty : null, profit: profit != null ? profit * qty : null,
+      cashProfit: cash != null ? cash * qty : null,
+      margin: ok && price ? profit / price : null,
+      incomplete: !ok, missingCost: !!c.missing.length,
+    });
+    if (!ok) continue;
+    t.units += qty; t.revenue += price * qty; t.materials += (c.total - laborCost) * qty;
+    t.labor += laborCost * qty; t.laborMinutes += minutes * qty;
+    t.cost += c.total * qty; t.fees += fees * qty; t.profit += profit * qty; t.cash += cash * qty;
+  }
+  const fixed = eventFixedCost(event);
+  const avgProfit = t.units ? t.profit / t.units : null;
+  const avgCash = t.units ? t.cash / t.units : null;
+  return {
+    lines, totals: t, fixed, feePct,
+    laborHours: t.laborMinutes / 60,
+    net: t.profit - fixed,               // si vendes TODO, ya pagado el lugar y tus horas
+    netCash: t.cash - fixed,             // efectivo en la bolsa si vendes todo
+    avgProfit, avgCash,
+    // punto de equilibrio: piezas del mismo mix que hay que vender para
+    // cubrir el costo fijo del evento
+    bePieces: avgProfit && avgProfit > 0 ? Math.ceil(fixed / avgProfit) : null,
+    beCashPieces: avgCash && avgCash > 0 ? Math.ceil(fixed / avgCash) : null,
+    beRevenue: t.profit > 0 ? (fixed * t.revenue) / t.profit : null,
+    sellThrough: t.profit > 0 ? fixed / t.profit : null,
+    viable: t.profit > fixed,
+    hasIncomplete: lines.some((l) => l.incomplete || l.missing),
+  };
+}
+
+// Materia prima que pide el plan contra lo comprado, y cuánto cuesta reponer
+// lo que falta.
+export function eventMaterialNeeds(db, event) {
+  const need = {};
+  for (const l of event.plan || []) {
+    const p = (db.products || []).find((x) => x.id === l.productId);
+    if (p) expandRawMaterials(db, p, +l.quantity || 0, need);
+  }
+  const stock = materialStock(db);
+  const rows = Object.keys(need).map((mid) => {
+    const m = (db.materials || []).find((x) => x.id === mid);
+    const needed = need[mid], have = stock[mid] || 0;
+    const short = Math.max(0, needed - have);
+    const unitCost = materialUnitCost(db, m);
+    return {
+      materialId: mid, material: m, name: m ? m.name : 'material eliminado', unit: m ? m.unit : '',
+      needed, have, short, unitCost,
+      restockCost: unitCost != null ? short * unitCost : null,
+      unknownCost: unitCost == null && short > 0,
+      tight: short === 0 && have > 0 && needed / have >= 0.8,
+    };
+  });
+  rows.sort((a, b) => b.short - a.short || a.name.localeCompare(b.name));
+  return {
+    rows,
+    restockCost: rows.reduce((s, r) => s + (r.restockCost || 0), 0),
+    shortCount: rows.filter((r) => r.short > 0).length,
+    tightCount: rows.filter((r) => r.tight).length,
+    anyUnknown: rows.some((r) => r.unknownCost),
+  };
+}
+
+// ---------- Pedidos de compra (proveedor externo, USD) ----------
+// Ligado a un evento: sus "pedidos" son los carritos reales que se van a
+// mandar, uno a la vez porque no pueden traslaparse (ver EVENT_CHECKLIST_BASE).
+// El escalón de precio de un material aplica sobre la cantidad de ESA línea
+// en ESE pedido — no se acumula entre pedidos aunque sea el mismo material.
+
+export const usd = (n) => {
+  if (n == null || isNaN(n)) return '—';
+  const v = Number(n);
+  return (v < 0 ? '-US$' : 'US$') + Math.abs(v).toFixed(2);
+};
+
+export const DEFAULT_ORDER_CAP_USD = 50;
+
+// Precio unitario (por pieza, o por bolsa si packSize > 1) al pedir `qty`
+// unidades de este material en un mismo pedido.
+export function vendorUnitPrice(vendor, qty) {
+  if (!vendor || !vendor.tiers || !vendor.tiers.length || !(qty > 0)) return null;
+  let price = vendor.tiers[0].price;
+  for (const t of vendor.tiers) { if (qty >= t.minQty) price = t.price; else break; }
+  return price;
+}
+
+export function orderTotals(db, order) {
+  const lines = (order.lines || []).map((l) => {
+    const m = (db.materials || []).find((x) => x.id === l.materialId);
+    const vendor = m && m.vendor;
+    const qty = +l.quantity || 0;
+    const unitPrice = vendor ? vendorUnitPrice(vendor, qty) : null;
+    const subtotal = unitPrice != null ? unitPrice * qty : null;
+    const packSize = vendor ? (vendor.packSize || 1) : 1;
+    return { ...l, material: m, vendor, qty, unitPrice, subtotal, packSize, pieces: qty * packSize };
+  });
+  const subtotalUSD = lines.reduce((s, l) => s + (l.subtotal || 0), 0);
+  return { lines, subtotalUSD };
+}
+
+// Todos los pedidos de un evento, con sus totales y si alguno se pasa del
+// límite por pedido (importación/de minimis — no es negociable por pieza).
+export function eventOrdersSummary(db, event) {
+  const cap = event.orderCapUSD != null && event.orderCapUSD !== '' && +event.orderCapUSD > 0 ? +event.orderCapUSD : DEFAULT_ORDER_CAP_USD;
+  const orders = (event.orders || []).map((o) => {
+    const t = orderTotals(db, o);
+    // "cerca del límite" solo a menos de $3 — armar pedidos eficientes los
+    // deja naturalmente arriba del 85%, así que ese umbral avisaría siempre.
+    return { ...o, ...t, overCap: t.subtotalUSD >= cap, nearCap: t.subtotalUSD >= cap - 3 && t.subtotalUSD < cap };
+  });
+  const grandTotalUSD = orders.reduce((s, o) => s + o.subtotalUSD, 0);
+  return { orders, cap, grandTotalUSD, overCount: orders.filter((o) => o.overCap).length };
+}
+
+// Materiales con proveedor externo capturado — el catálogo del que se puede
+// armar un pedido.
+export function vendorCatalog(db) {
+  return (db.materials || []).filter((m) => m.vendor && m.status !== 'archivado');
+}
+
 // ---------- Advertencias ----------
 
 export function productWarnings(db, product, settings, cost) {
@@ -289,21 +559,70 @@ export function makeSeedDB() {
     ...(extra || {}),
   });
 
+  // Proveedor externo (Buckleguy): precio en USD por escalón de cantidad —
+  // `tiers` ordenados ascendente por `minQty`, el precio aplica a TODA la
+  // cantidad de esa línea en ESE pedido (no se acumula entre pedidos).
+  // `packSize` > 1 = se vende por bolsa/paquete (ej. tornillos de 50), y
+  // `quantity` en un pedido representa bolsas, no piezas sueltas.
+  const V = (url, tiers, packSize) => ({ name: 'Buckleguy', url, packSize: packSize || 1, tiers });
+
   const materials = [
     M('m_bio_peri', 'Biothane Periwinkle', 'Biothane', 'Beta 19 mm', 'm', { color: 'Periwinkle', size: '19 mm', supplier: 'BioThane USA' }),
     M('m_bio_camel', 'Biothane Camel', 'Biothane', 'Beta 19 mm', 'm', { color: 'Camel', size: '19 mm', supplier: 'BioThane USA' }),
     M('m_bio_olive', 'Biothane Olive', 'Biothane', 'Beta 19 mm', 'm', { color: 'Olive', size: '19 mm', supplier: 'BioThane USA' }),
     M('m_bio_cafe', 'Biothane Café Claro', 'Biothane', 'Beta 19 mm', 'm', { color: 'Café claro', size: '19 mm', supplier: 'BioThane USA' }),
-    M('m_oring', 'O Ring solid brass', 'Herrajes', 'Argollas', 'pza', { size: '25 mm', supplier: 'Hardware Import Co.' }),
-    M('m_dring', 'D Ring solid brass', 'Herrajes', 'Argollas', 'pza', { size: '25 mm', supplier: 'Hardware Import Co.' }),
-    M('m_trigger', 'Trigger Snap solid brass', 'Herrajes', 'Mosquetones', 'pza', { size: '19 mm', supplier: 'Hardware Import Co.' }),
-    M('m_swivel', 'Swivel Hook solid brass', 'Herrajes', 'Mosquetones', 'pza', { size: '19 mm', supplier: 'Hardware Import Co.' }),
-    M('m_mini_swivel', 'Mini Swivel Hook', 'Herrajes', 'Mosquetones', 'pza', { size: '13 mm', supplier: 'Hardware Import Co.' }),
-    M('m_slider', 'Slider solid brass', 'Herrajes', 'Conectores', 'pza', { size: '19 mm', supplier: 'Hardware Import Co.' }),
+    M('m_oring', 'O Ring solid brass', 'Herrajes', 'Argollas', 'pza', {
+      size: '25 mm', supplier: 'Buckleguy',
+      vendor: V('https://www.buckleguy.com/or0-gold-plate-thick-o-ring-solid-brass-ll-multiple-sizes/',
+        [{ minQty: 1, price: 2.25 }, { minQty: 10, price: 1.91 }, { minQty: 100, price: 1.69 }]),
+    }),
+    M('m_dring', 'D Ring solid brass', 'Herrajes', 'Argollas', 'pza', {
+      size: '25 mm', supplier: 'Buckleguy',
+      vendor: V('https://www.buckleguy.com/2011-gold-plate-d-ring-solid-brass-ll-multiple-sizes/',
+        [{ minQty: 1, price: 2.63 }, { minQty: 10, price: 2.24 }, { minQty: 100, price: 1.97 }]),
+    }),
+    M('m_trigger', 'Trigger Snap solid brass', 'Herrajes', 'Mosquetones', 'pza', {
+      size: '19 mm', supplier: 'Buckleguy',
+      vendor: V('https://www.buckleguy.com/3002a-gold-plate-swivel-trigger-snap-solid-brass-ll-multiple-sizes/',
+        [{ minQty: 1, price: 6.94 }, { minQty: 10, price: 5.90 }, { minQty: 100, price: 5.21 }]),
+    }),
+    M('m_swivel', 'Swivel Hook solid brass', 'Herrajes', 'Mosquetones', 'pza', {
+      size: '19 mm', supplier: 'Buckleguy',
+      vendor: V('https://www.buckleguy.com/3001a-gold-plate-swivel-bolt-snap-solid-brass-ll-multiple-sizes/',
+        [{ minQty: 1, price: 6.34 }, { minQty: 10, price: 5.39 }, { minQty: 100, price: 4.75 }]),
+    }),
+    M('m_mini_swivel', 'Mini Swivel Hook', 'Herrajes', 'Mosquetones', 'pza', {
+      size: '13 mm', supplier: 'Buckleguy',
+      vendor: V('https://www.buckleguy.com/3008a-3-4-gold-plate-mini-swivel-trigger-snap-solid-brass-ll/',
+        [{ minQty: 1, price: 5.08 }, { minQty: 10, price: 4.32 }, { minQty: 100, price: 3.81 }]),
+    }),
+    M('m_slider', 'Slider solid brass', 'Herrajes', 'Conectores', 'pza', {
+      size: '19 mm', supplier: 'Buckleguy',
+      vendor: V('https://www.buckleguy.com/20122-natural-brass-single-loop-solid-brass-ll-multiple-sizes/',
+        [{ minQty: 1, price: 1.45 }, { minQty: 10, price: 1.23 }, { minQty: 100, price: 1.09 }, { minQty: 500, price: 0.94 }, { minQty: 1000, price: 0.87 }]),
+    }),
     M('m_cs5', 'Chicago Screw 5 mm', 'Remaches', 'Chicago screws', 'pza', { size: '5 mm', supplier: 'Hardware Import Co.' }),
-    M('m_cs65', 'Chicago Screw 6.5 mm', 'Remaches', 'Chicago screws', 'pza', { size: '6.5 mm', supplier: 'Hardware Import Co.' }),
-    M('m_buckle', 'Buckle M solid brass', 'Hebillas', '', 'pza', { size: 'M', supplier: 'Hardware Import Co.' }),
-    M('m_eyelets', 'Ojillos latón', 'Remaches', 'Ojillos', 'pza', { size: '8 mm', supplier: 'Mercería local' }),
+    M('m_cs65', 'Chicago Screw 6.5 mm', 'Remaches', 'Chicago screws', 'pza', {
+      size: '6.5 mm', supplier: 'Buckleguy',
+      vendor: V('https://www.buckleguy.com/chicago-screws-cylinder-cap-natural-brass-solid-brass-ll-50-per-bag-multiple-sizes/',
+        [{ minQty: 1, price: 28.21 }, { minQty: 10, price: 25.39 }, { minQty: 20, price: 21.16 }, { minQty: 50, price: 18.34 }], 50),
+    }),
+    M('m_buckle', 'Buckle M solid brass', 'Hebillas', '', 'pza', {
+      size: 'M', supplier: 'Buckleguy',
+      vendor: V('https://www.buckleguy.com/c5384-natural-brass-double-bar-buckle-solid-brass-ll-multiple-sizes/',
+        [{ minQty: 1, price: 3.72 }, { minQty: 10, price: 3.16 }, { minQty: 100, price: 2.79 }, { minQty: 500, price: 2.42 }]),
+    }),
+    // Ojillos: confirmado que también son de Buckleguy, no de mercería — pero
+    // sin liga ni precio capturados todavía, así que se queda sin `vendor`
+    // hasta que se manden (no se inventa el precio).
+    M('m_eyelets', 'Ojillos latón', 'Remaches', 'Ojillos', 'pza', { size: '8 mm', supplier: 'Buckleguy', notes: 'Ya tiene bastante inventario de esto — no es prioridad de pedido.' }),
+    // No lo usa ninguna receta todavía — se guarda el precio real porque ya
+    // se mandó, pero no entra a ningún pedido hasta que se use en un producto.
+    M('m_dloop', 'Double Loop solid brass', 'Herrajes', 'Conectores', 'pza', {
+      size: '19 mm', supplier: 'Buckleguy', status: 'prueba', notes: 'Sin receta que lo use todavía.',
+      vendor: V('https://www.buckleguy.com/20114-gold-plate-double-loop-solid-brass-ll-multiple-sizes/',
+        [{ minQty: 1, price: 2.28 }, { minQty: 10, price: 1.94 }, { minQty: 100, price: 1.71 }]),
+    }),
     M('m_box', 'Caja kraft KYN', 'Empaque', 'Cajas', 'pza', { supplier: 'Empaques MX' }),
     M('m_label', 'Etiqueta tejida KYN', 'Etiquetas', '', 'pza', { supplier: 'Etiquetas Deluxe' }),
     M('m_tissue', 'Papel tissue', 'Empaque', 'Consumibles', 'pza', { supplier: 'Empaques MX' }),
@@ -437,7 +756,42 @@ export function makeSeedDB() {
   // seguidores son datos reales que captura la usuaria; inventarlas confunde.
   const growth = [];
 
-  const db = { materials, purchases, products, seeding, growth, settings };
+  // Un evento de ejemplo, para que la sección se entienda de un vistazo.
+  const events = [
+    {
+      id: 'ev_bazar_oct', name: 'Bazar artesanal de octubre', venue: '',
+      startDate: '2026-10-16', endDate: '2026-10-18', days: 3,
+      boothCost: 1200, setupCost: 1200, otherCost: 0,
+      channel: 'inPerson', cardSharePct: 0.7, status: 'planeado',
+      notes: 'Puesto compartido con una vecina — mesas lado a lado.',
+      plan: [
+        { id: 'evl1', productId: 'p_collar', quantity: 8 },
+        { id: 'evl2', productId: 'p_leash', quantity: 5 },
+        { id: 'evl3', productId: 'p_cross', quantity: 4 },
+        { id: 'evl4', productId: 'p_handle', quantity: 4 },
+        { id: 'evl5', productId: 'p_long3', quantity: 3 },
+        { id: 'evl6', productId: 'p_long5', quantity: 2 },
+        { id: 'evl7', productId: 'p_duo', quantity: 1 },
+      ],
+      actual: [],
+      checklist: EVENT_CHECKLIST_BASE.map((text, i) => ({ id: 'evc' + i, text, done: false })),
+      orderCapUSD: 50,
+      orders: [
+        { id: 'evo1', label: 'Pedido 1', lines: [{ id: 'evo1l1', materialId: 'm_dring', quantity: 14 }, { id: 'evo1l2', materialId: 'm_trigger', quantity: 2 }] },
+        { id: 'evo2', label: 'Pedido 2', lines: [{ id: 'evo2l1', materialId: 'm_dring', quantity: 13 }, { id: 'evo2l2', materialId: 'm_oring', quantity: 10 }] },
+        { id: 'evo3', label: 'Pedido 3', lines: [{ id: 'evo3l1', materialId: 'm_oring', quantity: 11 }, { id: 'evo3l2', materialId: 'm_slider', quantity: 20 }] },
+        { id: 'evo4', label: 'Pedido 4', lines: [{ id: 'evo4l1', materialId: 'm_swivel', quantity: 7 }] },
+        { id: 'evo5', label: 'Pedido 5', lines: [{ id: 'evo5l1', materialId: 'm_swivel', quantity: 7 }] },
+        { id: 'evo6', label: 'Pedido 6', lines: [{ id: 'evo6l1', materialId: 'm_swivel', quantity: 2 }, { id: 'evo6l2', materialId: 'm_buckle', quantity: 10 }] },
+        { id: 'evo7', label: 'Pedido 7', lines: [{ id: 'evo7l1', materialId: 'm_trigger', quantity: 7 }] },
+        { id: 'evo8', label: 'Pedido 8', lines: [{ id: 'evo8l1', materialId: 'm_cs65', quantity: 1 }, { id: 'evo8l2', materialId: 'm_swivel', quantity: 1 }] },
+        { id: 'evo9', label: 'Pedido 9', lines: [{ id: 'evo9l1', materialId: 'm_cs65', quantity: 1 }] },
+      ],
+      createdAt: '2026-08-07', updatedAt: '2026-08-07',
+    },
+  ];
+
+  const db = { materials, purchases, products, seeding, growth, events, settings };
 
   // Precios finales del Excel, con snapshot del costo actual
   const excelPrices = {

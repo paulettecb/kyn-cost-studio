@@ -14,7 +14,7 @@ El sitio de Netlify también sincroniza con Notion: la función `netlify/functio
 
 ## Conectar Notion (una sola vez)
 
-Los datos viven en Notion, en la página **KYN Studio → KYN Cost Studio** (bases *Materiales*, *Compras*, *Productos* y *Ajustes*) y en la base *KYN Seeding Tracker*. Para que la app pueda leer y escribir ahí:
+Los datos viven en Notion, en la página **KYN Studio → KYN Cost Studio** (bases *Materiales*, *Compras*, *Productos* y *Ajustes*), en la base *KYN Seeding Tracker* y —si la conectas— en *KYN Eventos* (ver [Eventos](#eventos)). Para que la app pueda leer y escribir ahí:
 
 1. Entra a https://www.notion.so/profile/integrations y crea una integración interna (nombre sugerido: `KYN Cost Studio`). Copia el **Internal Integration Secret** (empieza con `ntn_` o `secret_`).
 2. En Notion, abre la página **KYN Cost Studio**, menú `···` → **Conexiones / Connections** → agrega tu integración `KYN Cost Studio`. Haz lo mismo en la base **KYN Seeding Tracker** (menú `···` → **Conexiones**) para que la sección *Seeding* también sincronice.
@@ -40,6 +40,38 @@ En la sección **Lista de precios** hay dos vistas:
 ## Bundles
 
 Un **bundle** es un producto armado con *otros productos* (por ejemplo, collar + correa). Se crea como cualquier producto (categoría *Bundles*) y en su **receta** eliges la pestañita **Productos** para agregar los componentes. Su costo es la suma del costo real de cada componente (más empaque u otros extras que le pongas), se recalcula solo si cambia el costo de un componente, y aparece en la lista de precios y la calculadora como cualquier producto. También puedes mezclar: productos + materiales sueltos en la misma receta (la merma solo aplica a los materiales).
+
+## Eventos
+
+La sección **Eventos** sirve para planear bazares, ferias y pop-ups: te dice cuánto tienes que vender para que valga la pena y qué material te falta comprar antes.
+
+Creas el evento con el costo del lugar, los días, el montaje (mantel, exhibidores, letrero — la primera vez sí se paga) y qué tanto vas a cobrar con terminal. Luego eliges **qué llevas**, y la app calcula:
+
+- **Para salir tablas** — cuántas piezas de ese mismo mix tienes que vender para cubrir el costo del evento, y qué porcentaje del plan representa.
+- **Si vendes todo** — lo que te queda ya pagados el lugar, los materiales, la comisión de cobro y tus horas de taller. Abajo también aparece el número **en efectivo**, sin descontarte las horas.
+- **Material para producirlo** — cuánta materia prima pide el plan (expandiendo bundles hasta llegar a materiales), cuánta tienes y cuánto cuesta reponer lo que falta. Ojo: *«tengo»* es la suma de todas tus compras registradas, **sin descontar lo que ya usaste** en piezas hechas — la app no lleva consumo, así que tómalo como techo y verifica en el taller.
+- **Preparación** — la lista de pendientes del evento, editable y con palomita.
+- **Lo que se vendió** — al terminar registras lo que de verdad salió y ves el resultado real contra lo planeado.
+
+Los precios que usa son los del canal que elijas en el evento (normalmente *En persona*). Si una pieza no tiene precio guardado en ese canal, usa el sugerido y lo marca. Las piezas con materiales sin costo registrado se señalan y **no** entran en los totales, para que ningún número salga inventado.
+
+### Pedidos de compra
+
+Dentro de un evento, debajo de "Material para producirlo", vive **Pedidos de compra**: arma los carritos reales de un proveedor externo (por ahora Buckleguy) respetando un límite en USD por pedido (configurable en "Editar datos", 50 USD por default — el umbral típico de importación sin traslape). Cada pedido muestra su liga directa al producto, la cantidad, el precio según el escalón de mayoreo que le toque *a esa línea en ese pedido* (partir una cantidad entre varios pedidos no acumula el descuento), y se avisa en amarillo cuando un pedido queda a menos de $3 del límite.
+
+Todo es editable ahí mismo: cambia cantidades, mueve una línea de un pedido a otro con el selector, agrega materiales con "+ material" o pedidos completos con "+ Nuevo pedido" — pensado para "jugar" con distintos armados antes de comprar.
+
+Para que un material aparezca en el catálogo de "+ material" necesita tener capturado su proveedor (liga, tamaño de paquete si se vende por bolsa, y escalones de precio en USD) — por ahora eso solo se captura editando el seed en `kyn-calc.js` (`materialId.vendor`), no hay editor en la UI todavía.
+
+### Guardarlos en Notion
+
+A diferencia de las demás, la base de eventos no viene precargada: se conecta desde la app.
+
+1. En Notion, dentro de **KYN Cost Studio**, crea una base llamada *KYN Eventos* con al menos las columnas **Name** (título) y **Data** (texto). Las demás (*Clave, Fecha, Lugar, Estado, Costo del evento, Venta planeada, Piezas para salir tablas, Actualizado*) se llenan solas si las creas con ese nombre.
+2. Menú `···` → **Conexiones** → agrega `KYN Cost Studio`.
+3. Copia el ID de la base (los 32 caracteres de su URL) y pégalo en la app en **Ajustes → Notion**.
+
+Mientras no hagas esto la sección funciona igual, pero los eventos se guardan solo en ese navegador y la app te lo avisa.
 
 ## Crecimiento
 
