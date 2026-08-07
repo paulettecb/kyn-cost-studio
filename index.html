@@ -1061,17 +1061,36 @@
             <span style="font-size:12.5px;color:var(--ink-500)">{{ evOrdersSub }}</span>
             <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" style="margin-left:auto" onClick="{{ evAddOrder }}">+ Nuevo pedido</button>
           </div>
+
+          <sc-if value="{{ evAllocEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="background:var(--oat);border-radius:var(--radius-md);padding:4px 4px">
+              <sc-for list="{{ evAllocRows }}" as="a" hint-placeholder-count="6">
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;font-size:13px">
+                  <span style="flex:1;min-width:120px;font-weight:600">{{ a.name }}</span>
+                  <span style="font-size:12px;color:var(--ink-500);width:96px;text-align:right">necesitas {{ a.needed }}</span>
+                  <span style="{{ a.barTrackStyle }}"><span style="{{ a.barFillStyle }}"></span></span>
+                  <span style="{{ a.statusStyle }}">{{ a.status }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ evAllocDone }}"><div style="{{ evAllocDoneStyle }}">✓ Ya asignaste todo lo que el plan pide a algún pedido.</div></sc-if>
+          </sc-if>
+
           <sc-if value="{{ evOrdersEmpty }}" hint-placeholder-val="{{ false }}">
             <div style="font-size:13.5px;color:var(--ink-500)">Arma pedidos con los materiales de proveedor externo (por ahora, Buckleguy) y aquí ves si cada uno se pasa del límite antes de dar clic en pagar.</div>
           </sc-if>
           <sc-for list="{{ evOrderCards }}" as="o" hint-placeholder-count="3">
             <div style="border:1px solid var(--ink-100);border-radius:var(--radius-md);padding:14px 16px;display:flex;flex-direction:column;gap:10px">
               <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                <input class="kyn-input" value="{{ o.label }}" onChange="{{ o.onLabel }}" aria-label="Nombre del pedido" style="max-width:150px;padding:7px 10px;font-weight:700;font-size:13.5px">
-                <sc-if value="{{ o.badge }}"><span style="{{ o.badgeStyle }}">{{ o.badge }}</span></sc-if>
-                <span style="margin-left:auto;font-weight:800;font-size:15px;{{ o.totalColor }}">{{ o.subtotal }}</span>
-                <button class="kyn-btn kyn-btn--ghost kyn-btn--sm" onClick="{{ o.onAddLine }}">+ material</button>
-                <button onClick="{{ o.onDelete }}" title="Eliminar pedido" aria-label="Eliminar {{ o.label }}" style="background:none;border:none;cursor:pointer;color:var(--ink-500);font-size:15px;padding:4px" style-hover="color:var(--danger)">✕</button>
+                <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:180px">
+                  <input class="kyn-input" value="{{ o.label }}" onChange="{{ o.onLabel }}" aria-label="Nombre del pedido" style="max-width:150px;padding:7px 10px;font-weight:700;font-size:13.5px">
+                  <sc-if value="{{ o.badge }}"><span style="{{ o.badgeStyle }}">{{ o.badge }}</span></sc-if>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;flex:none">
+                  <span style="font-weight:800;font-size:15px;{{ o.totalColor }}">{{ o.subtotal }}</span>
+                  <button class="kyn-btn kyn-btn--ghost kyn-btn--sm" onClick="{{ o.onAddLine }}">+ material</button>
+                  <button onClick="{{ o.onDelete }}" title="Eliminar pedido" aria-label="Eliminar {{ o.label }}" style="background:none;border:none;cursor:pointer;color:var(--ink-500);font-size:15px;padding:4px" style-hover="color:var(--danger)">✕</button>
+                </div>
               </div>
               <sc-if value="{{ o.empty }}"><div style="font-size:12.5px;color:var(--ink-500)">Sin materiales — agrega con “+ material”.</div></sc-if>
               <sc-for list="{{ o.lines }}" as="l" hint-placeholder-count="2">
@@ -2869,6 +2888,28 @@ class Component extends DCLogic {
           ? 'límite ' + C.usd(os.cap) + ' por pedido, sin envío'
           : os.orders.length + (os.orders.length === 1 ? ' pedido' : ' pedidos') + ' · ' + C.usd(os.grandTotalUSD) +
             ' en total' + (os.overCount ? ' · ' + os.overCount + ' se pasa' + (os.overCount === 1 ? '' : 'n') + ' del límite' : '');
+
+        // --- contador: cuánto de lo que pide el plan ya está en algún pedido ---
+        const alloc = C.eventOrderAllocation(db, e);
+        vals.evAllocEmpty = alloc.rows.length > 0;
+        vals.evAllocRows = alloc.rows.map((a) => {
+          const pct = a.needed ? Math.min(1, Math.max(0, a.allocated / a.needed)) : 0;
+          const over = a.remaining < 0;
+          const color = a.covered ? 'var(--success)' : 'var(--periwinkle-500)';
+          return {
+            name: a.material.name,
+            needed: C.round2(a.needed) + ' ' + (a.material.unit || 'pza'),
+            barTrackStyle: 'flex:none;width:64px;height:6px;border-radius:99px;background:var(--ink-100);overflow:hidden',
+            barFillStyle: 'display:block;height:100%;border-radius:99px;background:' + color + ';width:' + Math.round(pct * 100) + '%',
+            status: a.covered
+              ? (over ? '✓ +' + C.round2(-a.remaining) + ' de más' : '✓ cubierto')
+              : 'faltan ' + C.round2(a.remaining) + ' por asignar',
+            statusStyle: 'font-size:12px;font-weight:700;width:150px;text-align:right;color:' + (a.covered ? 'var(--success)' : 'var(--ink-700)'),
+          };
+        });
+        vals.evAllocDone = alloc.allCovered;
+        vals.evAllocDoneStyle = 'font-size:12.5px;font-weight:700;color:var(--success);padding:6px 4px 0';
+
         vals.evOrderCards = os.orders.map((od) => {
           const realOrder = e.orders.find((x) => x.id === od.id);
           return {
