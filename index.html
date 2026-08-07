@@ -1054,6 +1054,50 @@
           <p style="margin:2px 0 0;font-size:12.5px;color:var(--ink-500);line-height:1.55">“Tengo” es todo lo que has comprado según tus compras registradas — la app no descuenta lo que ya usaste en piezas hechas, así que tómalo como techo y verifica en el taller.</p>
         </div>
 
+        <!-- PEDIDOS DE COMPRA -->
+        <div class="kyn-card" style="padding:22px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+            <h2 style="margin:0;font-size:16px;font-weight:700">Pedidos de compra</h2>
+            <span style="font-size:12.5px;color:var(--ink-500)">{{ evOrdersSub }}</span>
+            <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" style="margin-left:auto" onClick="{{ evAddOrder }}">+ Nuevo pedido</button>
+          </div>
+          <sc-if value="{{ evOrdersEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:13.5px;color:var(--ink-500)">Arma pedidos con los materiales de proveedor externo (por ahora, Buckleguy) y aquí ves si cada uno se pasa del límite antes de dar clic en pagar.</div>
+          </sc-if>
+          <sc-for list="{{ evOrderCards }}" as="o" hint-placeholder-count="3">
+            <div style="border:1px solid var(--ink-100);border-radius:var(--radius-md);padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <input class="kyn-input" value="{{ o.label }}" onChange="{{ o.onLabel }}" aria-label="Nombre del pedido" style="max-width:150px;padding:7px 10px;font-weight:700;font-size:13.5px">
+                <sc-if value="{{ o.badge }}"><span style="{{ o.badgeStyle }}">{{ o.badge }}</span></sc-if>
+                <span style="margin-left:auto;font-weight:800;font-size:15px;{{ o.totalColor }}">{{ o.subtotal }}</span>
+                <button class="kyn-btn kyn-btn--ghost kyn-btn--sm" onClick="{{ o.onAddLine }}">+ material</button>
+                <button onClick="{{ o.onDelete }}" title="Eliminar pedido" aria-label="Eliminar {{ o.label }}" style="background:none;border:none;cursor:pointer;color:var(--ink-500);font-size:15px;padding:4px" style-hover="color:var(--danger)">✕</button>
+              </div>
+              <sc-if value="{{ o.empty }}"><div style="font-size:12.5px;color:var(--ink-500)">Sin materiales — agrega con “+ material”.</div></sc-if>
+              <sc-for list="{{ o.lines }}" as="l" hint-placeholder-count="2">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid #F3F1F5">
+                  <a href="{{ l.url }}" target="_blank" rel="noopener" style="flex:1;min-width:120px;font-weight:600;font-size:13px;color:var(--periwinkle-700);text-decoration:none" style-hover="text-decoration:underline">{{ l.name }} ↗</a>
+                  <input class="kyn-input" type="number" min="0" step="1" value="{{ l.quantity }}" onChange="{{ l.onQty }}" aria-label="Cantidad de {{ l.name }}" style="width:58px;padding:6px 8px;text-align:right;font-size:13px">
+                  <span style="font-size:11.5px;color:var(--ink-500);width:64px">{{ l.qtyUnit }}</span>
+                  <span style="font-size:12px;color:var(--ink-500);width:60px;text-align:right">{{ l.unitPrice }}</span>
+                  <span style="font-size:13px;font-weight:700;width:66px;text-align:right">{{ l.subtotal }}</span>
+                  <select class="kyn-input" value="{{ l.moveTo }}" onChange="{{ l.onMove }}" aria-label="Mover {{ l.name }} a otro pedido" style="padding:5px 6px;font-size:12px;width:100px">
+                    <sc-for list="{{ l.moveOptions }}" as="mo"><option value="{{ mo.value }}">{{ mo.label }}</option></sc-for>
+                  </select>
+                  <button onClick="{{ l.onRemove }}" title="Quitar" aria-label="Quitar {{ l.name }}" style="background:none;border:none;cursor:pointer;color:var(--ink-500);font-size:14px;padding:4px" style-hover="color:var(--danger)">✕</button>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+          <sc-if value="{{ evOrdersFooter }}">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:6px;font-size:14.5px">
+              <span style="color:var(--ink-500)">Total de los {{ evOrdersCount }} pedidos</span>
+              <strong>{{ evOrdersGrandTotal }}</strong>
+            </div>
+          </sc-if>
+          <p style="margin:2px 0 0;font-size:12.5px;color:var(--ink-500);line-height:1.55">El precio por volumen aplica solo a la cantidad de ESE material en ESE pedido — partirlo entre varios no acumula. Los pedidos no pueden traslaparse: uno sale hasta que llega el anterior.</p>
+        </div>
+
         <div style="{{ twoColStyle }}">
           <!-- PREPARACIÓN -->
           <div class="kyn-card" style="padding:22px;display:flex;flex-direction:column;gap:10px">
@@ -1398,6 +1442,24 @@
             </sc-for>
           </div>
           <button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ closeDrawer }}">Listo</button>
+        </sc-if>
+
+        <!-- Order pick drawer: agregar material de proveedor a un pedido -->
+        <sc-if value="{{ dOrderPick }}" hint-placeholder-val="{{ false }}">
+          <p style="margin:0;font-size:13px;color:var(--ink-500);line-height:1.5">Toca para agregar a {{ opOrderLabel }}. Si ya está, suma 1 — ajusta la cantidad exacta después en la lista.</p>
+          <input class="kyn-input" value="{{ opSearch }}" onChange="{{ opOnSearch }}" placeholder="Buscar material…" style="padding:10px 13px">
+          <div style="display:flex;flex-direction:column;max-height:300px;overflow-y:auto;border:1px solid var(--ink-100);border-radius:var(--radius-md)">
+            <sc-if value="{{ opNoResults }}"><div style="padding:14px;font-size:13px;color:var(--ink-500)">Ningún material de proveedor coincide.</div></sc-if>
+            <sc-for list="{{ opCandidates }}" as="c" hint-placeholder-count="6">
+              <button onClick="{{ c.onAdd }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:none;background:none;cursor:pointer;border-bottom:1px solid #F3F1F5;font-family:var(--font-sans);text-align:left" style-hover="background:var(--periwinkle-50)">
+                <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0"><span style="font-weight:600;font-size:13.5px">{{ c.name }}</span><span style="font-size:11.5px;color:var(--ink-500)">{{ c.sub }}</span></div>
+                <span style="{{ c.qtyStyle }}">{{ c.qtyLabel }}</span>
+                <span style="color:var(--periwinkle-700);font-weight:800;font-size:16px">+</span>
+              </button>
+            </sc-for>
+          </div>
+          <button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ closeDrawer }}">Listo</button>
+          <p style="margin:0;font-size:12px;color:var(--ink-500)">Sin liga de proveedor no aparece aquí — captúrala en el material primero.</p>
         </sc-if>
 
       </div>
@@ -1784,6 +1846,7 @@ class Component extends DCLogic {
         boothCost: '', setupCost: '', otherCost: '',
         channel: s.channels && s.channels.inPerson ? 'inPerson' : firstChannel,
         cardSharePct: '70', status: 'planeado', notes: '',
+        orderCapUSD: String(this.C.DEFAULT_ORDER_CAP_USD),
       };
     }
     return {
@@ -1795,6 +1858,7 @@ class Component extends DCLogic {
       channel: e.channel || firstChannel,
       cardSharePct: e.cardSharePct == null ? '' : String(Math.round(+e.cardSharePct * 100)),
       status: e.status || 'planeado', notes: e.notes || '',
+      orderCapUSD: e.orderCapUSD == null ? String(this.C.DEFAULT_ORDER_CAP_USD) : String(e.orderCapUSD),
     };
   }
 
@@ -1805,12 +1869,14 @@ class Component extends DCLogic {
     for (const [k, label] of [['boothCost', 'costo del lugar'], ['setupCost', 'montaje'], ['otherCost', 'otros gastos']]) {
       if (f[k] !== '' && (isNaN(+f[k]) || +f[k] < 0)) { d.error = 'Revisa el ' + label + ' — debe ser un número mayor o igual a cero.'; this.up(); return; }
     }
+    if (f.orderCapUSD !== '' && (isNaN(+f.orderCapUSD) || +f.orderCapUSD <= 0)) { d.error = 'El límite por pedido debe ser mayor a cero.'; this.up(); return; }
     const share = f.cardSharePct === '' ? null : Math.min(100, Math.max(0, +f.cardSharePct || 0)) / 100;
     const patch = {
       name: f.name.trim(), venue: f.venue.trim(),
       startDate: f.startDate, endDate: f.endDate,
       boothCost: +f.boothCost || 0, setupCost: +f.setupCost || 0, otherCost: +f.otherCost || 0,
       channel: f.channel, cardSharePct: share, status: f.status, notes: f.notes,
+      orderCapUSD: f.orderCapUSD === '' ? this.C.DEFAULT_ORDER_CAP_USD : +f.orderCapUSD,
       updatedAt: this.today(),
     };
     if (f.id) {
@@ -1820,7 +1886,7 @@ class Component extends DCLogic {
       return;
     }
     const ev = {
-      id: this.C.uid(), ...patch, plan: [], actual: [],
+      id: this.C.uid(), ...patch, plan: [], actual: [], orders: [],
       checklist: this.C.EVENT_CHECKLIST_BASE.map((text) => ({ id: this.C.uid(), text, done: false })),
       createdAt: this.today(),
     };
@@ -1966,7 +2032,7 @@ class Component extends DCLogic {
       confirmYes: () => { const a = st.confirm && st.confirm.action; this.setState({ confirm: null }); if (a) a(); },
       closeDrawer: () => this.setState({ drawer: null }),
       drawerOpen: !!st.drawer,
-      drawerTitle: '', dMaterial: false, dProductForm: false, dRecipe: false, dSeedForm: false, dGrowthCapture: false, dGrowthEdit: false, dEventForm: false, dEventPlan: false,
+      drawerTitle: '', dMaterial: false, dProductForm: false, dRecipe: false, dSeedForm: false, dGrowthCapture: false, dGrowthEdit: false, dEventForm: false, dEventPlan: false, dOrderPick: false,
       drawerPanelStyle: isMobile
         ? 'position:fixed;left:0;right:0;bottom:0;z-index:95;max-height:88dvh;background:var(--paper);border-radius:20px 20px 0 0;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:kynSheetUp 240ms ease-out;padding-bottom:env(safe-area-inset-bottom)'
         : 'position:fixed;top:0;right:0;bottom:0;z-index:95;width:min(540px,92vw);background:var(--paper);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:kynSlideIn 240ms ease-out',
@@ -2788,6 +2854,68 @@ class Component extends DCLogic {
             ? needs.shortCount + (needs.shortCount === 1 ? ' material te falta' : ' materiales te faltan')
             : 'Tienes todo el material' ) + (needs.tightCount ? ' · ' + needs.tightCount + ' van justos' : '');
 
+        // --- pedidos de compra (proveedor externo, USD) ---
+        if (!e.orders) e.orders = [];
+        const os = C.eventOrdersSummary(db, e);
+        vals.evAddOrder = () => {
+          e.orders.push({ id: C.uid(), label: 'Pedido ' + (e.orders.length + 1), lines: [] });
+          e.updatedAt = today; this.up();
+        };
+        vals.evOrdersEmpty = !os.orders.length;
+        vals.evOrdersFooter = os.orders.length > 0;
+        vals.evOrdersCount = os.orders.length;
+        vals.evOrdersGrandTotal = C.usd(os.grandTotalUSD);
+        vals.evOrdersSub = !os.orders.length
+          ? 'límite ' + C.usd(os.cap) + ' por pedido, sin envío'
+          : os.orders.length + (os.orders.length === 1 ? ' pedido' : ' pedidos') + ' · ' + C.usd(os.grandTotalUSD) +
+            ' en total' + (os.overCount ? ' · ' + os.overCount + ' se pasa' + (os.overCount === 1 ? '' : 'n') + ' del límite' : '');
+        vals.evOrderCards = os.orders.map((od) => {
+          const realOrder = e.orders.find((x) => x.id === od.id);
+          return {
+            label: od.label,
+            onLabel: (ev2) => { realOrder.label = ev2.target.value; e.updatedAt = today; this.up(); },
+            badge: od.overCap ? 'se pasa del límite' : (od.nearCap ? 'cerca del límite' : ''),
+            badgeStyle: 'font-size:11px;font-weight:700;border-radius:99px;padding:3px 9px;' +
+              (od.overCap ? 'background:#FBEDEC;color:var(--danger)' : 'background:#FBF4E4;color:#8A6D1F'),
+            subtotal: C.usd(od.subtotalUSD),
+            totalColor: 'color:' + (od.overCap ? 'var(--danger)' : 'var(--ink-900)'),
+            onAddLine: () => this.setState({ drawer: { type: 'orderPick', eventId: e.id, orderId: od.id, search: '' } }),
+            onDelete: () => this.ask('Eliminar pedido', 'Se eliminará “' + od.label + '” con sus ' + od.lines.length + ' línea(s).', 'Eliminar', () => {
+              e.orders = e.orders.filter((x) => x.id !== od.id); e.updatedAt = today; this.up(); this.showToast('Pedido eliminado');
+            }),
+            empty: !od.lines.length,
+            lines: od.lines.map((l) => {
+              const nm = l.material ? l.material.name : 'material eliminado';
+              return {
+                name: nm, url: l.material ? l.material.vendor.url : '#',
+                quantity: String(l.quantity == null ? '' : l.quantity),
+                qtyUnit: l.packSize > 1 ? 'bolsa' + (l.qty === 1 ? '' : 's') + ' (' + C.round2(l.pieces) + ' pza)' : (l.material ? l.material.unit : 'pza'),
+                unitPrice: l.unitPrice == null ? '—' : C.usd(l.unitPrice),
+                subtotal: l.subtotal == null ? '—' : C.usd(l.subtotal),
+                moveTo: od.id,
+                moveOptions: os.orders.map((oo) => ({ value: oo.id, label: oo.label })),
+                onMove: (ev2) => {
+                  const targetId = ev2.target.value;
+                  if (targetId === od.id) return;
+                  const src = e.orders.find((x) => x.id === od.id);
+                  const idx = src.lines.findIndex((x) => x.id === l.id);
+                  if (idx < 0) return;
+                  const [moved] = src.lines.splice(idx, 1);
+                  const dst = e.orders.find((x) => x.id === targetId);
+                  if (dst) dst.lines.push(moved); else src.lines.splice(idx, 0, moved);
+                  e.updatedAt = today; this.up();
+                },
+                onQty: (ev2) => {
+                  const real = realOrder.lines.find((x) => x.id === l.id);
+                  if (real) real.quantity = ev2.target.value === '' ? '' : Math.max(0, +ev2.target.value || 0);
+                  e.updatedAt = today; this.up();
+                },
+                onRemove: () => { realOrder.lines = realOrder.lines.filter((x) => x.id !== l.id); e.updatedAt = today; this.up(); },
+              };
+            }),
+          };
+        });
+
         // --- checklist ---
         const cl = e.checklist || (e.checklist = []);
         vals.evChecklist = cl.map((c) => ({
@@ -3062,6 +3190,7 @@ class Component extends DCLogic {
         F('Otros gastos', 'otherCost', { type: 'number', placeholder: '0', hint: 'Gasolina, estacionamiento, comidas de los días del evento.' }),
         F('Precios que vas a usar', 'channel', { options: Object.keys(s.channels).map((k) => ({ value: k, label: s.channels[k].label })) }),
         F('% que cobras con terminal', 'cardSharePct', { type: 'number', placeholder: '70', hint: 'El efectivo no paga comisión, así que esto ajusta el cálculo. 70 = siete de cada diez ventas con tarjeta.' }),
+        F('Límite por pedido de material (USD)', 'orderCapUSD', { type: 'number', placeholder: '50', hint: 'Lo que puede sumar un pedido de proveedor externo sin envío — ajusta si tu límite de importación es otro.' }),
         F('Estado', 'status', { options: C.EVENT_STATUS.map((x) => ({ value: x.v, label: x.label })) }),
         F('Notas', 'notes', { placeholder: 'Lo que quieras recordar' }),
       ];
@@ -3104,7 +3233,37 @@ class Component extends DCLogic {
         vals.depNoResults = !cands.length;
       }
     }
-    if (d && !vals.dMaterial && !vals.dProductForm && !vals.dRecipe && !vals.dSeedForm && !vals.dGrowthCapture && !vals.dGrowthEdit && !vals.dEventForm && !vals.dEventPlan) vals.drawerOpen = false;
+    if (d && d.type === 'orderPick') {
+      const e = (db.events || []).find((x) => x.id === d.eventId);
+      const order = e && (e.orders || []).find((x) => x.id === d.orderId);
+      if (e && order) {
+        vals.dOrderPick = true;
+        vals.drawerTitle = 'Agregar material';
+        vals.opOrderLabel = '“' + order.label + '”';
+        vals.opSearch = d.search || '';
+        vals.opOnSearch = (ev2) => { d.search = ev2.target.value; this.up(); };
+        const q = (d.search || '').toLowerCase();
+        const catalog = C.vendorCatalog(db).filter((m) => !q || m.name.toLowerCase().includes(q));
+        vals.opCandidates = catalog.map((m) => {
+          const line = (order.lines || []).find((l) => l.materialId === m.id);
+          const unit = m.vendor.packSize > 1 ? '/bolsa de ' + m.vendor.packSize : '/pza';
+          return {
+            name: m.name,
+            sub: M ? (C.usd(m.vendor.tiers[0].price) + ' ' + unit + (m.size ? ' · ' + m.size : '')) : '',
+            qtyLabel: line ? '×' + (+line.quantity || 0) : '',
+            qtyStyle: 'font-size:12px;font-weight:700;color:var(--periwinkle-700);white-space:nowrap',
+            onAdd: () => {
+              const found = order.lines.find((l) => l.materialId === m.id);
+              if (found) found.quantity = (+found.quantity || 0) + 1;
+              else order.lines.push({ id: C.uid(), materialId: m.id, quantity: 1 });
+              e.updatedAt = today; this.up();
+            },
+          };
+        });
+        vals.opNoResults = !catalog.length;
+      }
+    }
+    if (d && !vals.dMaterial && !vals.dProductForm && !vals.dRecipe && !vals.dSeedForm && !vals.dGrowthCapture && !vals.dGrowthEdit && !vals.dEventForm && !vals.dEventPlan && !vals.dOrderPick) vals.drawerOpen = false;
 
     return vals;
   }

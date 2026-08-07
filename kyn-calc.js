@@ -425,6 +425,63 @@ export function eventMaterialNeeds(db, event) {
   };
 }
 
+// ---------- Pedidos de compra (proveedor externo, USD) ----------
+// Ligado a un evento: sus "pedidos" son los carritos reales que se van a
+// mandar, uno a la vez porque no pueden traslaparse (ver EVENT_CHECKLIST_BASE).
+// El escalón de precio de un material aplica sobre la cantidad de ESA línea
+// en ESE pedido — no se acumula entre pedidos aunque sea el mismo material.
+
+export const usd = (n) => {
+  if (n == null || isNaN(n)) return '—';
+  const v = Number(n);
+  return (v < 0 ? '-US$' : 'US$') + Math.abs(v).toFixed(2);
+};
+
+export const DEFAULT_ORDER_CAP_USD = 50;
+
+// Precio unitario (por pieza, o por bolsa si packSize > 1) al pedir `qty`
+// unidades de este material en un mismo pedido.
+export function vendorUnitPrice(vendor, qty) {
+  if (!vendor || !vendor.tiers || !vendor.tiers.length || !(qty > 0)) return null;
+  let price = vendor.tiers[0].price;
+  for (const t of vendor.tiers) { if (qty >= t.minQty) price = t.price; else break; }
+  return price;
+}
+
+export function orderTotals(db, order) {
+  const lines = (order.lines || []).map((l) => {
+    const m = (db.materials || []).find((x) => x.id === l.materialId);
+    const vendor = m && m.vendor;
+    const qty = +l.quantity || 0;
+    const unitPrice = vendor ? vendorUnitPrice(vendor, qty) : null;
+    const subtotal = unitPrice != null ? unitPrice * qty : null;
+    const packSize = vendor ? (vendor.packSize || 1) : 1;
+    return { ...l, material: m, vendor, qty, unitPrice, subtotal, packSize, pieces: qty * packSize };
+  });
+  const subtotalUSD = lines.reduce((s, l) => s + (l.subtotal || 0), 0);
+  return { lines, subtotalUSD };
+}
+
+// Todos los pedidos de un evento, con sus totales y si alguno se pasa del
+// límite por pedido (importación/de minimis — no es negociable por pieza).
+export function eventOrdersSummary(db, event) {
+  const cap = event.orderCapUSD != null && event.orderCapUSD !== '' && +event.orderCapUSD > 0 ? +event.orderCapUSD : DEFAULT_ORDER_CAP_USD;
+  const orders = (event.orders || []).map((o) => {
+    const t = orderTotals(db, o);
+    // "cerca del límite" solo a menos de $3 — armar pedidos eficientes los
+    // deja naturalmente arriba del 85%, así que ese umbral avisaría siempre.
+    return { ...o, ...t, overCap: t.subtotalUSD >= cap, nearCap: t.subtotalUSD >= cap - 3 && t.subtotalUSD < cap };
+  });
+  const grandTotalUSD = orders.reduce((s, o) => s + o.subtotalUSD, 0);
+  return { orders, cap, grandTotalUSD, overCount: orders.filter((o) => o.overCap).length };
+}
+
+// Materiales con proveedor externo capturado — el catálogo del que se puede
+// armar un pedido.
+export function vendorCatalog(db) {
+  return (db.materials || []).filter((m) => m.vendor && m.status !== 'archivado');
+}
+
 // ---------- Advertencias ----------
 
 export function productWarnings(db, product, settings, cost) {
@@ -502,21 +559,70 @@ export function makeSeedDB() {
     ...(extra || {}),
   });
 
+  // Proveedor externo (Buckleguy): precio en USD por escalón de cantidad —
+  // `tiers` ordenados ascendente por `minQty`, el precio aplica a TODA la
+  // cantidad de esa línea en ESE pedido (no se acumula entre pedidos).
+  // `packSize` > 1 = se vende por bolsa/paquete (ej. tornillos de 50), y
+  // `quantity` en un pedido representa bolsas, no piezas sueltas.
+  const V = (url, tiers, packSize) => ({ name: 'Buckleguy', url, packSize: packSize || 1, tiers });
+
   const materials = [
     M('m_bio_peri', 'Biothane Periwinkle', 'Biothane', 'Beta 19 mm', 'm', { color: 'Periwinkle', size: '19 mm', supplier: 'BioThane USA' }),
     M('m_bio_camel', 'Biothane Camel', 'Biothane', 'Beta 19 mm', 'm', { color: 'Camel', size: '19 mm', supplier: 'BioThane USA' }),
     M('m_bio_olive', 'Biothane Olive', 'Biothane', 'Beta 19 mm', 'm', { color: 'Olive', size: '19 mm', supplier: 'BioThane USA' }),
     M('m_bio_cafe', 'Biothane Café Claro', 'Biothane', 'Beta 19 mm', 'm', { color: 'Café claro', size: '19 mm', supplier: 'BioThane USA' }),
-    M('m_oring', 'O Ring solid brass', 'Herrajes', 'Argollas', 'pza', { size: '25 mm', supplier: 'Hardware Import Co.' }),
-    M('m_dring', 'D Ring solid brass', 'Herrajes', 'Argollas', 'pza', { size: '25 mm', supplier: 'Hardware Import Co.' }),
-    M('m_trigger', 'Trigger Snap solid brass', 'Herrajes', 'Mosquetones', 'pza', { size: '19 mm', supplier: 'Hardware Import Co.' }),
-    M('m_swivel', 'Swivel Hook solid brass', 'Herrajes', 'Mosquetones', 'pza', { size: '19 mm', supplier: 'Hardware Import Co.' }),
-    M('m_mini_swivel', 'Mini Swivel Hook', 'Herrajes', 'Mosquetones', 'pza', { size: '13 mm', supplier: 'Hardware Import Co.' }),
-    M('m_slider', 'Slider solid brass', 'Herrajes', 'Conectores', 'pza', { size: '19 mm', supplier: 'Hardware Import Co.' }),
+    M('m_oring', 'O Ring solid brass', 'Herrajes', 'Argollas', 'pza', {
+      size: '25 mm', supplier: 'Buckleguy',
+      vendor: V('https://www.buckleguy.com/or0-gold-plate-thick-o-ring-solid-brass-ll-multiple-sizes/',
+        [{ minQty: 1, price: 2.25 }, { minQty: 10, price: 1.91 }, { minQty: 100, price: 1.69 }]),
+    }),
+    M('m_dring', 'D Ring solid brass', 'Herrajes', 'Argollas', 'pza', {
+      size: '25 mm', supplier: 'Buckleguy',
+      vendor: V('https://www.buckleguy.com/2011-gold-plate-d-ring-solid-brass-ll-multiple-sizes/',
+        [{ minQty: 1, price: 2.63 }, { minQty: 10, price: 2.24 }, { minQty: 100, price: 1.97 }]),
+    }),
+    M('m_trigger', 'Trigger Snap solid brass', 'Herrajes', 'Mosquetones', 'pza', {
+      size: '19 mm', supplier: 'Buckleguy',
+      vendor: V('https://www.buckleguy.com/3002a-gold-plate-swivel-trigger-snap-solid-brass-ll-multiple-sizes/',
+        [{ minQty: 1, price: 6.94 }, { minQty: 10, price: 5.90 }, { minQty: 100, price: 5.21 }]),
+    }),
+    M('m_swivel', 'Swivel Hook solid brass', 'Herrajes', 'Mosquetones', 'pza', {
+      size: '19 mm', supplier: 'Buckleguy',
+      vendor: V('https://www.buckleguy.com/3001a-gold-plate-swivel-bolt-snap-solid-brass-ll-multiple-sizes/',
+        [{ minQty: 1, price: 6.34 }, { minQty: 10, price: 5.39 }, { minQty: 100, price: 4.75 }]),
+    }),
+    M('m_mini_swivel', 'Mini Swivel Hook', 'Herrajes', 'Mosquetones', 'pza', {
+      size: '13 mm', supplier: 'Buckleguy',
+      vendor: V('https://www.buckleguy.com/3008a-3-4-gold-plate-mini-swivel-trigger-snap-solid-brass-ll/',
+        [{ minQty: 1, price: 5.08 }, { minQty: 10, price: 4.32 }, { minQty: 100, price: 3.81 }]),
+    }),
+    M('m_slider', 'Slider solid brass', 'Herrajes', 'Conectores', 'pza', {
+      size: '19 mm', supplier: 'Buckleguy',
+      vendor: V('https://www.buckleguy.com/20122-natural-brass-single-loop-solid-brass-ll-multiple-sizes/',
+        [{ minQty: 1, price: 1.45 }, { minQty: 10, price: 1.23 }, { minQty: 100, price: 1.09 }, { minQty: 500, price: 0.94 }, { minQty: 1000, price: 0.87 }]),
+    }),
     M('m_cs5', 'Chicago Screw 5 mm', 'Remaches', 'Chicago screws', 'pza', { size: '5 mm', supplier: 'Hardware Import Co.' }),
-    M('m_cs65', 'Chicago Screw 6.5 mm', 'Remaches', 'Chicago screws', 'pza', { size: '6.5 mm', supplier: 'Hardware Import Co.' }),
-    M('m_buckle', 'Buckle M solid brass', 'Hebillas', '', 'pza', { size: 'M', supplier: 'Hardware Import Co.' }),
-    M('m_eyelets', 'Ojillos latón', 'Remaches', 'Ojillos', 'pza', { size: '8 mm', supplier: 'Mercería local' }),
+    M('m_cs65', 'Chicago Screw 6.5 mm', 'Remaches', 'Chicago screws', 'pza', {
+      size: '6.5 mm', supplier: 'Buckleguy',
+      vendor: V('https://www.buckleguy.com/chicago-screws-cylinder-cap-natural-brass-solid-brass-ll-50-per-bag-multiple-sizes/',
+        [{ minQty: 1, price: 28.21 }, { minQty: 10, price: 25.39 }, { minQty: 20, price: 21.16 }, { minQty: 50, price: 18.34 }], 50),
+    }),
+    M('m_buckle', 'Buckle M solid brass', 'Hebillas', '', 'pza', {
+      size: 'M', supplier: 'Buckleguy',
+      vendor: V('https://www.buckleguy.com/c5384-natural-brass-double-bar-buckle-solid-brass-ll-multiple-sizes/',
+        [{ minQty: 1, price: 3.72 }, { minQty: 10, price: 3.16 }, { minQty: 100, price: 2.79 }, { minQty: 500, price: 2.42 }]),
+    }),
+    // Ojillos: confirmado que también son de Buckleguy, no de mercería — pero
+    // sin liga ni precio capturados todavía, así que se queda sin `vendor`
+    // hasta que se manden (no se inventa el precio).
+    M('m_eyelets', 'Ojillos latón', 'Remaches', 'Ojillos', 'pza', { size: '8 mm', supplier: 'Buckleguy', notes: 'Ya tiene bastante inventario de esto — no es prioridad de pedido.' }),
+    // No lo usa ninguna receta todavía — se guarda el precio real porque ya
+    // se mandó, pero no entra a ningún pedido hasta que se use en un producto.
+    M('m_dloop', 'Double Loop solid brass', 'Herrajes', 'Conectores', 'pza', {
+      size: '19 mm', supplier: 'Buckleguy', status: 'prueba', notes: 'Sin receta que lo use todavía.',
+      vendor: V('https://www.buckleguy.com/20114-gold-plate-double-loop-solid-brass-ll-multiple-sizes/',
+        [{ minQty: 1, price: 2.28 }, { minQty: 10, price: 1.94 }, { minQty: 100, price: 1.71 }]),
+    }),
     M('m_box', 'Caja kraft KYN', 'Empaque', 'Cajas', 'pza', { supplier: 'Empaques MX' }),
     M('m_label', 'Etiqueta tejida KYN', 'Etiquetas', '', 'pza', { supplier: 'Etiquetas Deluxe' }),
     M('m_tissue', 'Papel tissue', 'Empaque', 'Consumibles', 'pza', { supplier: 'Empaques MX' }),
@@ -669,6 +775,18 @@ export function makeSeedDB() {
       ],
       actual: [],
       checklist: EVENT_CHECKLIST_BASE.map((text, i) => ({ id: 'evc' + i, text, done: false })),
+      orderCapUSD: 50,
+      orders: [
+        { id: 'evo1', label: 'Pedido 1', lines: [{ id: 'evo1l1', materialId: 'm_dring', quantity: 14 }, { id: 'evo1l2', materialId: 'm_trigger', quantity: 2 }] },
+        { id: 'evo2', label: 'Pedido 2', lines: [{ id: 'evo2l1', materialId: 'm_dring', quantity: 13 }, { id: 'evo2l2', materialId: 'm_oring', quantity: 10 }] },
+        { id: 'evo3', label: 'Pedido 3', lines: [{ id: 'evo3l1', materialId: 'm_oring', quantity: 11 }, { id: 'evo3l2', materialId: 'm_slider', quantity: 20 }] },
+        { id: 'evo4', label: 'Pedido 4', lines: [{ id: 'evo4l1', materialId: 'm_swivel', quantity: 7 }] },
+        { id: 'evo5', label: 'Pedido 5', lines: [{ id: 'evo5l1', materialId: 'm_swivel', quantity: 7 }] },
+        { id: 'evo6', label: 'Pedido 6', lines: [{ id: 'evo6l1', materialId: 'm_swivel', quantity: 2 }, { id: 'evo6l2', materialId: 'm_buckle', quantity: 10 }] },
+        { id: 'evo7', label: 'Pedido 7', lines: [{ id: 'evo7l1', materialId: 'm_trigger', quantity: 7 }] },
+        { id: 'evo8', label: 'Pedido 8', lines: [{ id: 'evo8l1', materialId: 'm_cs65', quantity: 1 }, { id: 'evo8l2', materialId: 'm_swivel', quantity: 1 }] },
+        { id: 'evo9', label: 'Pedido 9', lines: [{ id: 'evo9l1', materialId: 'm_cs65', quantity: 1 }] },
+      ],
       createdAt: '2026-08-07', updatedAt: '2026-08-07',
     },
   ];

@@ -55,6 +55,14 @@ Creas el evento con el costo del lugar, los días, el montaje (mantel, exhibidor
 
 Los precios que usa son los del canal que elijas en el evento (normalmente *En persona*). Si una pieza no tiene precio guardado en ese canal, usa el sugerido y lo marca. Las piezas con materiales sin costo registrado se señalan y **no** entran en los totales, para que ningún número salga inventado.
 
+### Pedidos de compra
+
+Dentro de un evento, debajo de "Material para producirlo", vive **Pedidos de compra**: arma los carritos reales de un proveedor externo (por ahora Buckleguy) respetando un límite en USD por pedido (configurable en "Editar datos", 50 USD por default — el umbral típico de importación sin traslape). Cada pedido muestra su liga directa al producto, la cantidad, el precio según el escalón de mayoreo que le toque *a esa línea en ese pedido* (partir una cantidad entre varios pedidos no acumula el descuento), y se avisa en amarillo cuando un pedido queda a menos de $3 del límite.
+
+Todo es editable ahí mismo: cambia cantidades, mueve una línea de un pedido a otro con el selector, agrega materiales con "+ material" o pedidos completos con "+ Nuevo pedido" — pensado para "jugar" con distintos armados antes de comprar.
+
+Para que un material aparezca en el catálogo de "+ material" necesita tener capturado su proveedor (liga, tamaño de paquete si se vende por bolsa, y escalones de precio en USD) — por ahora eso solo se captura editando el seed en `kyn-calc.js` (`materialId.vendor`), no hay editor en la UI todavía.
+
 ### Guardarlos en Notion
 
 A diferencia de las demás, la base de eventos no viene precargada: se conecta desde la app.
