@@ -16,6 +16,11 @@ export const NOTION_DBS = {
   // KYN Crecimiento — mediciones de seguidores. También columnas nativas.
   // Vive debajo de la página KYN Cost Studio, así que hereda la conexión.
   growth: 'd8cd7267-b81b-4c30-b591-75014f417cc1',
+  // KYN Eventos — bazares y ferias. A diferencia de las demás, su ID NO está
+  // fijo aquí: se configura en Ajustes → Notion (settings.eventsDbId) para que
+  // la base se pueda crear cuando haga falta, sin tocar código. Sin ID, la
+  // sección Eventos funciona igual pero solo se guarda en el navegador.
+  events: '',
 };
 
 const r2 = (n) => (n == null || isNaN(n) ? null : Math.round(n * 100) / 100);
@@ -232,6 +237,26 @@ function growthProps(g) {
   };
 }
 
+// ---------- eventos ----------
+// Como los materiales y productos, el evento completo (plan, checklist y lo
+// vendido) viaja en el blob JSON de `Data`; las demás columnas existen solo
+// para poder leerlo bonito desde Notion.
+function evProps(e, C, db) {
+  const r = C.eventPlan(db, e);
+  return {
+    Name: { title: rt(e.name || '') },
+    Clave: { rich_text: rt(e.id) },
+    Fecha: e.startDate ? { date: e.endDate && e.endDate !== e.startDate ? { start: e.startDate, end: e.endDate } : { start: e.startDate } } : { date: null },
+    Lugar: { rich_text: rt(e.venue || '') },
+    Estado: { rich_text: rt(e.status || '') },
+    'Costo del evento': { number: r2(r.fixed) },
+    'Venta planeada': { number: r2(r.totals.revenue) },
+    'Piezas para salir tablas': { number: r.bePieces == null ? null : r.bePieces },
+    Actualizado: { rich_text: rt(e.updatedAt || '') },
+    Data: { rich_text: rt(JSON.stringify(e)) },
+  };
+}
+
 function seedProps(s) {
   const seg = s.seguidores === '' || s.seguidores == null || isNaN(s.seguidores) ? null : Number(s.seguidores);
   return {
@@ -278,12 +303,26 @@ export async function loadDB(C) {
   const setRow = coll(setPages)[0] || null;
   if (!setRow) throw new Error('No se encontró la fila de ajustes en Notion.');
 
+  // La base de eventos se configura desde Ajustes, así que solo se consulta si
+  // ya hay un ID guardado. Sin ID (o si falla) la sección vive en el navegador.
+  const eventsDbId = (setRow.obj.eventsDbId || '').trim();
+  let eventPages = null;
+  if (eventsDbId) {
+    try {
+      eventPages = await queryAll(eventsDbId);
+    } catch (e) {
+      console.warn('KYN Eventos no disponible en Notion — la sección Eventos no sincronizará hasta conectar la base a la integración.', e);
+    }
+  }
+  const evs = coll(eventPages || []);
+
   const db = {
     materials: mats.map((x) => x.obj),
     purchases: purs.map((x) => x.obj).sort((a, b) => (b.date || '').localeCompare(a.date || '')),
     products: prods.map((x) => x.obj).sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || '')),
     seeding: seeds.map((x) => x.obj).sort((a, b) => (b.createdTime || '').localeCompare(a.createdTime || '')),
     growth: grows.map((x) => x.obj).sort((a, b) => (b.fecha || '').localeCompare(a.fecha || '')),
+    events: evs.map((x) => x.obj).sort((a, b) => (b.startDate || '').localeCompare(a.startDate || '')),
     settings: setRow.obj,
   };
 
@@ -294,13 +333,16 @@ export async function loadDB(C) {
       products: new Map(prods.map((x) => [x.obj.id, x.pageId])),
       seeding: new Map(seeds.map((x) => [x.obj.id, x.pageId])),
       growth: new Map(grows.map((x) => [x.obj.id, x.pageId])),
+      events: new Map(evs.map((x) => [x.obj.id, x.pageId])),
     },
     settingsPageId: setRow.pageId,
     // Sin acceso a una base no se escribe nada en ella (evita crear
     // duplicados o archivar filas por error con un estado incompleto).
     seedingDisabled: seedPages == null,
     growthDisabled: growthPages == null,
-    propSnaps: { materials: new Map(), purchases: new Map(), products: new Map(), seeding: new Map(), growth: new Map(), settings: '' },
+    eventsDbId,
+    eventsDisabled: eventPages == null,
+    propSnaps: { materials: new Map(), purchases: new Map(), products: new Map(), seeding: new Map(), growth: new Map(), events: new Map(), settings: '' },
   };
   snapshotAll(db, ctx, C);
   return { db, ctx };
@@ -312,6 +354,7 @@ export function snapshotAll(db, ctx, C) {
   ctx.propSnaps.products = new Map(db.products.map((p) => [p.id, JSON.stringify(prodProps(p, C, db))]));
   ctx.propSnaps.seeding = new Map((db.seeding || []).map((s) => [s.id, JSON.stringify(seedProps(s))]));
   ctx.propSnaps.growth = new Map((db.growth || []).map((g) => [g.id, JSON.stringify(growthProps(g))]));
+  ctx.propSnaps.events = new Map((db.events || []).map((e) => [e.id, JSON.stringify(evProps(e, C, db))]));
   ctx.propSnaps.settings = JSON.stringify(db.settings);
 }
 
@@ -319,7 +362,8 @@ export function snapshotAll(db, ctx, C) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function syncColl(name, list, buildProps, ctx) {
+async function syncColl(name, list, buildProps, ctx, dbIdOverride) {
+  const dbId = dbIdOverride || NOTION_DBS[name];
   const map = ctx.pageMap[name];
   const snaps = ctx.propSnaps[name];
   const seen = new Set();
@@ -330,7 +374,7 @@ async function syncColl(name, list, buildProps, ctx) {
     const json = JSON.stringify(props);
     if (!map.has(obj.id)) {
       if (writes++) await sleep(340);
-      const page = await api('pages', 'POST', { parent: { database_id: NOTION_DBS[name] }, properties: props });
+      const page = await api('pages', 'POST', { parent: { database_id: dbId }, properties: props });
       map.set(obj.id, page.id);
       snaps.set(obj.id, json);
     } else if (snaps.get(obj.id) !== json) {
@@ -358,6 +402,7 @@ export async function saveDB(db, ctx, C) {
   writes += await syncColl('products', db.products, (p) => prodProps(p, C, db), ctx);
   if (!ctx.seedingDisabled) writes += await syncColl('seeding', db.seeding || [], (s) => seedProps(s), ctx);
   if (!ctx.growthDisabled) writes += await syncColl('growth', db.growth || [], (g) => growthProps(g), ctx);
+  if (!ctx.eventsDisabled && ctx.eventsDbId) writes += await syncColl('events', db.events || [], (e) => evProps(e, C, db), ctx, ctx.eventsDbId);
   const setJson = JSON.stringify(db.settings);
   if (setJson !== ctx.propSnaps.settings) {
     await api('pages/' + ctx.settingsPageId, 'PATCH', { properties: { Data: { rich_text: rt(setJson) } } });

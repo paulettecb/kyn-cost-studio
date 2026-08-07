@@ -6,8 +6,13 @@
 export const uid = () => 'k' + Math.random().toString(36).slice(2, 10);
 export const round2 = (n) => Math.round(n * 100) / 100;
 
-export const money = (n, d = 2) =>
-  n == null || isNaN(n) ? '—' : '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: d, maximumFractionDigits: d });
+// El signo va ANTES del $ ("-$474", no "$-474"): los números de un evento sí
+// pueden salir negativos y "$-474" se lee como error de la app.
+export const money = (n, d = 2) => {
+  if (n == null || isNaN(n)) return '—';
+  const v = Number(n);
+  return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('es-MX', { minimumFractionDigits: d, maximumFractionDigits: d });
+};
 
 export const pct = (n, d = 1) =>
   n == null || isNaN(n) ? '—' : (n * 100).toFixed(d).replace(/\.0$/, '') + '%';
@@ -210,6 +215,214 @@ export function channelSuggestedPrice(cost, ch, settings) {
   let p = ch.method === 'multiplier' ? priceByMultiplier(cost, ch.multiplier) : priceByMargin(cost, ch.targetMargin);
   if (p == null) return null;
   return roundPrice(p, settings.defaultRoundingRule);
+}
+
+// ---------- Eventos: bazares, ferias y pop-ups ----------
+
+export const EVENT_STATUS = [
+  { v: 'planeado',   label: 'Planeado',   bg: '#EFEDF1', fg: '#6B6873' },
+  { v: 'confirmado', label: 'Confirmado', bg: '#DCE6FB', fg: '#3A5BB0' },
+  { v: 'cerrado',    label: 'Cerrado',    bg: '#D6F0DE', fg: '#2E7D4F' },
+  { v: 'cancelado',  label: 'Cancelado',  bg: '#FBDCE4', fg: '#9B4D67' },
+];
+
+// Lista de preparación que se le pone a cada evento nuevo. Son los pendientes
+// que de verdad tumban un bazar si se olvidan (el material tarda en llegar,
+// el cambio en efectivo no se consigue el mismo día).
+export const EVENT_CHECKLIST_BASE = [
+  'Confirmar medidas de la mesa, horario y si hay luz',
+  'Pedir el material que falta (lo que viene de fuera, primero)',
+  'Producir el inventario del plan',
+  'Etiquetas de precio y letrero de marca',
+  'Exhibidores: algo vertical + niveles en la mesa',
+  'Terminal de pago probada',
+  'Cambio en efectivo (billetes chicos)',
+  'Empaque, bolsas y tarjetas con QR',
+  'Montaje de prueba en casa y foto',
+];
+
+// Inventario por material. OJO: es la suma de TODO lo comprado, sin descontar
+// lo que ya se usó en piezas hechas — la app no lleva consumo. Es un techo,
+// no el inventario real del taller.
+export function materialStock(db) {
+  const stock = {};
+  for (const p of db.purchases || []) {
+    for (const it of computePurchaseItems(p)) {
+      if (!it.materialId) continue;
+      stock[it.materialId] = (stock[it.materialId] || 0) + (+it.quantity || 0);
+    }
+  }
+  return stock;
+}
+
+// Materia prima que consumen `qty` unidades de `product`, expandiendo los
+// bundles hasta llegar a materiales. `_path` evita ciclos.
+export function expandRawMaterials(db, product, qty, out, _path) {
+  out = out || {};
+  const path = _path || [];
+  if (!product || path.includes(product.id)) return out;
+  for (const l of product.recipe || []) {
+    const q = (+l.quantity || 0) * (+qty || 0);
+    if (l.productId) {
+      const sub = (db.products || []).find((x) => x.id === l.productId);
+      if (sub) expandRawMaterials(db, sub, q, out, [...path, product.id]);
+      continue;
+    }
+    if (!l.materialId) continue;
+    out[l.materialId] = (out[l.materialId] || 0) + q;
+  }
+  return out;
+}
+
+// Mano de obra contenida en un producto, incluida la de los componentes de un
+// bundle. Se resta del costo total para saber qué sale de verdad del bolsillo.
+export function productLaborCost(db, product, settings, _path) {
+  settings = settings || db.settings;
+  const path = _path || [];
+  if (!product || path.includes(product.id)) return 0;
+  const rate = product.laborHourlyRate != null ? +product.laborHourlyRate : (+settings.defaultLaborHourlyRate || 0);
+  let total = ((+product.laborTimeMinutes || 0) / 60) * rate;
+  for (const l of product.recipe || []) {
+    if (!l.productId) continue;
+    const sub = (db.products || []).find((x) => x.id === l.productId);
+    if (sub) total += productLaborCost(db, sub, settings, [...path, product.id]) * (+l.quantity || 0);
+  }
+  return total;
+}
+
+export function productLaborMinutes(db, product, _path) {
+  const path = _path || [];
+  if (!product || path.includes(product.id)) return 0;
+  let mins = +product.laborTimeMinutes || 0;
+  for (const l of product.recipe || []) {
+    if (!l.productId) continue;
+    const sub = (db.products || []).find((x) => x.id === l.productId);
+    if (sub) mins += productLaborMinutes(db, sub, [...path, product.id]) * (+l.quantity || 0);
+  }
+  return mins;
+}
+
+export function eventDays(e) {
+  if (e.days != null && e.days !== '' && +e.days > 0) return Math.round(+e.days);
+  if (e.startDate && e.endDate) {
+    const a = new Date(e.startDate + 'T00:00:00Z'), b = new Date(e.endDate + 'T00:00:00Z');
+    if (!isNaN(a) && !isNaN(b) && b >= a) return Math.round((b - a) / 86400000) + 1;
+  }
+  return 1;
+}
+
+// Lo que cuesta estar ahí, se venda o no.
+export function eventFixedCost(e) {
+  return (+e.boothCost || 0) + (+e.setupCost || 0) + (+e.otherCost || 0);
+}
+
+// Comisión efectiva: la del canal, ponderada por qué tanto se cobra con
+// terminal — el efectivo no paga comisión.
+export function eventFeePct(e, settings) {
+  const ch = (settings.channels || {})[e.channel || 'inPerson'];
+  if (!ch) return 0;
+  const share = e.cardSharePct == null || e.cardSharePct === '' ? 1 : Math.min(1, Math.max(0, +e.cardSharePct || 0));
+  return channelFeesPct(ch) * share;
+}
+
+// Precio del producto en el canal del evento; si no hay precio guardado, el
+// sugerido por el canal (así una pieza nueva no rompe el cálculo).
+export function eventUnitPrice(db, product, event, settings) {
+  const chId = event.channel || 'inPerson';
+  const sp = (product.savedPrices || {})[chId];
+  if (sp && sp.price != null && sp.price !== '' && !isNaN(+sp.price)) return { price: +sp.price, suggested: false };
+  const ch = (settings.channels || {})[chId];
+  if (!ch) return { price: null, suggested: false };
+  const p = channelSuggestedPrice(productCost(db, product, settings).total, ch, settings);
+  return { price: p, suggested: true };
+}
+
+// Corre los números de un evento sobre una de sus dos listas:
+//   'plan'   → lo que piensas llevar
+//   'actual' → lo que de verdad se vendió (para cerrar el evento)
+// `profit` descuenta tu mano de obra (ya te pagaste tus horas);
+// `cash` NO la descuenta — es lo que realmente entra a la bolsa.
+export function eventPlan(db, event, settings, which) {
+  settings = settings || db.settings;
+  const key = which === 'actual' ? 'actual' : 'plan';
+  const feePct = eventFeePct(event, settings);
+  const lines = [];
+  const t = { units: 0, revenue: 0, materials: 0, labor: 0, laborMinutes: 0, cost: 0, fees: 0, profit: 0, cash: 0 };
+  for (const l of event[key] || []) {
+    const p = (db.products || []).find((x) => x.id === l.productId);
+    const qty = +l.quantity || 0;
+    if (!p) { lines.push({ ...l, product: null, qty, missing: true }); continue; }
+    const c = productCost(db, p, settings);
+    const laborCost = productLaborCost(db, p, settings);
+    const { price, suggested } = eventUnitPrice(db, p, event, settings);
+    const ok = price != null && !c.missing.length;
+    const fees = ok ? price * feePct : 0;
+    const profit = ok ? price - c.total - fees : null;
+    const cash = ok ? price - (c.total - laborCost) - fees : null;
+    const minutes = productLaborMinutes(db, p);
+    lines.push({
+      ...l, product: p, qty, price, suggested, unitCost: c.total, unitCash: c.total - laborCost,
+      unitProfit: profit, unitCashProfit: cash, minutes,
+      revenue: ok ? price * qty : null, profit: profit != null ? profit * qty : null,
+      cashProfit: cash != null ? cash * qty : null,
+      margin: ok && price ? profit / price : null,
+      incomplete: !ok, missingCost: !!c.missing.length,
+    });
+    if (!ok) continue;
+    t.units += qty; t.revenue += price * qty; t.materials += (c.total - laborCost) * qty;
+    t.labor += laborCost * qty; t.laborMinutes += minutes * qty;
+    t.cost += c.total * qty; t.fees += fees * qty; t.profit += profit * qty; t.cash += cash * qty;
+  }
+  const fixed = eventFixedCost(event);
+  const avgProfit = t.units ? t.profit / t.units : null;
+  const avgCash = t.units ? t.cash / t.units : null;
+  return {
+    lines, totals: t, fixed, feePct,
+    laborHours: t.laborMinutes / 60,
+    net: t.profit - fixed,               // si vendes TODO, ya pagado el lugar y tus horas
+    netCash: t.cash - fixed,             // efectivo en la bolsa si vendes todo
+    avgProfit, avgCash,
+    // punto de equilibrio: piezas del mismo mix que hay que vender para
+    // cubrir el costo fijo del evento
+    bePieces: avgProfit && avgProfit > 0 ? Math.ceil(fixed / avgProfit) : null,
+    beCashPieces: avgCash && avgCash > 0 ? Math.ceil(fixed / avgCash) : null,
+    beRevenue: t.profit > 0 ? (fixed * t.revenue) / t.profit : null,
+    sellThrough: t.profit > 0 ? fixed / t.profit : null,
+    viable: t.profit > fixed,
+    hasIncomplete: lines.some((l) => l.incomplete || l.missing),
+  };
+}
+
+// Materia prima que pide el plan contra lo comprado, y cuánto cuesta reponer
+// lo que falta.
+export function eventMaterialNeeds(db, event) {
+  const need = {};
+  for (const l of event.plan || []) {
+    const p = (db.products || []).find((x) => x.id === l.productId);
+    if (p) expandRawMaterials(db, p, +l.quantity || 0, need);
+  }
+  const stock = materialStock(db);
+  const rows = Object.keys(need).map((mid) => {
+    const m = (db.materials || []).find((x) => x.id === mid);
+    const needed = need[mid], have = stock[mid] || 0;
+    const short = Math.max(0, needed - have);
+    const unitCost = materialUnitCost(db, m);
+    return {
+      materialId: mid, material: m, name: m ? m.name : 'material eliminado', unit: m ? m.unit : '',
+      needed, have, short, unitCost,
+      restockCost: unitCost != null ? short * unitCost : null,
+      unknownCost: unitCost == null && short > 0,
+      tight: short === 0 && have > 0 && needed / have >= 0.8,
+    };
+  });
+  rows.sort((a, b) => b.short - a.short || a.name.localeCompare(b.name));
+  return {
+    rows,
+    restockCost: rows.reduce((s, r) => s + (r.restockCost || 0), 0),
+    shortCount: rows.filter((r) => r.short > 0).length,
+    tightCount: rows.filter((r) => r.tight).length,
+    anyUnknown: rows.some((r) => r.unknownCost),
+  };
 }
 
 // ---------- Advertencias ----------
@@ -437,7 +650,30 @@ export function makeSeedDB() {
   // seguidores son datos reales que captura la usuaria; inventarlas confunde.
   const growth = [];
 
-  const db = { materials, purchases, products, seeding, growth, settings };
+  // Un evento de ejemplo, para que la sección se entienda de un vistazo.
+  const events = [
+    {
+      id: 'ev_bazar_oct', name: 'Bazar artesanal de octubre', venue: '',
+      startDate: '2026-10-16', endDate: '2026-10-18', days: 3,
+      boothCost: 1200, setupCost: 1200, otherCost: 0,
+      channel: 'inPerson', cardSharePct: 0.7, status: 'planeado',
+      notes: 'Puesto compartido con una vecina — mesas lado a lado.',
+      plan: [
+        { id: 'evl1', productId: 'p_collar', quantity: 8 },
+        { id: 'evl2', productId: 'p_leash', quantity: 5 },
+        { id: 'evl3', productId: 'p_cross', quantity: 4 },
+        { id: 'evl4', productId: 'p_handle', quantity: 4 },
+        { id: 'evl5', productId: 'p_long3', quantity: 3 },
+        { id: 'evl6', productId: 'p_long5', quantity: 2 },
+        { id: 'evl7', productId: 'p_duo', quantity: 1 },
+      ],
+      actual: [],
+      checklist: EVENT_CHECKLIST_BASE.map((text, i) => ({ id: 'evc' + i, text, done: false })),
+      createdAt: '2026-08-07', updatedAt: '2026-08-07',
+    },
+  ];
+
+  const db = { materials, purchases, products, seeding, growth, events, settings };
 
   // Precios finales del Excel, con snapshot del costo actual
   const excelPrices = {
