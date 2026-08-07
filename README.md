@@ -61,6 +61,8 @@ Dentro de un evento, debajo de "Material para producirlo", vive **Pedidos de com
 
 Todo es editable ahí mismo: cambia cantidades, mueve una línea de un pedido a otro con el selector, agrega materiales con "+ material" o pedidos completos con "+ Nuevo pedido" — pensado para "jugar" con distintos armados antes de comprar.
 
+Arriba de los pedidos hay un contador por material: cuánto pide el plan, una barra que se llena conforme lo vas repartiendo entre pedidos, y cuánto falta por asignar (o cuánto llevas de más, en verde, si compraste con colchón a propósito). Baja y sube en vivo con cada cambio — sirve para no perder la cuenta mientras reacomodas.
+
 Para que un material aparezca en el catálogo de "+ material" necesita tener capturado su proveedor (liga, tamaño de paquete si se vende por bolsa, y escalones de precio en USD) — por ahora eso solo se captura editando el seed en `kyn-calc.js` (`materialId.vendor`), no hay editor en la UI todavía.
 
 ### Guardarlos en Notion

@@ -482,6 +482,37 @@ export function vendorCatalog(db) {
   return (db.materials || []).filter((m) => m.vendor && m.status !== 'archivado');
 }
 
+// Cuánto de lo que el plan pide (solo materiales con proveedor, en piezas —
+// las bolsas de un pedido se convierten a piezas con su packSize) ya quedó
+// repartido entre los pedidos armados, y cuánto falta por asignar a alguno.
+// Vive aparte de eventMaterialNeeds porque ese compara contra lo COMPRADO
+// (el stock declarado); esto compara contra lo ASIGNADO en los pedidos que
+// se están armando ahorita — dos preguntas distintas.
+export function eventOrderAllocation(db, event) {
+  const needed = {};
+  for (const l of event.plan || []) {
+    const p = (db.products || []).find((x) => x.id === l.productId);
+    if (p) expandRawMaterials(db, p, +l.quantity || 0, needed);
+  }
+  const allocated = {};
+  for (const o of event.orders || []) {
+    for (const l of o.lines || []) {
+      const m = (db.materials || []).find((x) => x.id === l.materialId);
+      const packSize = m && m.vendor ? (m.vendor.packSize || 1) : 1;
+      allocated[l.materialId] = (allocated[l.materialId] || 0) + (+l.quantity || 0) * packSize;
+    }
+  }
+  const rows = vendorCatalog(db)
+    .filter((m) => needed[m.id] > 0)
+    .map((m) => {
+      const need = needed[m.id] || 0;
+      const alloc = allocated[m.id] || 0;
+      return { materialId: m.id, material: m, needed: need, allocated: alloc, remaining: need - alloc, covered: alloc >= need };
+    });
+  rows.sort((a, b) => (a.covered - b.covered) || b.remaining - a.remaining);
+  return { rows, allCovered: rows.length > 0 && rows.every((r) => r.covered) };
+}
+
 // ---------- Advertencias ----------
 
 export function productWarnings(db, product, settings, cost) {
