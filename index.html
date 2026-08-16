@@ -1256,6 +1256,46 @@
             <input class="kyn-input" type="number" min="0" step="any" value="{{ dm.stockQty }}" onChange="{{ dmOnStock }}" placeholder="Conteo físico — vacío usa lo comprado" style="padding:10px 13px">
             <span style="font-size:12px;color:var(--ink-500)">Cuando lo capturas, manda sobre la suma de compras — es lo que usan Eventos y el contador de pedidos. Vacío = se sigue calculando solo con tus compras.</span>
           </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="font-size:13px;font-weight:600">Proveedor externo</label>
+            <span style="font-size:12px;color:var(--ink-500);margin-top:-4px">Para que este material aparezca en “Pedidos de compra” dentro de un evento — precio en USD, con escalones por cantidad.</span>
+
+            <sc-if value="{{ dmNoVendor }}" hint-placeholder-val="{{ false }}">
+              <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" style="align-self:flex-start" onClick="{{ dmVendorAdd }}">+ Agregar proveedor</button>
+            </sc-if>
+
+            <sc-if value="{{ dmHasVendor }}" hint-placeholder-val="{{ false }}">
+              <div style="{{ formGridStyle }}">
+                <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                  <label style="font-size:12px;color:var(--ink-500)">Nombre del proveedor</label>
+                  <input class="kyn-input" value="{{ dmv.name }}" onChange="{{ dmvSet.name }}" placeholder="Buckleguy" style="padding:9px 12px">
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                  <label style="font-size:12px;color:var(--ink-500)">Se vende por paquete de</label>
+                  <input class="kyn-input" type="number" min="1" step="1" value="{{ dmv.packSize }}" onChange="{{ dmvSet.packSize }}" placeholder="1 = suelto, 50 = bolsa de 50" style="padding:9px 12px">
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="font-size:12px;color:var(--ink-500)">Liga del producto</label>
+                <input class="kyn-input" value="{{ dmv.url }}" onChange="{{ dmvSet.url }}" placeholder="https://www.buckleguy.com/…" style="padding:9px 12px">
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <label style="font-size:12px;color:var(--ink-500)">Escalones de precio (USD, por pieza o por paquete)</label>
+                <sc-for list="{{ dmvTiers }}" as="t" hint-placeholder-count="2">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font-size:12px;color:var(--ink-500);white-space:nowrap">a partir de</span>
+                    <input class="kyn-input" type="number" min="1" step="1" value="{{ t.minQty }}" onChange="{{ t.onMinQty }}" aria-label="Cantidad mínima del escalón" style="width:64px;padding:7px 9px;font-size:13px">
+                    <span style="font-size:12px;color:var(--ink-500)">US$</span>
+                    <input class="kyn-input" type="number" min="0" step="any" value="{{ t.price }}" onChange="{{ t.onPrice }}" aria-label="Precio del escalón" style="width:78px;padding:7px 9px;font-size:13px">
+                    <button onClick="{{ t.onRemove }}" title="Quitar escalón" aria-label="Quitar este escalón de precio" style="background:none;border:none;cursor:pointer;color:var(--ink-500);font-size:14px;padding:4px;margin-left:auto" style-hover="color:var(--danger)">✕</button>
+                  </div>
+                </sc-for>
+                <button class="kyn-btn kyn-btn--ghost kyn-btn--sm" style="align-self:flex-start" onClick="{{ dmvAddTier }}">+ Agregar escalón</button>
+              </div>
+              <button class="kyn-btn kyn-btn--ghost kyn-btn--sm" style="align-self:flex-start;color:var(--danger)" onClick="{{ dmVendorRemove }}">Quitar proveedor</button>
+            </sc-if>
+          </div>
           <div style="display:flex;flex-direction:column;gap:8px">
             <label style="font-size:13px;font-weight:600">Método de costeo</label>
             <sc-for list="{{ dmMethods }}" as="m" hint-placeholder-count="3">
@@ -2999,7 +3039,7 @@ class Component extends DCLogic {
             lines: od.lines.map((l) => {
               const nm = l.material ? l.material.name : 'material eliminado';
               return {
-                name: nm, url: l.material ? l.material.vendor.url : '#',
+                name: nm, url: (l.material && l.material.vendor && l.material.vendor.url) || '#',
                 quantity: String(l.quantity == null ? '' : l.quantity),
                 qtyUnit: l.packSize > 1 ? 'bolsa' + (l.qty === 1 ? '' : 's') + ' (' + C.round2(l.pieces) + ' pza)' : (l.material ? l.material.unit : 'pza'),
                 unitPrice: l.unitPrice == null ? '—' : C.usd(l.unitPrice),
@@ -3101,6 +3141,39 @@ class Component extends DCLogic {
           stockQty: m.stockQty == null ? '' : String(m.stockQty),
         };
         vals.dmOnStock = (ev2) => { m.stockQty = ev2.target.value === '' ? '' : Math.max(0, +ev2.target.value || 0); m.updatedAt = today; this.up(); };
+
+        // --- proveedor externo (liga + escalones de precio en USD) ---
+        vals.dmHasVendor = !!m.vendor;
+        vals.dmNoVendor = !m.vendor;
+        vals.dmVendorAdd = () => {
+          m.vendor = { name: '', url: '', packSize: 1, tiers: [{ minQty: 1, price: '' }] };
+          m.updatedAt = today; this.up();
+        };
+        vals.dmVendorRemove = () => this.ask('Quitar proveedor', 'Este material ya no aparecerá en “Pedidos de compra” de ningún evento.', 'Quitar', () => {
+          delete m.vendor; m.updatedAt = today; this.up(); this.showToast('Proveedor quitado');
+        });
+        if (m.vendor) {
+          const v = m.vendor;
+          vals.dmv = { name: v.name || '', url: v.url || '', packSize: v.packSize == null ? '1' : String(v.packSize) };
+          vals.dmvSet = {
+            name: (ev2) => { v.name = ev2.target.value; m.updatedAt = today; this.up(); },
+            url: (ev2) => { v.url = ev2.target.value.trim(); m.updatedAt = today; this.up(); },
+            packSize: (ev2) => { v.packSize = Math.max(1, Math.round(+ev2.target.value || 1)); m.updatedAt = today; this.up(); },
+          };
+          if (!v.tiers || !v.tiers.length) v.tiers = [{ minQty: 1, price: '' }];
+          vals.dmvTiers = v.tiers.map((t, i) => ({
+            minQty: String(t.minQty == null ? '' : t.minQty),
+            price: String(t.price == null ? '' : t.price),
+            onMinQty: (ev2) => { t.minQty = ev2.target.value === '' ? '' : Math.max(1, +ev2.target.value || 1); m.updatedAt = today; this.up(); },
+            onPrice: (ev2) => { t.price = ev2.target.value === '' ? '' : Math.max(0, +ev2.target.value || 0); m.updatedAt = today; this.up(); },
+            onRemove: () => { v.tiers = v.tiers.filter((x, xi) => xi !== i); if (!v.tiers.length) v.tiers = [{ minQty: 1, price: '' }]; m.updatedAt = today; this.up(); },
+          }));
+          vals.dmvAddTier = () => {
+            const last = v.tiers[v.tiers.length - 1];
+            v.tiers.push({ minQty: (+last.minQty || 0) + 1, price: '' });
+            m.updatedAt = today; this.up();
+          };
+        }
         const hist = C.materialHistory(db, m.id);
         const wavg = hist.length ? hist.reduce((a, h) => a + h.realTotalCost, 0) / hist.reduce((a, h) => a + h.quantity, 0) : null;
         const methodDefs = [
@@ -3362,9 +3435,10 @@ class Component extends DCLogic {
         vals.opCandidates = catalog.map((m) => {
           const line = (order.lines || []).find((l) => l.materialId === m.id);
           const unit = m.vendor.packSize > 1 ? '/bolsa de ' + m.vendor.packSize : '/pza';
+          const startPrice = C.vendorUnitPrice(m.vendor, 1);
           return {
             name: m.name,
-            sub: M ? (C.usd(m.vendor.tiers[0].price) + ' ' + unit + (m.size ? ' · ' + m.size : '')) : '',
+            sub: (startPrice == null ? 'sin precio capturado' : C.usd(startPrice) + ' ' + unit) + (m.size ? ' · ' + m.size : ''),
             qtyLabel: line ? '×' + (+line.quantity || 0) : '',
             qtyStyle: 'font-size:12px;font-weight:700;color:var(--periwinkle-700);white-space:nowrap',
             onAdd: () => {

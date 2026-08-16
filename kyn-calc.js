@@ -450,11 +450,18 @@ export const usd = (n) => {
 export const DEFAULT_ORDER_CAP_USD = 50;
 
 // Precio unitario (por pieza, o por bolsa si packSize > 1) al pedir `qty`
-// unidades de este material en un mismo pedido.
+// unidades de este material en un mismo pedido. Los escalones se capturan a
+// mano en el editor de proveedor, así que no se puede asumir que ya llegan
+// completos ni ordenados — se descartan los que no tienen precio válido y
+// se ordenan por cantidad mínima antes de buscar el que aplica.
 export function vendorUnitPrice(vendor, qty) {
   if (!vendor || !vendor.tiers || !vendor.tiers.length || !(qty > 0)) return null;
-  let price = vendor.tiers[0].price;
-  for (const t of vendor.tiers) { if (qty >= t.minQty) price = t.price; else break; }
+  const tiers = vendor.tiers
+    .filter((t) => t.price !== '' && t.price != null && !isNaN(+t.price) && t.minQty !== '' && t.minQty != null)
+    .sort((a, b) => (+a.minQty || 0) - (+b.minQty || 0));
+  if (!tiers.length) return null;
+  let price = +tiers[0].price;
+  for (const t of tiers) { if (qty >= (+t.minQty || 0)) price = +t.price; else break; }
   return price;
 }
 

@@ -67,7 +67,7 @@ El campo "tienes" vive en el material (`stockQty`) y también se edita desde el 
 
 Cada pedido tiene también un espacio para registrar **lo que de verdad pagaste** — material, envío y tipo de cambio — y lo compara contra el estimado por escalón para avisarte si Buckleguy cambió un precio desde que armaste el plan.
 
-Para que un material aparezca en el catálogo de "+ material" necesita tener capturado su proveedor (liga, tamaño de paquete si se vende por bolsa, y escalones de precio en USD) — por ahora eso solo se captura editando el seed en `kyn-calc.js` (`materialId.vendor`), no hay editor en la UI todavía.
+Para que un material aparezca en el catálogo de "+ material" necesita tener capturado su proveedor: en su drawer de Materiales, "Proveedor externo" → "+ Agregar proveedor" — nombre, liga, si se vende por paquete (una bolsa de tornillos cuenta como 1 unidad de pedido) y los escalones de precio en USD ("a partir de X piezas, US$Y"; agrega los que necesites con "+ Agregar escalón"). Es la misma info que usa Buckleguy en su tabla de mayoreo. Sin un escalón con precio válido, el material no cuenta para ningún pedido.
 
 ### Guardarlos en Notion
 
