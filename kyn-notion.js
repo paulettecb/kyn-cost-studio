@@ -112,8 +112,13 @@ async function queryAll(dbId) {
 
 function parseDataRow(page) {
   const p = page.properties || {};
-  const dataProp = p.Data && p.Data.rich_text ? plain(p.Data.rich_text) : '';
+  let dataProp = p.Data && p.Data.rich_text ? plain(p.Data.rich_text) : '';
   if (!dataProp) return null;
+  // Filas escritas a mano vía la integración MCP de Notion (no por esta app)
+  // a veces llevan un '~' inicial — un rodeo a un bug de validación de esa
+  // herramienta que rechaza strings con forma de objeto JSON. Esta app nunca
+  // escribe el prefijo; solo lo tolera al leer.
+  if (dataProp[0] === '~') dataProp = dataProp.slice(1);
   try {
     return { pageId: page.id, obj: JSON.parse(dataProp) };
   } catch (e) {
