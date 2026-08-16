@@ -1051,7 +1051,7 @@
               <strong>{{ evRestockCost }}</strong>
             </div>
           </sc-if>
-          <p style="margin:2px 0 0;font-size:12.5px;color:var(--ink-500);line-height:1.55">“Tengo” es todo lo que has comprado según tus compras registradas — la app no descuenta lo que ya usaste en piezas hechas, así que tómalo como techo y verifica en el taller.</p>
+          <p style="margin:2px 0 0;font-size:12.5px;color:var(--ink-500);line-height:1.55">“Tengo” usa tu conteo físico si lo capturaste (en Materiales, o directo en el contador de Pedidos abajo) — si no, cae de vuelta a la suma de tus compras, que no descuenta lo que ya usaste en piezas hechas.</p>
         </div>
 
         <!-- PEDIDOS DE COMPRA -->
@@ -1065,9 +1065,12 @@
           <sc-if value="{{ evAllocEmpty }}" hint-placeholder-val="{{ false }}">
             <div style="background:var(--oat);border-radius:var(--radius-md);padding:4px 4px">
               <sc-for list="{{ evAllocRows }}" as="a" hint-placeholder-count="6">
-                <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;font-size:13px">
-                  <span style="flex:1;min-width:120px;font-weight:600">{{ a.name }}</span>
-                  <span style="font-size:12px;color:var(--ink-500);width:96px;text-align:right">necesitas {{ a.needed }}</span>
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;flex-wrap:wrap">
+                  <span style="flex:1;min-width:130px;font-weight:600">{{ a.name }}</span>
+                  <span style="font-size:12px;color:var(--ink-500);width:86px;text-align:right">pide {{ a.needed }}</span>
+                  <span style="font-size:11px;color:var(--ink-500)">tienes</span>
+                  <input class="kyn-input" type="number" min="0" step="1" value="{{ a.stock }}" onChange="{{ a.onStock }}" aria-label="Cuánto tienes de {{ a.name }}" style="width:52px;padding:5px 6px;text-align:right;font-size:12.5px">
+                  <span style="font-size:11px;color:var(--ink-500);width:90px">{{ a.allocated }}</span>
                   <span style="{{ a.barTrackStyle }}"><span style="{{ a.barFillStyle }}"></span></span>
                   <span style="{{ a.statusStyle }}">{{ a.status }}</span>
                 </div>
@@ -1106,6 +1109,24 @@
                   <button onClick="{{ l.onRemove }}" title="Quitar" aria-label="Quitar {{ l.name }}" style="background:none;border:none;cursor:pointer;color:var(--ink-500);font-size:14px;padding:4px" style-hover="color:var(--danger)">✕</button>
                 </div>
               </sc-for>
+              <div style="border-top:1px dashed var(--ink-100);padding-top:10px;margin-top:2px;display:flex;flex-direction:column;gap:8px">
+                <span style="font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--ink-500)">Lo que pagaste</span>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                  <div style="display:flex;flex-direction:column;gap:3px">
+                    <label style="font-size:11px;color:var(--ink-500)">Material (US$)</label>
+                    <input class="kyn-input" type="number" min="0" step="any" value="{{ o.paid.material }}" onChange="{{ o.paid.onMaterial }}" placeholder="{{ o.paid.materialPlaceholder }}" aria-label="Lo que pagaste de material en {{ o.label }}" style="width:100px;padding:6px 8px;font-size:12.5px">
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:3px">
+                    <label style="font-size:11px;color:var(--ink-500)">Envío (US$)</label>
+                    <input class="kyn-input" type="number" min="0" step="any" value="{{ o.paid.shipping }}" onChange="{{ o.paid.onShipping }}" placeholder="0" aria-label="Lo que pagaste de envío en {{ o.label }}" style="width:80px;padding:6px 8px;font-size:12.5px">
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:3px">
+                    <label style="font-size:11px;color:var(--ink-500)">Tipo de cambio</label>
+                    <input class="kyn-input" type="number" min="0" step="any" value="{{ o.paid.rate }}" onChange="{{ o.paid.onRate }}" placeholder="MXN por USD" aria-label="Tipo de cambio usado en {{ o.label }}" style="width:90px;padding:6px 8px;font-size:12.5px">
+                  </div>
+                </div>
+                <sc-if value="{{ o.paid.summary }}"><div style="{{ o.paid.summaryStyle }}">{{ o.paid.summary }}</div></sc-if>
+              </div>
             </div>
           </sc-for>
           <sc-if value="{{ evOrdersFooter }}">
@@ -1229,6 +1250,11 @@
           <div style="background:var(--oat);border-radius:var(--radius-md);padding:16px 18px;display:flex;justify-content:space-between;align-items:baseline">
             <span style="font-size:13px;color:var(--ink-700)">Costo unitario vigente</span>
             <span style="font-size:22px;font-weight:800">{{ dm.cost }} <span style="font-size:13px;font-weight:600;color:var(--ink-500)">/ {{ dm.unit }}</span></span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label style="font-size:13px;font-weight:600">Stock en mano</label>
+            <input class="kyn-input" type="number" min="0" step="any" value="{{ dm.stockQty }}" onChange="{{ dmOnStock }}" placeholder="Conteo físico — vacío usa lo comprado" style="padding:10px 13px">
+            <span style="font-size:12px;color:var(--ink-500)">Cuando lo capturas, manda sobre la suma de compras — es lo que usan Eventos y el contador de pedidos. Vacío = se sigue calculando solo con tus compras.</span>
           </div>
           <div style="display:flex;flex-direction:column;gap:8px">
             <label style="font-size:13px;font-weight:600">Método de costeo</label>
@@ -1926,6 +1952,44 @@ class Component extends DCLogic {
     else e[key].push({ id: this.C.uid(), productId, quantity: 1 });
     e.updatedAt = this.today();
     this.up();
+  }
+
+  // Lo que de verdad se pagó por un pedido, contra el estimado por escalón —
+  // sirve para notar si Buckleguy cambió un precio desde que armaste el plan.
+  orderPaidVals(realOrder, od) {
+    const C = this.C, today = this.today();
+    if (!realOrder.actual) realOrder.actual = {};
+    const a = realOrder.actual;
+    const set = (k, transform) => (ev2) => {
+      const v = ev2.target.value;
+      a[k] = v === '' ? '' : (transform ? transform(v) : v);
+      realOrder.updatedAt = today; this.up();
+    };
+    const num = (v) => Math.max(0, +v || 0);
+    const paid = a.material === '' || a.material == null ? null : +a.material;
+    const shipping = +a.shipping || 0;
+    const rate = a.rate === '' || a.rate == null ? null : +a.rate;
+    let summary = '', summaryStyle = '';
+    if (paid != null) {
+      const diff = paid - od.subtotalUSD;
+      const close = Math.abs(diff) < 0.05;
+      const totalUSD = paid + shipping;
+      const mxn = rate != null ? totalUSD * rate : null;
+      summary = (close ? '✓ coincide con el estimado (' + C.usd(od.subtotalUSD) + ')' :
+        (diff > 0 ? '⬆ subió ' : '⬇ bajó ') + C.usd(Math.abs(diff)) + ' vs. el estimado (' + C.usd(od.subtotalUSD) + ')') +
+        (shipping ? ' · con envío: ' + C.usd(totalUSD) : '') + (mxn != null ? ' ≈ ' + this.C.money(mxn, 0) : '');
+      summaryStyle = 'font-size:12px;font-weight:600;color:' + (close ? 'var(--success)' : (diff > 0 ? '#8A6D1F' : 'var(--success)'));
+    }
+    return {
+      material: a.material == null ? '' : String(a.material),
+      materialPlaceholder: 'est. ' + od.subtotalUSD.toFixed(2),
+      shipping: a.shipping == null ? '' : String(a.shipping),
+      rate: a.rate == null ? '' : String(a.rate),
+      onMaterial: set('material', num),
+      onShipping: set('shipping', num),
+      onRate: set('rate', num),
+      summary, summaryStyle,
+    };
   }
 
   // ---------- exports ----------
@@ -2893,18 +2957,25 @@ class Component extends DCLogic {
         const alloc = C.eventOrderAllocation(db, e);
         vals.evAllocEmpty = alloc.rows.length > 0;
         vals.evAllocRows = alloc.rows.map((a) => {
-          const pct = a.needed ? Math.min(1, Math.max(0, a.allocated / a.needed)) : 0;
+          const pct = a.needed ? Math.min(1, Math.max(0, (a.stock + a.allocated) / a.needed)) : 0;
           const over = a.remaining < 0;
           const color = a.covered ? 'var(--success)' : 'var(--periwinkle-500)';
           return {
             name: a.material.name,
             needed: C.round2(a.needed) + ' ' + (a.material.unit || 'pza'),
-            barTrackStyle: 'flex:none;width:64px;height:6px;border-radius:99px;background:var(--ink-100);overflow:hidden',
+            stock: String(a.stock),
+            onStock: (ev2) => {
+              const mat = db.materials.find((x) => x.id === a.materialId);
+              if (mat) mat.stockQty = ev2.target.value === '' ? '' : Math.max(0, +ev2.target.value || 0);
+              mat.updatedAt = today; this.up();
+            },
+            allocated: 'en pedidos ' + C.round2(a.allocated),
+            barTrackStyle: 'flex:none;width:56px;height:6px;border-radius:99px;background:var(--ink-100);overflow:hidden',
             barFillStyle: 'display:block;height:100%;border-radius:99px;background:' + color + ';width:' + Math.round(pct * 100) + '%',
             status: a.covered
               ? (over ? '✓ +' + C.round2(-a.remaining) + ' de más' : '✓ cubierto')
-              : 'faltan ' + C.round2(a.remaining) + ' por asignar',
-            statusStyle: 'font-size:12px;font-weight:700;width:150px;text-align:right;color:' + (a.covered ? 'var(--success)' : 'var(--ink-700)'),
+              : 'faltan ' + C.round2(a.remaining) + ' por pedir',
+            statusStyle: 'font-size:12px;font-weight:700;width:130px;text-align:right;color:' + (a.covered ? 'var(--success)' : 'var(--ink-700)'),
           };
         });
         vals.evAllocDone = alloc.allCovered;
@@ -2954,6 +3025,7 @@ class Component extends DCLogic {
                 onRemove: () => { realOrder.lines = realOrder.lines.filter((x) => x.id !== l.id); e.updatedAt = today; this.up(); },
               };
             }),
+            paid: this.orderPaidVals(realOrder, od),
           };
         });
 
@@ -3026,7 +3098,9 @@ class Component extends DCLogic {
           category: m.category, color: m.color, chipLabel: c.label, chipCls: c.cls,
           cost: cost == null ? '—' : M(cost), unit: m.unit,
           status: m.status, notes: m.notes, manualCost: m.manualCost == null ? '' : String(m.manualCost),
+          stockQty: m.stockQty == null ? '' : String(m.stockQty),
         };
+        vals.dmOnStock = (ev2) => { m.stockQty = ev2.target.value === '' ? '' : Math.max(0, +ev2.target.value || 0); m.updatedAt = today; this.up(); };
         const hist = C.materialHistory(db, m.id);
         const wavg = hist.length ? hist.reduce((a, h) => a + h.realTotalCost, 0) / hist.reduce((a, h) => a + h.quantity, 0) : null;
         const methodDefs = [
