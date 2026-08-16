@@ -255,6 +255,16 @@ export function materialStock(db) {
   return stock;
 }
 
+// Cuánto tienes de verdad: si el material tiene un conteo físico capturado
+// (`stockQty` — lo que se cuenta a mano en el taller) ese manda, porque la
+// suma de compras no baja cuando usas o vendes material suelto. Sin conteo
+// capturado, cae de vuelta a la suma de compras (el techo de siempre).
+export function materialOnHand(m, purchaseStock) {
+  if (!m) return 0;
+  if (m.stockQty != null && m.stockQty !== '') return +m.stockQty || 0;
+  return (purchaseStock && purchaseStock[m.id]) || 0;
+}
+
 // Materia prima que consumen `qty` unidades de `product`, expandiendo los
 // bundles hasta llegar a materiales. `_path` evita ciclos.
 export function expandRawMaterials(db, product, qty, out, _path) {
@@ -404,7 +414,7 @@ export function eventMaterialNeeds(db, event) {
   const stock = materialStock(db);
   const rows = Object.keys(need).map((mid) => {
     const m = (db.materials || []).find((x) => x.id === mid);
-    const needed = need[mid], have = stock[mid] || 0;
+    const needed = need[mid], have = materialOnHand(m, stock);
     const short = Math.max(0, needed - have);
     const unitCost = materialUnitCost(db, m);
     return {
@@ -440,11 +450,18 @@ export const usd = (n) => {
 export const DEFAULT_ORDER_CAP_USD = 50;
 
 // Precio unitario (por pieza, o por bolsa si packSize > 1) al pedir `qty`
-// unidades de este material en un mismo pedido.
+// unidades de este material en un mismo pedido. Los escalones se capturan a
+// mano en el editor de proveedor, así que no se puede asumir que ya llegan
+// completos ni ordenados — se descartan los que no tienen precio válido y
+// se ordenan por cantidad mínima antes de buscar el que aplica.
 export function vendorUnitPrice(vendor, qty) {
   if (!vendor || !vendor.tiers || !vendor.tiers.length || !(qty > 0)) return null;
-  let price = vendor.tiers[0].price;
-  for (const t of vendor.tiers) { if (qty >= t.minQty) price = t.price; else break; }
+  const tiers = vendor.tiers
+    .filter((t) => t.price !== '' && t.price != null && !isNaN(+t.price) && t.minQty !== '' && t.minQty != null)
+    .sort((a, b) => (+a.minQty || 0) - (+b.minQty || 0));
+  if (!tiers.length) return null;
+  let price = +tiers[0].price;
+  for (const t of tiers) { if (qty >= (+t.minQty || 0)) price = +t.price; else break; }
   return price;
 }
 
@@ -482,12 +499,11 @@ export function vendorCatalog(db) {
   return (db.materials || []).filter((m) => m.vendor && m.status !== 'archivado');
 }
 
-// Cuánto de lo que el plan pide (solo materiales con proveedor, en piezas —
-// las bolsas de un pedido se convierten a piezas con su packSize) ya quedó
-// repartido entre los pedidos armados, y cuánto falta por asignar a alguno.
-// Vive aparte de eventMaterialNeeds porque ese compara contra lo COMPRADO
-// (el stock declarado); esto compara contra lo ASIGNADO en los pedidos que
-// se están armando ahorita — dos preguntas distintas.
+// Cuánto de lo que el plan pide (solo materiales con proveedor) ya está
+// cubierto — por lo que tienes en mano (`stockQty`, editable) más lo que ya
+// repartiste entre los pedidos armados — y cuánto falta por meter a alguno.
+// `stock` se resta primero porque es lo que YA tienes sin pedir nada; los
+// pedidos solo necesitan cubrir el resto.
 export function eventOrderAllocation(db, event) {
   const needed = {};
   for (const l of event.plan || []) {
@@ -502,12 +518,15 @@ export function eventOrderAllocation(db, event) {
       allocated[l.materialId] = (allocated[l.materialId] || 0) + (+l.quantity || 0) * packSize;
     }
   }
+  const purchaseStock = materialStock(db);
   const rows = vendorCatalog(db)
     .filter((m) => needed[m.id] > 0)
     .map((m) => {
       const need = needed[m.id] || 0;
+      const stock = materialOnHand(m, purchaseStock);
       const alloc = allocated[m.id] || 0;
-      return { materialId: m.id, material: m, needed: need, allocated: alloc, remaining: need - alloc, covered: alloc >= need };
+      const remaining = need - stock - alloc;
+      return { materialId: m.id, material: m, needed: need, stock, allocated: alloc, remaining, covered: remaining <= 0 };
     });
   rows.sort((a, b) => (a.covered - b.covered) || b.remaining - a.remaining);
   return { rows, allCovered: rows.length > 0 && rows.every((r) => r.covered) };
@@ -603,43 +622,43 @@ export function makeSeedDB() {
     M('m_bio_olive', 'Biothane Olive', 'Biothane', 'Beta 19 mm', 'm', { color: 'Olive', size: '19 mm', supplier: 'BioThane USA' }),
     M('m_bio_cafe', 'Biothane Café Claro', 'Biothane', 'Beta 19 mm', 'm', { color: 'Café claro', size: '19 mm', supplier: 'BioThane USA' }),
     M('m_oring', 'O Ring solid brass', 'Herrajes', 'Argollas', 'pza', {
-      size: '25 mm', supplier: 'Buckleguy',
+      size: '25 mm', supplier: 'Buckleguy', stockQty: 11,
       vendor: V('https://www.buckleguy.com/or0-gold-plate-thick-o-ring-solid-brass-ll-multiple-sizes/',
         [{ minQty: 1, price: 2.25 }, { minQty: 10, price: 1.91 }, { minQty: 100, price: 1.69 }]),
     }),
     M('m_dring', 'D Ring solid brass', 'Herrajes', 'Argollas', 'pza', {
-      size: '25 mm', supplier: 'Buckleguy',
+      size: '25 mm', supplier: 'Buckleguy', stockQty: 13,
       vendor: V('https://www.buckleguy.com/2011-gold-plate-d-ring-solid-brass-ll-multiple-sizes/',
         [{ minQty: 1, price: 2.63 }, { minQty: 10, price: 2.24 }, { minQty: 100, price: 1.97 }]),
     }),
     M('m_trigger', 'Trigger Snap solid brass', 'Herrajes', 'Mosquetones', 'pza', {
-      size: '19 mm', supplier: 'Buckleguy',
+      size: '19 mm', supplier: 'Buckleguy', stockQty: 1,
       vendor: V('https://www.buckleguy.com/3002a-gold-plate-swivel-trigger-snap-solid-brass-ll-multiple-sizes/',
         [{ minQty: 1, price: 6.94 }, { minQty: 10, price: 5.90 }, { minQty: 100, price: 5.21 }]),
     }),
     M('m_swivel', 'Swivel Hook solid brass', 'Herrajes', 'Mosquetones', 'pza', {
-      size: '19 mm', supplier: 'Buckleguy',
+      size: '19 mm', supplier: 'Buckleguy', stockQty: 12,
       vendor: V('https://www.buckleguy.com/3001a-gold-plate-swivel-bolt-snap-solid-brass-ll-multiple-sizes/',
         [{ minQty: 1, price: 6.34 }, { minQty: 10, price: 5.39 }, { minQty: 100, price: 4.75 }]),
     }),
     M('m_mini_swivel', 'Mini Swivel Hook', 'Herrajes', 'Mosquetones', 'pza', {
-      size: '13 mm', supplier: 'Buckleguy',
+      size: '13 mm', supplier: 'Buckleguy', stockQty: 3,
       vendor: V('https://www.buckleguy.com/3008a-3-4-gold-plate-mini-swivel-trigger-snap-solid-brass-ll/',
         [{ minQty: 1, price: 5.08 }, { minQty: 10, price: 4.32 }, { minQty: 100, price: 3.81 }]),
     }),
     M('m_slider', 'Slider solid brass', 'Herrajes', 'Conectores', 'pza', {
-      size: '19 mm', supplier: 'Buckleguy',
+      size: '19 mm', supplier: 'Buckleguy', stockQty: 7,
       vendor: V('https://www.buckleguy.com/20122-natural-brass-single-loop-solid-brass-ll-multiple-sizes/',
         [{ minQty: 1, price: 1.45 }, { minQty: 10, price: 1.23 }, { minQty: 100, price: 1.09 }, { minQty: 500, price: 0.94 }, { minQty: 1000, price: 0.87 }]),
     }),
     M('m_cs5', 'Chicago Screw 5 mm', 'Remaches', 'Chicago screws', 'pza', { size: '5 mm', supplier: 'Hardware Import Co.' }),
     M('m_cs65', 'Chicago Screw 6.5 mm', 'Remaches', 'Chicago screws', 'pza', {
-      size: '6.5 mm', supplier: 'Buckleguy',
+      size: '6.5 mm', supplier: 'Buckleguy', stockQty: 0,
       vendor: V('https://www.buckleguy.com/chicago-screws-cylinder-cap-natural-brass-solid-brass-ll-50-per-bag-multiple-sizes/',
         [{ minQty: 1, price: 28.21 }, { minQty: 10, price: 25.39 }, { minQty: 20, price: 21.16 }, { minQty: 50, price: 18.34 }], 50),
     }),
     M('m_buckle', 'Buckle M solid brass', 'Hebillas', '', 'pza', {
-      size: 'M', supplier: 'Buckleguy',
+      size: 'M', supplier: 'Buckleguy', stockQty: 6,
       vendor: V('https://www.buckleguy.com/c5384-natural-brass-double-bar-buckle-solid-brass-ll-multiple-sizes/',
         [{ minQty: 1, price: 3.72 }, { minQty: 10, price: 3.16 }, { minQty: 100, price: 2.79 }, { minQty: 500, price: 2.42 }]),
     }),
@@ -647,10 +666,12 @@ export function makeSeedDB() {
     // sin liga ni precio capturados todavía, así que se queda sin `vendor`
     // hasta que se manden (no se inventa el precio).
     M('m_eyelets', 'Ojillos latón', 'Remaches', 'Ojillos', 'pza', { size: '8 mm', supplier: 'Buckleguy', notes: 'Ya tiene bastante inventario de esto — no es prioridad de pedido.' }),
-    // No lo usa ninguna receta todavía — se guarda el precio real porque ya
-    // se mandó, pero no entra a ningún pedido hasta que se use en un producto.
+    // No lo usa ninguna receta todavía — se guarda el precio real y el stock
+    // porque ya se mandaron, pero no entra a ningún pedido hasta que se use
+    // en un producto. Paulette explicó que lo usa para el largo ajustable de
+    // correas/crossbody — pendiente meterlo a esas recetas cuando lo pida.
     M('m_dloop', 'Double Loop solid brass', 'Herrajes', 'Conectores', 'pza', {
-      size: '19 mm', supplier: 'Buckleguy', status: 'prueba', notes: 'Sin receta que lo use todavía.',
+      size: '19 mm', supplier: 'Buckleguy', status: 'prueba', stockQty: 7, notes: 'Sin receta que lo use todavía — se usa para el largo ajustable de correas/crossbody.',
       vendor: V('https://www.buckleguy.com/20114-gold-plate-double-loop-solid-brass-ll-multiple-sizes/',
         [{ minQty: 1, price: 2.28 }, { minQty: 10, price: 1.94 }, { minQty: 100, price: 1.71 }]),
     }),
@@ -807,16 +828,14 @@ export function makeSeedDB() {
       actual: [],
       checklist: EVENT_CHECKLIST_BASE.map((text, i) => ({ id: 'evc' + i, text, done: false })),
       orderCapUSD: 50,
+      // Cantidades = lo que YA falta pedir (pide el plan menos lo que hay en
+      // el taller, contado a mano el 2026-08-07) — no el total de la receta.
       orders: [
-        { id: 'evo1', label: 'Pedido 1', lines: [{ id: 'evo1l1', materialId: 'm_dring', quantity: 14 }, { id: 'evo1l2', materialId: 'm_trigger', quantity: 2 }] },
-        { id: 'evo2', label: 'Pedido 2', lines: [{ id: 'evo2l1', materialId: 'm_dring', quantity: 13 }, { id: 'evo2l2', materialId: 'm_oring', quantity: 10 }] },
-        { id: 'evo3', label: 'Pedido 3', lines: [{ id: 'evo3l1', materialId: 'm_oring', quantity: 11 }, { id: 'evo3l2', materialId: 'm_slider', quantity: 20 }] },
-        { id: 'evo4', label: 'Pedido 4', lines: [{ id: 'evo4l1', materialId: 'm_swivel', quantity: 7 }] },
-        { id: 'evo5', label: 'Pedido 5', lines: [{ id: 'evo5l1', materialId: 'm_swivel', quantity: 7 }] },
-        { id: 'evo6', label: 'Pedido 6', lines: [{ id: 'evo6l1', materialId: 'm_swivel', quantity: 2 }, { id: 'evo6l2', materialId: 'm_buckle', quantity: 10 }] },
-        { id: 'evo7', label: 'Pedido 7', lines: [{ id: 'evo7l1', materialId: 'm_trigger', quantity: 7 }] },
-        { id: 'evo8', label: 'Pedido 8', lines: [{ id: 'evo8l1', materialId: 'm_cs65', quantity: 1 }, { id: 'evo8l2', materialId: 'm_swivel', quantity: 1 }] },
-        { id: 'evo9', label: 'Pedido 9', lines: [{ id: 'evo9l1', materialId: 'm_cs65', quantity: 1 }] },
+        { id: 'evo1', label: 'Pedido 1', lines: [{ id: 'evo1l1', materialId: 'm_dring', quantity: 14 }, { id: 'evo1l2', materialId: 'm_buckle', quantity: 2 }, { id: 'evo1l3', materialId: 'm_trigger', quantity: 1 }] },
+        { id: 'evo2', label: 'Pedido 2', lines: [{ id: 'evo2l1', materialId: 'm_oring', quantity: 10 }, { id: 'evo2l2', materialId: 'm_slider', quantity: 13 }, { id: 'evo2l3', materialId: 'm_swivel', quantity: 2 }] },
+        { id: 'evo3', label: 'Pedido 3', lines: [{ id: 'evo3l1', materialId: 'm_trigger', quantity: 7 }] },
+        { id: 'evo4', label: 'Pedido 4', lines: [{ id: 'evo4l1', materialId: 'm_swivel', quantity: 3 }, { id: 'evo4l2', materialId: 'm_cs65', quantity: 1 }] },
+        { id: 'evo5', label: 'Pedido 5', lines: [{ id: 'evo5l1', materialId: 'm_cs65', quantity: 1 }] },
       ],
       createdAt: '2026-08-07', updatedAt: '2026-08-07',
     },

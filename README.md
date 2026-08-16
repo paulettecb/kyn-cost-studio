@@ -61,9 +61,13 @@ Dentro de un evento, debajo de "Material para producirlo", vive **Pedidos de com
 
 Todo es editable ahí mismo: cambia cantidades, mueve una línea de un pedido a otro con el selector, agrega materiales con "+ material" o pedidos completos con "+ Nuevo pedido" — pensado para "jugar" con distintos armados antes de comprar.
 
-Arriba de los pedidos hay un contador por material: cuánto pide el plan, una barra que se llena conforme lo vas repartiendo entre pedidos, y cuánto falta por asignar (o cuánto llevas de más, en verde, si compraste con colchón a propósito). Baja y sube en vivo con cada cambio — sirve para no perder la cuenta mientras reacomodas.
+Arriba de los pedidos hay un contador por material: cuánto pide el plan, cuánto **tienes** (editable ahí mismo — número real, no calculado), cuánto ya va repartido entre pedidos, y cuánto falta por meter a alguno. Baja y sube en vivo con cada cambio, tanto si editas el stock como si mueves algo entre pedidos.
 
-Para que un material aparezca en el catálogo de "+ material" necesita tener capturado su proveedor (liga, tamaño de paquete si se vende por bolsa, y escalones de precio en USD) — por ahora eso solo se captura editando el seed en `kyn-calc.js` (`materialId.vendor`), no hay editor en la UI todavía.
+El campo "tienes" vive en el material (`stockQty`) y también se edita desde el drawer de Materiales, en "Stock en mano". Cuando lo capturas, manda sobre la suma de compras en toda la sección Eventos (aquí y en "Material para producirlo") — sin capturarlo, sigue funcionando como antes, calculado solo con tus compras registradas. Sirve para corregir la cuenta cuando usas o vendes material fuera de la app y el número calculado ya no es real.
+
+Cada pedido tiene también un espacio para registrar **lo que de verdad pagaste** — material, envío y tipo de cambio — y lo compara contra el estimado por escalón para avisarte si Buckleguy cambió un precio desde que armaste el plan.
+
+Para que un material aparezca en el catálogo de "+ material" necesita tener capturado su proveedor: en su drawer de Materiales, "Proveedor externo" → "+ Agregar proveedor" — nombre, liga, si se vende por paquete (una bolsa de tornillos cuenta como 1 unidad de pedido) y los escalones de precio en USD ("a partir de X piezas, US$Y"; agrega los que necesites con "+ Agregar escalón"). Es la misma info que usa Buckleguy en su tabla de mayoreo. Sin un escalón con precio válido, el material no cuenta para ningún pedido.
 
 ### Guardarlos en Notion
 
