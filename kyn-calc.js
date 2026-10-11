@@ -217,6 +217,45 @@ export function channelSuggestedPrice(cost, ch, settings) {
   return roundPrice(p, settings.defaultRoundingRule);
 }
 
+// ---------- Recibos de venta ----------
+// Un recibo guarda una COPIA del nombre y precio de cada pieza: si mañana
+// cambias un precio o renombras un producto, el recibo de Cali sigue diciendo
+// lo que se le cobró ese día.
+
+export const RECEIPT_PAYMENTS = ['Efectivo', 'Transferencia', 'Tarjeta'];
+export const RECEIPT_STATUS = ['Pagado', 'Anticipo', 'Pendiente'];
+
+// Precio guardado del producto en ese canal; si no hay, el sugerido.
+export function savedOrSuggestedPrice(db, product, channelId, settings) {
+  settings = settings || db.settings;
+  const sp = (product.savedPrices || {})[channelId];
+  if (sp && sp.price != null && sp.price !== '' && !isNaN(+sp.price)) return { price: +sp.price, suggested: false };
+  const ch = settings.channels[channelId];
+  if (!ch) return { price: null, suggested: false };
+  return { price: channelSuggestedPrice(productCost(db, product, settings).total, ch, settings), suggested: true };
+}
+
+export function receiptTotals(r) {
+  const lines = (r && r.lines) || [];
+  const subtotal = lines.reduce((t, l) => t + (+l.price || 0) * (+l.qty || 0), 0);
+  const pieces = lines.reduce((t, l) => t + (+l.qty || 0), 0);
+  const discount = Math.max(0, +r.discount || 0);
+  const shipping = Math.max(0, +r.shipping || 0);
+  const total = Math.max(0, subtotal - discount + shipping);
+  const paid = r.estado === 'Pagado' ? total : (r.estado === 'Anticipo' ? Math.min(total, Math.max(0, +r.deposit || 0)) : 0);
+  return { subtotal, pieces, discount, shipping, total, paid, due: total - paid };
+}
+
+// KYN-001, KYN-002… — siguiente número libre según los folios existentes.
+export function nextReceiptFolio(receipts) {
+  let max = 0;
+  for (const r of receipts || []) {
+    const m = /(\d+)\s*$/.exec(r.folio || '');
+    if (m) max = Math.max(max, +m[1]);
+  }
+  return 'KYN-' + String(max + 1).padStart(3, '0');
+}
+
 // ---------- Eventos: bazares, ferias y pop-ups ----------
 
 export const EVENT_STATUS = [

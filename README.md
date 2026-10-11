@@ -37,6 +37,19 @@ En la sección **Lista de precios** hay dos vistas:
 - **Tabla** — costos, márgenes y recalcular por canal, con exportación CSV / copiar / PDF.
 - **Tarjetas** — las tarjetas bonitas por canal (en línea / en persona / familia & amigos), listas para imprimir o compartir.
 
+**Guardar en mi cel** (arriba, en Lista de precios) convierte las tarjetas en imágenes PNG: en el celular abre la hoja de compartir (→ *Guardar imagen* para tus fotos, o directo a WhatsApp); en la compu las descarga. Usa los chips para guardar solo un canal o los 3 de un jalón.
+
+## Recibos
+
+La sección **Recibos** arma recibos bonitos para tus clientas, con el mismo estilo que las tarjetas de precios.
+
+1. **+ Nuevo recibo** — se le pone folio solo (KYN-001, KYN-002…).
+2. **+ Agregar pieza** — eliges productos; el precio sale del canal elegido en *Precios* (en persona por default). Cada precio se puede ajustar a mano.
+3. Llenas cliente, fecha, forma de pago y estado (*Pagado*, *Anticipo* —con cuánto te dieron, y el recibo dice cuánto resta— o *Pendiente*). Descuento, envío y una nota para tu clienta son opcionales.
+4. **Guardar en mi cel** — igual que en la lista de precios: imagen lista para mandar.
+
+El recibo guarda una copia del nombre y precio de cada pieza, así que aunque después cambies precios, el recibo sigue diciendo lo que se cobró ese día. Se guardan en la base *KYN Recibos* de Notion (debajo de KYN Cost Studio, así que hereda la conexión).
+
 ## Bundles
 
 Un **bundle** es un producto armado con *otros productos* (por ejemplo, collar + correa). Se crea como cualquier producto (categoría *Bundles*) y en su **receta** eliges la pestañita **Productos** para agregar los componentes. Su costo es la suma del costo real de cada componente (más empaque u otros extras que le pongas), se recalcula solo si cambia el costo de un componente, y aparece en la lista de precios y la calculadora como cualquier producto. También puedes mezclar: productos + materiales sueltos en la misma receta (la merma solo aplica a los materiales).
@@ -108,3 +121,4 @@ La sección **Seeding** lleva el control de las cuentas para colaboración (la b
 - `server.js` — servidor local + puente al API de Notion.
 - `notion-config.json` — tu token (no lo compartas).
 - `_ds/`, `support.js` — sistema de diseño KYN y runtime.
+- `vendor/html2canvas.min.js` — convierte tarjetas y recibos en imagen (MIT, v1.4.1).
