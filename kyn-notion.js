@@ -16,6 +16,10 @@ export const NOTION_DBS = {
   // KYN Crecimiento — mediciones de seguidores. También columnas nativas.
   // Vive debajo de la página KYN Cost Studio, así que hereda la conexión.
   growth: 'd8cd7267-b81b-4c30-b591-75014f417cc1',
+  // KYN Recibos — recibos de venta. Como materiales y productos, el recibo
+  // completo viaja en el blob `Data`; las demás columnas son para leerlo
+  // bonito desde Notion. También vive debajo de KYN Cost Studio.
+  receipts: '1e097b0c-b655-4a03-a3a5-fdd7c195b3a4',
   // KYN Eventos — bazares y ferias. A diferencia de las demás, su ID NO está
   // fijo aquí: se configura en Ajustes → Notion (settings.eventsDbId) para que
   // la base se pueda crear cuando haga falta, sin tocar código. Sin ID, la
@@ -262,6 +266,22 @@ function evProps(e, C, db) {
   };
 }
 
+// ---------- recibos ----------
+function recProps(r, C) {
+  const t = C.receiptTotals(r);
+  return {
+    Name: { title: rt([r.folio, r.cliente].filter(Boolean).join(' · ') || 'Recibo') },
+    Clave: { rich_text: rt(r.id) },
+    Folio: { rich_text: rt(r.folio || '') },
+    Fecha: r.fecha ? { date: { start: r.fecha } } : { date: null },
+    Cliente: { rich_text: rt(r.cliente || '') },
+    Canal: { rich_text: rt(r.channel || '') },
+    Total: { number: r2(t.total) },
+    Estado: { rich_text: rt(r.estado || '') },
+    Data: { rich_text: rt(JSON.stringify(r)) },
+  };
+}
+
 function seedProps(s) {
   const seg = s.seguidores === '' || s.seguidores == null || isNaN(s.seguidores) ? null : Number(s.seguidores);
   return {
@@ -301,6 +321,12 @@ export async function loadDB(C) {
   } catch (e) {
     console.warn('KYN Crecimiento no disponible en Notion — la sección Crecimiento no sincronizará hasta conectar la base a la integración.', e);
   }
+  let recPages = null;
+  try {
+    recPages = await queryAll(NOTION_DBS.receipts);
+  } catch (e) {
+    console.warn('KYN Recibos no disponible en Notion — los recibos se guardarán solo en este navegador hasta conectar la base a la integración.', e);
+  }
   const coll = (pages) => pages.map(parseDataRow).filter(Boolean);
   const mats = coll(matPages), purs = coll(purPages), prods = coll(prodPages);
   const seeds = (seedPages || []).map(parseSeedRow);
@@ -320,6 +346,7 @@ export async function loadDB(C) {
     }
   }
   const evs = coll(eventPages || []);
+  const recs = coll(recPages || []);
 
   const db = {
     materials: mats.map((x) => x.obj),
@@ -328,6 +355,7 @@ export async function loadDB(C) {
     seeding: seeds.map((x) => x.obj).sort((a, b) => (b.createdTime || '').localeCompare(a.createdTime || '')),
     growth: grows.map((x) => x.obj).sort((a, b) => (b.fecha || '').localeCompare(a.fecha || '')),
     events: evs.map((x) => x.obj).sort((a, b) => (b.startDate || '').localeCompare(a.startDate || '')),
+    receipts: recs.map((x) => x.obj).sort((a, b) => (b.folio || '').localeCompare(a.folio || '')),
     settings: setRow.obj,
   };
 
@@ -339,6 +367,7 @@ export async function loadDB(C) {
       seeding: new Map(seeds.map((x) => [x.obj.id, x.pageId])),
       growth: new Map(grows.map((x) => [x.obj.id, x.pageId])),
       events: new Map(evs.map((x) => [x.obj.id, x.pageId])),
+      receipts: new Map(recs.map((x) => [x.obj.id, x.pageId])),
     },
     settingsPageId: setRow.pageId,
     // Sin acceso a una base no se escribe nada en ella (evita crear
@@ -347,7 +376,8 @@ export async function loadDB(C) {
     growthDisabled: growthPages == null,
     eventsDbId,
     eventsDisabled: eventPages == null,
-    propSnaps: { materials: new Map(), purchases: new Map(), products: new Map(), seeding: new Map(), growth: new Map(), events: new Map(), settings: '' },
+    receiptsDisabled: recPages == null,
+    propSnaps: { materials: new Map(), purchases: new Map(), products: new Map(), seeding: new Map(), growth: new Map(), events: new Map(), receipts: new Map(), settings: '' },
   };
   snapshotAll(db, ctx, C);
   return { db, ctx };
@@ -360,6 +390,7 @@ export function snapshotAll(db, ctx, C) {
   ctx.propSnaps.seeding = new Map((db.seeding || []).map((s) => [s.id, JSON.stringify(seedProps(s))]));
   ctx.propSnaps.growth = new Map((db.growth || []).map((g) => [g.id, JSON.stringify(growthProps(g))]));
   ctx.propSnaps.events = new Map((db.events || []).map((e) => [e.id, JSON.stringify(evProps(e, C, db))]));
+  ctx.propSnaps.receipts = new Map((db.receipts || []).map((r) => [r.id, JSON.stringify(recProps(r, C))]));
   ctx.propSnaps.settings = JSON.stringify(db.settings);
 }
 
@@ -408,6 +439,7 @@ export async function saveDB(db, ctx, C) {
   if (!ctx.seedingDisabled) writes += await syncColl('seeding', db.seeding || [], (s) => seedProps(s), ctx);
   if (!ctx.growthDisabled) writes += await syncColl('growth', db.growth || [], (g) => growthProps(g), ctx);
   if (!ctx.eventsDisabled && ctx.eventsDbId) writes += await syncColl('events', db.events || [], (e) => evProps(e, C, db), ctx, ctx.eventsDbId);
+  if (!ctx.receiptsDisabled) writes += await syncColl('receipts', db.receipts || [], (r) => recProps(r, C), ctx);
   const setJson = JSON.stringify(db.settings);
   if (setJson !== ctx.propSnaps.settings) {
     await api('pages/' + ctx.settingsPageId, 'PATCH', { properties: { Data: { rich_text: rt(setJson) } } });

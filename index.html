@@ -641,6 +641,7 @@
             <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" onClick="{{ plExportCsv }}">CSV</button>
             <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" onClick="{{ plCopy }}">Copiar</button>
             <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" onClick="{{ plPrint }}">PDF</button>
+            <button class="kyn-btn kyn-btn--primary kyn-btn--sm" onClick="{{ plExportCards }}">Guardar en mi cel</button>
           </div>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -709,7 +710,7 @@
         <sc-if value="{{ plCardsMode }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start;justify-content:center;padding:24px 0">
             <sc-for list="{{ priceCards }}" as="c" hint-placeholder-count="3">
-              <div style="{{ c.cardStyle }}">
+              <div id="{{ c.domId }}" style="{{ c.cardStyle }}">
                 <span style="{{ c.blobStyle }}"></span>
                 <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding-top:8px">
                   <div style="display:flex;align-items:baseline;gap:10px">
@@ -748,6 +749,142 @@
             </sc-for>
           </div>
         </sc-if>
+      </section>
+      </sc-if>
+
+      <!-- ============ RECIBOS (lista) ============ -->
+      <sc-if value="{{ vReceipts }}" hint-placeholder-val="{{ false }}">
+      <section data-screen-label="Recibos" style="display:flex;flex-direction:column;gap:18px;animation:kynFade 240ms ease-out">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+          <div>
+            <h1 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.02em">Recibos</h1>
+            <p style="margin:4px 0 0;color:var(--ink-500);font-size:14px">Recibos bonitos para tus clientas — los armas aquí y los guardas en tu cel para mandarlos.</p>
+          </div>
+          <button class="kyn-btn kyn-btn--primary kyn-btn--md" style="margin-left:auto" onClick="{{ goNewReceipt }}">+ Nuevo recibo</button>
+        </div>
+        <sc-if value="{{ rcSyncOff }}" hint-placeholder-val="{{ false }}">
+          <div style="{{ rcSyncOffStyle }}">La base «KYN Recibos» no está disponible en Notion, así que los recibos se guardan solo en este navegador. Revisa que la integración tenga acceso a la página KYN Cost Studio y recarga.</div>
+        </sc-if>
+        <sc-if value="{{ rcEmpty }}" hint-placeholder-val="{{ false }}">
+          <div class="kyn-card" style="padding:40px 24px;text-align:center;color:var(--ink-500);font-size:14px;line-height:1.6">Todavía no hay recibos. Toca «+ Nuevo recibo», agrega las piezas y guárdalo en tu cel.</div>
+        </sc-if>
+        <div style="{{ rcGridStyle }}">
+          <sc-for list="{{ rcList }}" as="r" hint-placeholder-count="4">
+            <button onClick="{{ r.onOpen }}" class="kyn-card" style="padding:18px 20px;display:flex;flex-direction:column;gap:8px;text-align:left;cursor:pointer;font-family:var(--font-sans);border:1px solid var(--border-subtle)" style-hover="box-shadow:var(--shadow-md)">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:12px;font-weight:800;letter-spacing:0.12em;color:var(--periwinkle-700)">{{ r.folio }}</span>
+                <span style="font-size:12px;color:var(--ink-500)">{{ r.fecha }}</span>
+                <span style="{{ r.chipStyle }}">{{ r.estado }}</span>
+              </div>
+              <span style="font-size:17px;font-weight:700;color:var(--ink-900)">{{ r.cliente }}</span>
+              <span style="font-size:13px;color:var(--ink-500);line-height:1.45">{{ r.items }}</span>
+              <span style="font-size:20px;font-weight:800;letter-spacing:-0.01em;color:var(--ink-900);font-variant-numeric:tabular-nums">{{ r.total }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </section>
+      </sc-if>
+
+      <!-- ============ RECIBO (detalle: editar + vista bonita) ============ -->
+      <sc-if value="{{ vReceiptDetail }}" hint-placeholder-val="{{ false }}">
+      <section data-screen-label="Recibo" style="display:flex;flex-direction:column;gap:18px;animation:kynFade 240ms ease-out">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px">
+          <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" onClick="{{ goReceipts }}">← Recibos</button>
+          <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.02em">{{ rdTitle }}</h1>
+          <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" onClick="{{ rdDelete }}">Borrar</button>
+            <button class="kyn-btn kyn-btn--primary kyn-btn--sm" onClick="{{ rdExport }}">Guardar en mi cel</button>
+          </div>
+        </div>
+        <div style="{{ rdLayoutStyle }}">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="kyn-card" style="padding:20px;display:flex;flex-direction:column;gap:14px">
+              <h2 style="margin:0;font-size:16px;font-weight:700">Piezas</h2>
+              <sc-if value="{{ rdNoLines }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:13px;color:var(--ink-500);background:var(--oat);border-radius:10px;padding:12px 14px">Todavía no hay piezas — agrégalas con «+ Agregar pieza».</div>
+              </sc-if>
+              <sc-for list="{{ rdLines }}" as="l" hint-placeholder-count="2">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px solid #F3F1F5">
+                  <div style="display:flex;flex-direction:column;flex:1;min-width:140px">
+                    <span style="font-weight:600;font-size:14px">{{ l.name }}</span>
+                    <sc-if value="{{ l.note }}"><span style="font-size:11.5px;color:var(--ink-500)">{{ l.note }}</span></sc-if>
+                  </div>
+                  <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--ink-500)">Cant.
+                    <input class="kyn-input" type="number" min="1" step="1" value="{{ l.qty }}" onChange="{{ l.onQty }}" style="padding:7px 8px;width:58px"></label>
+                  <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--ink-500)">$
+                    <input class="kyn-input" type="number" step="any" value="{{ l.price }}" onChange="{{ l.onPrice }}" style="padding:7px 8px;width:92px"></label>
+                  <button onClick="{{ l.onRemove }}" title="Quitar pieza" aria-label="Quitar pieza" style="background:none;border:none;cursor:pointer;color:var(--ink-500);font-size:14px;padding:4px" style-hover="color:var(--danger)">✕</button>
+                </div>
+              </sc-for>
+              <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" style="align-self:flex-start" onClick="{{ rdAddLine }}">+ Agregar pieza</button>
+            </div>
+            <div class="kyn-card" style="padding:20px;display:flex;flex-direction:column;gap:14px">
+              <h2 style="margin:0;font-size:16px;font-weight:700">Datos del recibo</h2>
+              <div style="{{ formGridStyle }}">
+                <sc-for list="{{ rdFields }}" as="f" hint-placeholder-count="6">
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <label style="font-size:13px;font-weight:600">{{ f.label }}</label>
+                    <sc-if value="{{ f.isSelect }}" hint-placeholder-val="{{ false }}">
+                      <select class="kyn-input" value="{{ f.value }}" onChange="{{ f.onChange }}" style="padding:10px 13px"><sc-for list="{{ f.options }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+                    </sc-if>
+                    <sc-if value="{{ f.isInput }}" hint-placeholder-val="{{ true }}">
+                      <input class="kyn-input" type="{{ f.type }}" step="any" value="{{ f.value }}" onChange="{{ f.onChange }}" placeholder="{{ f.placeholder }}" style="padding:10px 13px">
+                    </sc-if>
+                    <sc-if value="{{ f.hint }}"><span style="font-size:12px;color:var(--ink-500);line-height:1.45">{{ f.hint }}</span></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+
+          <!-- el recibo bonito (esto es lo que se guarda como imagen) -->
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+            <div id="kyn-receipt" style="{{ rvCardStyle }}">
+              <span style="{{ rvBlobStyle }}"></span>
+              <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
+                <div style="display:flex;align-items:baseline;gap:9px">
+                  <span style="font-family:var(--font-display);font-size:42px;line-height:1;color:var(--ink-900)">KYN</span>
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--pop-magenta)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-8deg)"><path d="M19.5 12.6 12 20l-7.5-7.4A5 5 0 1 1 12 6.3a5 5 0 1 1 7.5 6.3Z"></path></svg>
+                </div>
+                <span style="font-size:10.5px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-500)">Handmade · Biothane &amp; solid brass</span>
+                <span style="font-family:var(--font-display);font-size:34px;line-height:1.1;color:var(--ink-900);margin-top:12px">recibo</span>
+                <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--periwinkle-700)">{{ rvFolio }} · {{ rvFecha }}</span>
+              </div>
+              <div style="position:relative;display:flex;flex-direction:column;gap:2px;background:var(--oat);border-radius:16px;padding:14px 18px">
+                <span style="font-size:11px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-500)">Para</span>
+                <span style="font-size:19px;font-weight:700;color:var(--ink-900)">{{ rvCliente }}</span>
+              </div>
+              <div style="position:relative;display:flex;flex-direction:column;gap:2px">
+                <sc-for list="{{ rvLines }}" as="l" hint-placeholder-count="2">
+                  <div style="display:flex;align-items:baseline;gap:10px;padding:7px 0">
+                    <span style="font-size:15.5px;font-weight:600;letter-spacing:-0.01em">{{ l.label }}</span>
+                    <span style="flex:1;border-bottom:2px dotted var(--sand);transform:translateY(-3px)"></span>
+                    <span style="font-size:15.5px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums">{{ l.amount }}</span>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ rvNoLines }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:var(--ink-300);padding:8px 0">Sin piezas todavía</span></sc-if>
+              </div>
+              <div style="position:relative;display:flex;flex-direction:column;gap:6px;padding-top:14px;border-top:1px solid var(--sand)">
+                <sc-for list="{{ rvSums }}" as="x" hint-placeholder-count="1">
+                  <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--ink-700)"><span>{{ x.label }}</span><span style="font-variant-numeric:tabular-nums">{{ x.value }}</span></div>
+                </sc-for>
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px">
+                  <span style="font-size:13px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-900)">Total</span>
+                  <span style="font-size:30px;font-weight:800;letter-spacing:-0.02em;color:var(--ink-900);font-variant-numeric:tabular-nums">{{ rvTotal }}</span>
+                </div>
+                <div style="display:flex;justify-content:flex-end;margin-top:4px">
+                  <span style="{{ rvStatusStyle }}">{{ rvStatus }}</span>
+                </div>
+              </div>
+              <sc-if value="{{ rvNota }}"><p style="position:relative;margin:0;font-size:13.5px;color:var(--ink-700);line-height:1.55;text-align:center">{{ rvNota }}</p></sc-if>
+              <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding-top:16px;border-top:1px solid var(--pastel-blush)">
+                <span style="font-family:var(--font-accent);font-size:24px;color:var(--pop-magenta);line-height:1">gracias</span>
+                <span style="font-size:12px;color:var(--ink-500);letter-spacing:0.04em">por ser parte de KYN</span>
+                <span style="font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-300)">@kynstudiomx · Precios en MXN</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
       </sc-if>
 
@@ -1529,6 +1666,23 @@
           <button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ closeDrawer }}">Listo</button>
         </sc-if>
 
+        <!-- Receipt pick drawer: agregar piezas a un recibo -->
+        <sc-if value="{{ dReceiptPick }}" hint-placeholder-val="{{ false }}">
+          <p style="margin:0;font-size:13px;color:var(--ink-500);line-height:1.5">Toca para agregar al recibo. Si ya está, suma 1. El precio sale del canal elegido ({{ rpChannel }}) y lo puedes cambiar en la lista.</p>
+          <input class="kyn-input" value="{{ rpSearch }}" onChange="{{ rpOnSearch }}" placeholder="Buscar producto…" style="padding:10px 13px">
+          <div style="display:flex;flex-direction:column;max-height:320px;overflow-y:auto;border:1px solid var(--ink-100);border-radius:var(--radius-md)">
+            <sc-if value="{{ rpNoResults }}"><div style="padding:14px;font-size:13px;color:var(--ink-500)">Ningún producto coincide con esa búsqueda.</div></sc-if>
+            <sc-for list="{{ rpCandidates }}" as="c" hint-placeholder-count="6">
+              <button onClick="{{ c.onAdd }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:none;background:none;cursor:pointer;border-bottom:1px solid #F3F1F5;font-family:var(--font-sans);text-align:left" style-hover="background:var(--periwinkle-50)">
+                <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0"><span style="font-weight:600;font-size:13.5px">{{ c.name }}</span><span style="font-size:11.5px;color:var(--ink-500)">{{ c.sub }}</span></div>
+                <span style="{{ c.qtyStyle }}">{{ c.qtyLabel }}</span>
+                <span style="color:var(--periwinkle-700);font-weight:800;font-size:16px">+</span>
+              </button>
+            </sc-for>
+          </div>
+          <button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ closeDrawer }}">Listo</button>
+        </sc-if>
+
         <!-- Order pick drawer: agregar material de proveedor a un pedido -->
         <sc-if value="{{ dOrderPick }}" hint-placeholder-val="{{ false }}">
           <p style="margin:0;font-size:13px;color:var(--ink-500);line-height:1.5">Toca para agregar a {{ opOrderLabel }}. Si ya está, suma 1 — ajusta la cantidad exacta después en la lista.</p>
@@ -1565,6 +1719,21 @@
     </div>
   </sc-if>
 
+  <!-- ============ IMAGEN LISTA PARA COMPARTIR ============ -->
+  <sc-if value="{{ shareOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:125;background:rgba(42,41,51,0.42);display:flex;align-items:center;justify-content:center;padding:20px;animation:kynFade 160ms ease-out">
+      <div class="kyn-card" style="max-width:380px;padding:26px;display:flex;flex-direction:column;gap:14px;text-align:center">
+        <h3 style="margin:0;font-size:17px;font-weight:800">{{ shareTitle }}</h3>
+        <p style="margin:0;font-size:14px;color:var(--ink-700);line-height:1.55">Toca «Guardar / compartir» y elige <strong>Guardar imagen</strong> para mandarla a tus fotos, o compártela directo por WhatsApp.</p>
+        <button class="kyn-btn kyn-btn--primary kyn-btn--md" onClick="{{ shareNow }}">Guardar / compartir</button>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" onClick="{{ shareDownload }}">Descargar</button>
+          <button class="kyn-btn kyn-btn--secondary kyn-btn--sm" onClick="{{ shareClose }}">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <!-- ============ TOAST ============ -->
   <sc-if value="{{ toastMsg }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom));z-index:150;background:var(--ink-900);color:#fff;font-family:var(--font-sans);font-size:14px;font-weight:600;padding:12px 22px;border-radius:99px;box-shadow:var(--shadow-lg);animation:kynToast 220ms ease-out">{{ toastMsg }}</div>
@@ -1574,7 +1743,7 @@
 </sc-if>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{
-  &quot;startView&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;dashboard&quot;, &quot;purchases&quot;, &quot;materials&quot;, &quot;products&quot;, &quot;calculator&quot;, &quot;prices&quot;, &quot;events&quot;, &quot;seeding&quot;, &quot;growth&quot;, &quot;settings&quot;], &quot;default&quot;: &quot;dashboard&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Comportamiento&quot; },
+  &quot;startView&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;dashboard&quot;, &quot;purchases&quot;, &quot;materials&quot;, &quot;products&quot;, &quot;calculator&quot;, &quot;prices&quot;, &quot;receipts&quot;, &quot;events&quot;, &quot;seeding&quot;, &quot;growth&quot;, &quot;settings&quot;], &quot;default&quot;: &quot;dashboard&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Comportamiento&quot; },
   &quot;forceMobile&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Comportamiento&quot; }
 }">
 class Component extends DCLogic {
@@ -1593,6 +1762,7 @@ class Component extends DCLogic {
     plSearch: '', plCat: 'todas', plStatus: 'activos', plSort: 'name', plMode: 'table', plCardChannel: 'all',
     seedSearch: '', seedCity: 'todas', seedStatus: 'todas', seedSort: 'recent',
     confirm: null, toast: null,
+    shareFiles: null,        // imágenes listas que el cel pide compartir con un toque extra
     syncMode: 'seed',        // 'notion' | 'local' | 'seed'
     syncState: 'off',        // 'ok' | 'saving' | 'error' | 'off'
     lastSyncAt: null,
@@ -1618,6 +1788,7 @@ class Component extends DCLogic {
         try { const raw = localStorage.getItem('kyn-db'); if (raw) { db = JSON.parse(raw); syncMode = 'local'; } } catch (e) {}
       }
       if (!db) db = mod.makeSeedDB();
+      if (!db.receipts) db.receipts = [];
       this.setState({ db, ready: true, view, syncMode, syncState, lastSyncAt: syncMode === 'notion' ? new Date() : null });
       this._startAutosave();
     }).catch((e) => console.error('No se pudo cargar kyn-calc.js', e));
@@ -1683,6 +1854,7 @@ class Component extends DCLogic {
       gear: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm8.5 3a8.5 8.5 0 0 0-.15-1.6l2-1.55-2-3.46-2.35 1a8.6 8.6 0 0 0-2.75-1.6L14.9 2.3H9.1l-.35 2.5a8.6 8.6 0 0 0-2.75 1.6l-2.35-1-2 3.46 2 1.55A8.5 8.5 0 0 0 3.5 12c0 .55.05 1.08.15 1.6l-2 1.55 2 3.46 2.35-1a8.6 8.6 0 0 0 2.75 1.6l.35 2.5h5.8l.35-2.5a8.6 8.6 0 0 0 2.75-1.6l2.35 1 2-3.46-2-1.55c.1-.52.15-1.05.15-1.6Z',
       seed: 'M22 2 11 13M22 2l-7 20-4-9-9-4Z',
       trend: 'M3 17l6-6 4 4 8-8M15 7h6v6',
+      receipt: 'M6 2.5h12v19l-3-2-3 2-3-2-3 2ZM9 7.5h6M9 11.5h6M9 15.5h3',
       stand: 'M3 9.5 5.5 4h13L21 9.5M3 9.5h18M3 9.5v10.5h18V9.5M8.7 9.5 10 4M15.3 9.5 14 4M9 20v-5.5h6V20',
     };
     return R.createElement('svg', { viewBox: '0 0 24 24', width: s, height: s, fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flex: 'none' } },
@@ -2088,6 +2260,97 @@ class Component extends DCLogic {
   };
   plPrint = () => { window.print(); };
 
+  // ---------- guardar como imagen (para el cel) ----------
+  // html2canvas (vendor/, MIT) se carga solo la primera vez que se usa.
+  loadHtml2Canvas() {
+    if (window.html2canvas) return Promise.resolve(window.html2canvas);
+    if (!this._h2c) {
+      this._h2c = new Promise((resolve, reject) => {
+        const sc = document.createElement('script');
+        sc.src = new URL('./vendor/html2canvas.min.js', document.baseURI).href;
+        sc.onload = () => resolve(window.html2canvas);
+        sc.onerror = () => { this._h2c = null; reject(new Error('no se pudo cargar el exportador de imágenes')); };
+        document.head.appendChild(sc);
+      });
+    }
+    return this._h2c;
+  }
+  async exportImages(ids, baseName) {
+    if (this._exporting) return;
+    this._exporting = true;
+    this.showToast('Preparando imagen…');
+    try {
+      const h2c = await this.loadHtml2Canvas();
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      const files = [];
+      for (let i = 0; i < ids.length; i++) {
+        const el = document.getElementById(ids[i]);
+        if (!el) continue;
+        const canvas = await h2c(el, { scale: 3, backgroundColor: null, logging: false, useCORS: true });
+        const blob = await new Promise((r) => canvas.toBlob(r, 'image/png'));
+        if (blob) files.push(new File([blob], baseName + (ids.length > 1 ? '-' + (i + 1) : '') + '.png', { type: 'image/png' }));
+      }
+      if (!files.length) throw new Error('no encontré nada que guardar');
+      await this.deliverFiles(files, false);
+    } catch (e) {
+      console.error('No se pudo crear la imagen', e);
+      this.showToast('No se pudo crear la imagen: ' + ((e && e.message) || e));
+    }
+    this._exporting = false;
+  }
+  // En el cel abre la hoja de compartir (→ Guardar imagen / WhatsApp); en la
+  // compu descarga el PNG. Si el cel no deja compartir porque el «toque» ya
+  // expiró mientras se armaba la imagen, se muestra un botón para pedir otro.
+  async deliverFiles(files, fromTap) {
+    const touch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    if (touch && navigator.share && navigator.canShare && navigator.canShare({ files })) {
+      try {
+        await navigator.share({ files });
+        this.setState({ shareFiles: null });
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') { this.setState({ shareFiles: null }); return; }
+        if (!fromTap) { this.setState({ shareFiles: files }); return; }
+      }
+    }
+    this.downloadFiles(files);
+  }
+  downloadFiles(files) {
+    for (const f of files) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(f); a.download = f.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    }
+    this.setState({ shareFiles: null });
+    this.showToast(files.length > 1 ? 'Imágenes descargadas' : 'Imagen descargada');
+  }
+
+  // ---------- recibos ----------
+  newReceipt = () => {
+    const db = this.state.db;
+    if (!db.receipts) db.receipts = [];
+    const r = {
+      id: this.C.uid(), folio: this.C.nextReceiptFolio(db.receipts), fecha: this.today(),
+      cliente: '', channel: 'inPerson', payment: 'Efectivo', estado: 'Pagado', deposit: '',
+      discount: '', shipping: '', nota: '', lines: [],
+      createdAt: this.today(), updatedAt: this.today(),
+    };
+    db.receipts.unshift(r);
+    this.up();
+    this.nav('receiptDetail', { id: r.id });
+  };
+  receiptAddProduct(r, p) {
+    const found = r.lines.find((l) => l.productId === p.id);
+    if (found) found.qty = (+found.qty || 0) + 1;
+    else {
+      const { price } = this.C.savedOrSuggestedPrice(this.state.db, p, r.channel);
+      r.lines.push({ id: this.C.uid(), productId: p.id, name: p.name, qty: 1, price: price == null ? 0 : price });
+    }
+    r.updatedAt = this.today();
+    this.up();
+  }
+
   // ================= RENDER =================
   renderVals() {
     const st = this.state;
@@ -2103,9 +2366,9 @@ class Component extends DCLogic {
     const navDef = [
       ['dashboard', 'Inicio', 'home'], ['purchases', 'Compras', 'cart'], ['materials', 'Materiales', 'box'],
       ['products', 'Productos', 'tag'], ['calculator', 'Calculadora', 'calc'], ['prices', 'Lista de precios', 'list'],
-      ['events', 'Eventos', 'stand'], ['seeding', 'Seeding', 'seed'], ['growth', 'Crecimiento', 'trend'],
+      ['receipts', 'Recibos', 'receipt'], ['events', 'Eventos', 'stand'], ['seeding', 'Seeding', 'seed'], ['growth', 'Crecimiento', 'trend'],
     ];
-    const viewGroup = { purchaseDetail: 'purchases', purchaseForm: 'purchases', productDetail: 'products', eventDetail: 'events' }[st.view] || st.view;
+    const viewGroup = { purchaseDetail: 'purchases', purchaseForm: 'purchases', productDetail: 'products', eventDetail: 'events', receiptDetail: 'receipts' }[st.view] || st.view;
     const navBtn = ([id, label, ic]) => {
       const active = viewGroup === id;
       return {
@@ -2117,7 +2380,7 @@ class Component extends DCLogic {
     };
     const navMain = navDef.map(navBtn);
     const navBottom = [navBtn(['settings', 'Ajustes', 'gear'])];
-    const navMobile = [['dashboard', 'Inicio', 'home'], ['purchases', 'Compras', 'cart'], ['materials', 'Material', 'box'], ['products', 'Productos', 'tag'], ['prices', 'Precios', 'list'], ['events', 'Bazar', 'stand'], ['seeding', 'Seeding', 'seed'], ['growth', 'Crecer', 'trend']].map(([id, label, ic]) => {
+    const navMobile = [['dashboard', 'Inicio', 'home'], ['purchases', 'Compras', 'cart'], ['materials', 'Material', 'box'], ['products', 'Productos', 'tag'], ['prices', 'Precios', 'list'], ['receipts', 'Recibos', 'receipt'], ['events', 'Bazar', 'stand'], ['seeding', 'Seeding', 'seed'], ['growth', 'Crecer', 'trend']].map(([id, label, ic]) => {
       const active = viewGroup === id;
       return {
         label, icon: this.icon(ic, 21), onClick: () => this.nav(id),
@@ -2141,6 +2404,14 @@ class Component extends DCLogic {
       vPurchaseForm: st.view === 'purchaseForm', vMaterials: st.view === 'materials', vProducts: st.view === 'products',
       vProductDetail: st.view === 'productDetail', vCalc: st.view === 'calculator', vPrices: st.view === 'prices', vSeeding: st.view === 'seeding', vGrowth: st.view === 'growth', vSettings: st.view === 'settings',
       vEvents: st.view === 'events', vEventDetail: st.view === 'eventDetail',
+      vReceipts: st.view === 'receipts', vReceiptDetail: st.view === 'receiptDetail',
+      goReceipts: () => this.nav('receipts'),
+      goNewReceipt: () => this.newReceipt(),
+      shareOpen: !!st.shareFiles,
+      shareTitle: st.shareFiles && st.shareFiles.length > 1 ? 'Tus ' + st.shareFiles.length + ' imágenes están listas' : 'Tu imagen está lista',
+      shareNow: () => this.deliverFiles(st.shareFiles || [], true),
+      shareDownload: () => this.downloadFiles(st.shareFiles || []),
+      shareClose: () => this.setState({ shareFiles: null }),
       goEvents: () => this.nav('events'),
       goNewEvent: () => this.setState({ drawer: { type: 'eventForm', form: this.blankEventForm() } }),
       goPurchases: () => this.nav('purchases'), goProducts: () => this.nav('products'),
@@ -2155,7 +2426,7 @@ class Component extends DCLogic {
       confirmYes: () => { const a = st.confirm && st.confirm.action; this.setState({ confirm: null }); if (a) a(); },
       closeDrawer: () => this.setState({ drawer: null }),
       drawerOpen: !!st.drawer,
-      drawerTitle: '', dMaterial: false, dProductForm: false, dRecipe: false, dSeedForm: false, dGrowthCapture: false, dGrowthEdit: false, dEventForm: false, dEventPlan: false, dOrderPick: false,
+      drawerTitle: '', dMaterial: false, dProductForm: false, dRecipe: false, dSeedForm: false, dGrowthCapture: false, dGrowthEdit: false, dEventForm: false, dEventPlan: false, dOrderPick: false, dReceiptPick: false,
       drawerPanelStyle: isMobile
         ? 'position:fixed;left:0;right:0;bottom:0;z-index:95;max-height:88dvh;background:var(--paper);border-radius:20px 20px 0 0;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:kynSheetUp 240ms ease-out;padding-bottom:env(safe-area-inset-bottom)'
         : 'position:fixed;top:0;right:0;bottom:0;z-index:95;width:min(540px,92vw);background:var(--paper);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:kynSlideIn 240ms ease-out',
@@ -2596,7 +2867,7 @@ class Component extends DCLogic {
           { id: 'friends', eyebrow: 'Para', title: 'familia & amigos', accent: 'var(--pop-magenta)', heartColor: 'var(--pop-magenta)', bg: 'var(--white)', blob: 'var(--pastel-blush)', rule: 'var(--pastel-blush)', footNote: 'Precio especial con mucho cariño', flourish: 'con amor' },
         ];
         vals.priceCards = defs.filter((d) => st.plCardChannel === 'all' || st.plCardChannel === d.id).map((d) => ({
-          title: d.title, eyebrow: d.eyebrow, heartColor: d.heartColor, ruleColor: d.rule,
+          domId: 'kyn-precios-' + d.id, title: d.title, eyebrow: d.eyebrow, heartColor: d.heartColor, ruleColor: d.rule,
           footNote: d.footNote, flourish: d.flourish,
           sections: sectionsFor(d.id),
           cardStyle: 'position:relative;overflow:hidden;width:470px;max-width:94vw;box-sizing:border-box;border-radius:26px;padding:44px 42px 36px;display:flex;flex-direction:column;gap:30px;background:' + d.bg + ';border:1px solid var(--border-subtle);box-shadow:var(--shadow-md)',
@@ -2615,6 +2886,16 @@ class Component extends DCLogic {
       vals.plSortOptions = this.opt([['name', 'Ordenar: nombre'], ['priceDesc', 'Precio ↓'], ['priceAsc', 'Precio ↑'], ['marginDesc', 'Margen ↓'], ['costDesc', 'Costo ↓']]);
       vals.plCols = ['Producto', 'Estado', 'Costo', 'Venta en línea', 'En persona', 'Familia y amigos', 'Actualizado', ''];
       vals.plExportCsv = this.plExportCsv; vals.plCopy = this.plCopy; vals.plPrint = this.plPrint;
+      // Guardar en el cel = las tarjetas bonitas. Desde la tabla primero se
+      // cambia a la vista de tarjetas y se exporta en cuanto se pinta.
+      vals.plExportCards = () => {
+        const ids = Object.keys(s.channels).filter((chId) => st.plCardChannel === 'all' || !st.plCardChannel || st.plCardChannel === chId).map((chId) => 'kyn-precios-' + chId);
+        const name = 'kyn-precios-' + today;
+        if (st.plMode !== 'cards') {
+          this.setState({ plMode: 'cards' });
+          setTimeout(() => this.exportImages(ids, name), 350);
+        } else this.exportImages(ids, name);
+      };
       const rows = this.plComputedRows();
       vals.plRows = rows.map((r) => {
         const c = this.chip(r.p.status);
@@ -2783,6 +3064,106 @@ class Component extends DCLogic {
     }
 
     // ============ CRECIMIENTO ============
+    // ============ RECIBOS ============
+    const fechaLarga = (iso) => {
+      if (!iso) return '';
+      const [y, m, d] = iso.split('-').map(Number);
+      const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+      return d + ' de ' + meses[m - 1] + ' ' + y;
+    };
+    const rcChipStyle = (estado) => {
+      const c = { Pagado: ['var(--pastel-mint)', '#2F6B4F'], Anticipo: ['var(--pastel-butter, #FBF0C9)', '#7A5310'], Pendiente: ['var(--pastel-blush)', '#9B4D67'] }[estado] || ['var(--oat)', 'var(--ink-700)'];
+      return 'margin-left:auto;font-size:11px;font-weight:700;border-radius:99px;padding:3px 10px;background:' + c[0] + ';color:' + c[1];
+    };
+    // un recibo borrado (o un link viejo) regresa a la lista en vez de quedar en blanco
+    if (vals.vReceiptDetail && !(db.receipts || []).some((x) => x.id === (st.params || {}).id)) { vals.vReceiptDetail = false; vals.vReceipts = true; }
+    if (vals.vReceipts) {
+      const list = db.receipts || [];
+      vals.rcEmpty = !list.length;
+      vals.rcGridStyle = 'display:grid;gap:14px;grid-template-columns:' + (isMobile ? '1fr' : 'repeat(auto-fill,minmax(260px,1fr))');
+      vals.rcList = list.map((r) => {
+        const t = C.receiptTotals(r);
+        return {
+          folio: r.folio, fecha: fechaLarga(r.fecha), estado: r.estado, chipStyle: rcChipStyle(r.estado),
+          cliente: r.cliente || 'Sin nombre',
+          items: r.lines.length ? r.lines.map((l) => (+l.qty > 1 ? l.qty + '× ' : '') + l.name).join(', ') : 'Sin piezas',
+          total: M(t.total, 0),
+          onOpen: () => this.nav('receiptDetail', { id: r.id }),
+        };
+      });
+      vals.rcSyncOff = st.syncMode === 'notion' && !!(this._nctx && this._nctx.receiptsDisabled);
+      vals.rcSyncOffStyle = this.alertStyle('warn').replace('cursor:pointer;', '');
+    }
+    if (vals.vReceiptDetail) {
+      const r = (db.receipts || []).find((x) => x.id === (st.params || {}).id);
+      if (r) {
+        const touch = () => { r.updatedAt = today; this.up(); };
+        const t = C.receiptTotals(r);
+        vals.rdTitle = r.folio + (r.cliente ? ' · ' + r.cliente : '');
+        vals.rdLayoutStyle = 'display:grid;gap:20px;align-items:start;grid-template-columns:' + (isMobile ? 'minmax(0,1fr)' : 'minmax(0,1fr) 440px');
+        vals.rdNoLines = !r.lines.length;
+        vals.rdLines = r.lines.map((l) => {
+          const p = l.productId && db.products.find((x) => x.id === l.productId);
+          const { price } = p ? C.savedOrSuggestedPrice(db, p, r.channel, s) : { price: null };
+          return {
+            name: l.name, qty: String(l.qty), price: String(l.price),
+            note: price != null && +l.price !== price ? 'Precio de lista en este canal: ' + M(price, 0) : '',
+            onQty: (e) => { l.qty = e.target.value === '' ? '' : Math.max(0, Math.round(+e.target.value)); touch(); },
+            onPrice: (e) => { l.price = e.target.value === '' ? '' : +e.target.value; touch(); },
+            onRemove: () => { r.lines = r.lines.filter((x) => x !== l); touch(); },
+          };
+        });
+        vals.rdAddLine = () => this.setState({ drawer: { type: 'receiptPick', id: r.id, search: '' } });
+        const set = (k) => (e) => { r[k] = e.target.value; touch(); };
+        const setChannel = (e) => {
+          r.channel = e.target.value;
+          // al cambiar de canal, cada pieza toma el precio de lista de ese canal
+          for (const l of r.lines) {
+            const p = l.productId && db.products.find((x) => x.id === l.productId);
+            if (!p) continue;
+            const { price } = C.savedOrSuggestedPrice(db, p, r.channel, s);
+            if (price != null) l.price = price;
+          }
+          touch();
+          this.showToast('Precios de ' + s.channels[r.channel].label);
+        };
+        const F = (label, key, opts) => this.fld(label, r[key], key === 'channel' ? setChannel : set(key), opts);
+        vals.rdFields = [
+          F('Cliente', 'cliente', { placeholder: 'Cali' }),
+          F('Fecha', 'fecha', { type: 'date' }),
+          F('Precios', 'channel', { options: Object.keys(s.channels).map((k) => ({ value: k, label: s.channels[k].label })), hint: 'Al cambiarlo, las piezas toman el precio de ese canal.' }),
+          F('Forma de pago', 'payment', { options: C.RECEIPT_PAYMENTS.map((x) => ({ value: x, label: x })) }),
+          F('Estado', 'estado', { options: C.RECEIPT_STATUS.map((x) => ({ value: x, label: x })) }),
+          ...(r.estado === 'Anticipo' ? [F('Anticipo recibido', 'deposit', { type: 'number', placeholder: '1000' })] : []),
+          F('Descuento', 'discount', { type: 'number', placeholder: '0', hint: 'En pesos. Sale como renglón aparte en el recibo.' }),
+          F('Envío', 'shipping', { type: 'number', placeholder: '0', hint: 'Si se lo cobras aparte.' }),
+          F('Nota para tu clienta', 'nota', { placeholder: 'Ej. Con cariño para Luna 🐾' }),
+        ];
+        vals.rdDelete = () => this.ask('Borrar recibo', '¿Borrar el recibo ' + r.folio + '? Se archiva en Notion.', 'Borrar', () => {
+          db.receipts = db.receipts.filter((x) => x.id !== r.id); this.up(); this.nav('receipts'); this.showToast('Recibo borrado');
+        });
+        vals.rdExport = () => this.exportImages(['kyn-receipt'], 'kyn-recibo-' + r.folio + (r.cliente ? '-' + r.cliente.trim().toLowerCase().replace(/[^a-z0-9áéíóúñü]+/gi, '-') : ''));
+
+        // vista bonita
+        vals.rvCardStyle = 'position:relative;overflow:hidden;width:420px;max-width:100%;box-sizing:border-box;border-radius:26px;padding:40px 36px 30px;display:flex;flex-direction:column;gap:24px;background:var(--white);border:1px solid var(--border-subtle);box-shadow:var(--shadow-md)';
+        vals.rvBlobStyle = 'position:absolute;top:-90px;right:-80px;width:230px;height:230px;border-radius:46% 54% 58% 42% / 52% 44% 56% 48%;background:var(--pastel-blush);opacity:0.5';
+        vals.rvFolio = r.folio; vals.rvFecha = fechaLarga(r.fecha);
+        vals.rvCliente = r.cliente || '—';
+        vals.rvLines = r.lines.filter((l) => +l.qty > 0).map((l) => ({ label: (+l.qty > 1 ? l.qty + ' × ' : '') + l.name, amount: M((+l.price || 0) * (+l.qty || 0), 0) }));
+        vals.rvNoLines = !vals.rvLines.length;
+        vals.rvSums = [];
+        if (t.discount || t.shipping) vals.rvSums.push({ label: 'Subtotal', value: M(t.subtotal, 0) });
+        if (t.discount) vals.rvSums.push({ label: 'Descuento', value: '−' + M(t.discount, 0) });
+        if (t.shipping) vals.rvSums.push({ label: 'Envío', value: M(t.shipping, 0) });
+        vals.rvTotal = M(t.total, 0);
+        vals.rvStatus = r.estado === 'Pagado' ? 'Pagado · ' + r.payment
+          : r.estado === 'Anticipo' ? 'Anticipo ' + M(t.paid, 0) + ' · Resta ' + M(t.due, 0)
+          : 'Pendiente de pago · ' + r.payment;
+        vals.rvStatusStyle = rcChipStyle(r.estado).replace('margin-left:auto;', '').replace('font-size:11px', 'font-size:12.5px').replace('padding:3px 10px', 'padding:6px 14px');
+        vals.rvNota = r.nota || '';
+      }
+    }
+
     if (vals.vGrowth) {
       const chipFor = (cuenta) => 'font-size:12px;font-weight:700;border-radius:99px;padding:3px 10px;' +
         (cuenta === '@soykenna' ? 'background:#EDE4FB;color:#6B4D9B' : 'background:#FBDCE4;color:#9B4D67');
@@ -3421,6 +3802,30 @@ class Component extends DCLogic {
         vals.depNoResults = !cands.length;
       }
     }
+    if (d && d.type === 'receiptPick') {
+      const r = (db.receipts || []).find((x) => x.id === d.id);
+      if (r) {
+        vals.dReceiptPick = true;
+        vals.drawerTitle = 'Agregar pieza';
+        vals.rpChannel = s.channels[r.channel] ? s.channels[r.channel].label : r.channel;
+        vals.rpSearch = d.search || '';
+        vals.rpOnSearch = (ev2) => { d.search = ev2.target.value; this.up(); };
+        const q = (d.search || '').toLowerCase();
+        const cands = db.products.filter((p) => p.status === 'activo' && (!q || p.name.toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q)));
+        vals.rpCandidates = cands.map((p) => {
+          const line = r.lines.find((l) => l.productId === p.id);
+          const { price, suggested } = C.savedOrSuggestedPrice(db, p, r.channel, s);
+          return {
+            name: p.name,
+            sub: p.category + ' · ' + (price == null ? 'sin precio' : M(price, 0) + (suggested ? ' (sugerido)' : '')),
+            qtyLabel: line ? '×' + (+line.qty || 0) : '',
+            qtyStyle: 'font-size:12px;font-weight:700;color:var(--periwinkle-700);white-space:nowrap',
+            onAdd: () => this.receiptAddProduct(r, p),
+          };
+        });
+        vals.rpNoResults = !cands.length;
+      }
+    }
     if (d && d.type === 'orderPick') {
       const e = (db.events || []).find((x) => x.id === d.eventId);
       const order = e && (e.orders || []).find((x) => x.id === d.orderId);
@@ -3452,7 +3857,7 @@ class Component extends DCLogic {
         vals.opNoResults = !catalog.length;
       }
     }
-    if (d && !vals.dMaterial && !vals.dProductForm && !vals.dRecipe && !vals.dSeedForm && !vals.dGrowthCapture && !vals.dGrowthEdit && !vals.dEventForm && !vals.dEventPlan && !vals.dOrderPick) vals.drawerOpen = false;
+    if (d && !vals.dMaterial && !vals.dProductForm && !vals.dRecipe && !vals.dSeedForm && !vals.dGrowthCapture && !vals.dGrowthEdit && !vals.dEventForm && !vals.dEventPlan && !vals.dOrderPick && !vals.dReceiptPick) vals.drawerOpen = false;
 
     return vals;
   }
