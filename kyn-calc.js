@@ -235,15 +235,36 @@ export function savedOrSuggestedPrice(db, product, channelId, settings) {
   return { price: channelSuggestedPrice(productCost(db, product, settings).total, ch, settings), suggested: true };
 }
 
+// Para bundles: qué trae («2× Urban Leash + Urban Crossbody») y cuánto
+// costarían esas piezas compradas por separado en el mismo canal. Si la
+// receta mezcla materiales sueltos, no hay "precio por separado" comparable.
+export function bundleBreakdown(db, product, channelId, settings) {
+  const recipe = (product && product.recipe) || [];
+  const parts = recipe.filter((l) => l.productId);
+  if (!parts.length) return null;
+  let separate = 0, complete = parts.length === recipe.length;
+  const names = parts.map((l) => {
+    const sub = db.products.find((x) => x.id === l.productId);
+    const q = +l.quantity || 0;
+    const { price } = sub ? savedOrSuggestedPrice(db, sub, channelId, settings) : { price: null };
+    if (price == null) complete = false; else separate += price * q;
+    return (q > 1 ? q + '× ' : '') + (sub ? sub.name : 'producto eliminado');
+  });
+  return { components: names.join(' + '), separate: complete ? separate : null };
+}
+
 export function receiptTotals(r) {
   const lines = (r && r.lines) || [];
   const subtotal = lines.reduce((t, l) => t + (+l.price || 0) * (+l.qty || 0), 0);
   const pieces = lines.reduce((t, l) => t + (+l.qty || 0), 0);
   const discount = Math.max(0, +r.discount || 0);
   const shipping = Math.max(0, +r.shipping || 0);
+  // ahorro de los bundles contra comprar sus piezas por separado (solo informativo)
+  const separate = lines.reduce((t, l) => t + (l.separatePrice != null ? +l.separatePrice : (+l.price || 0)) * (+l.qty || 0), 0);
+  const bundleSavings = Math.max(0, separate - subtotal);
   const total = Math.max(0, subtotal - discount + shipping);
   const paid = r.estado === 'Pagado' ? total : (r.estado === 'Anticipo' ? Math.min(total, Math.max(0, +r.deposit || 0)) : 0);
-  return { subtotal, pieces, discount, shipping, total, paid, due: total - paid };
+  return { subtotal, pieces, separate, bundleSavings, discount, shipping, total, paid, due: total - paid };
 }
 
 // KYN-001, KYN-002… — siguiente número libre según los folios existentes.
