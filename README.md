@@ -41,7 +41,7 @@ En la sección **Lista de precios** hay dos vistas:
 
 ## Recibos
 
-La sección **Recibos** arma recibos bonitos para tus clientas, con el mismo estilo que las tarjetas de precios.
+La sección **Recibos** arma recibos bonitos para tus clientas, con el mismo estilo que la papelería impresa: fondo periwinkle con puntitos, «HOLA,» con el nombre de tu clienta y la tarjeta blanca «TU PEDIDO» (o «TU BUNDLE» si todo lo que lleva son bundles). Cada bundle muestra qué trae, y abajo sale «Precio por separado» con la pastilla de «Descuento por bundle».
 
 1. **+ Nuevo recibo** — se le pone folio solo (KYN-001, KYN-002…).
 2. **+ Agregar pieza** — eliges productos; el precio sale del canal elegido en *Precios* (en persona por default). Cada precio se puede ajustar a mano.

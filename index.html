@@ -840,47 +840,72 @@
           <!-- el recibo bonito (esto es lo que se guarda como imagen) -->
           <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
             <div id="kyn-receipt" style="{{ rvCardStyle }}">
-              <span style="{{ rvBlobStyle }}"></span>
-              <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
-                <div style="display:flex;align-items:baseline;gap:9px">
-                  <span style="font-family:var(--font-display);font-size:42px;line-height:1;color:var(--ink-900)">KYN</span>
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--pop-magenta)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-8deg)"><path d="M19.5 12.6 12 20l-7.5-7.4A5 5 0 1 1 12 6.3a5 5 0 1 1 7.5 6.3Z"></path></svg>
+              <!-- encabezado sobre el periwinkle: como la tarjeta impresa -->
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+                <div style="display:flex;align-items:baseline;gap:6px">
+                  <span style="font-family:var(--font-display);font-weight:500;font-size:34px;line-height:1;color:var(--white)">KYN</span>
+                  <span style="font-family:var(--font-accent);font-size:30px;line-height:1;color:var(--white)">studio</span>
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--pop-magenta-soft)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-8deg)"><path d="M19.5 12.6 12 20l-7.5-7.4A5 5 0 1 1 12 6.3a5 5 0 1 1 7.5 6.3Z"></path></svg>
                 </div>
-                <span style="font-size:10.5px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-500)">Handmade · Biothane &amp; solid brass</span>
-                <span style="font-family:var(--font-display);font-size:34px;line-height:1.1;color:var(--ink-900);margin-top:12px">recibo</span>
-                <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--periwinkle-700)">{{ rvFolio }} · {{ rvFecha }}</span>
+                <span style="font-size:10.5px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--periwinkle-100);text-align:right;line-height:1.5;padding-top:6px">{{ rvFolio }}</span>
               </div>
-              <div style="position:relative;display:flex;flex-direction:column;gap:2px;background:var(--oat);border-radius:16px;padding:14px 18px">
-                <span style="font-size:11px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-500)">Para</span>
-                <span style="font-size:19px;font-weight:700;color:var(--ink-900)">{{ rvCliente }}</span>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <span style="font-family:var(--font-display);font-weight:500;font-size:44px;line-height:1;letter-spacing:0.01em;text-transform:uppercase;color:var(--white)">Hola,</span>
+                <span style="font-size:22px;font-weight:600;color:var(--white);padding-bottom:6px;border-bottom:2px solid rgba(255,255,255,0.85);min-height:28px">{{ rvCliente }}</span>
               </div>
-              <div style="position:relative;display:flex;flex-direction:column;gap:2px">
-                <sc-for list="{{ rvLines }}" as="l" hint-placeholder-count="2">
-                  <div style="display:flex;align-items:baseline;gap:10px;padding:7px 0">
-                    <span style="font-size:15.5px;font-weight:600;letter-spacing:-0.01em">{{ l.label }}</span>
-                    <span style="flex:1;border-bottom:2px dotted var(--sand);transform:translateY(-3px)"></span>
-                    <span style="font-size:15.5px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums">{{ l.amount }}</span>
+
+              <!-- la tarjeta blanca: TU PEDIDO -->
+              <div style="background:var(--white);border-radius:20px;padding:22px 20px 20px;display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--ink-100)">
+                  <span style="font-family:var(--font-display);font-weight:500;font-size:26px;line-height:1;letter-spacing:0.01em;text-transform:uppercase;color:var(--ink-900)">{{ rvHeading }}</span>
+                  <div style="display:flex;align-items:baseline;gap:8px">
+                    <span style="font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-500)">Fecha</span>
+                    <span style="font-size:13px;font-weight:600;color:var(--ink-900);border-bottom:1px solid var(--ink-300);padding:0 2px 2px">{{ rvFecha }}</span>
                   </div>
-                </sc-for>
-                <sc-if value="{{ rvNoLines }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:var(--ink-300);padding:8px 0">Sin piezas todavía</span></sc-if>
-              </div>
-              <div style="position:relative;display:flex;flex-direction:column;gap:6px;padding-top:14px;border-top:1px solid var(--sand)">
-                <sc-for list="{{ rvSums }}" as="x" hint-placeholder-count="1">
-                  <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--ink-700)"><span>{{ x.label }}</span><span style="font-variant-numeric:tabular-nums">{{ x.value }}</span></div>
-                </sc-for>
-                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px">
-                  <span style="font-size:13px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-900)">Total</span>
-                  <span style="font-size:30px;font-weight:800;letter-spacing:-0.02em;color:var(--ink-900);font-variant-numeric:tabular-nums">{{ rvTotal }}</span>
                 </div>
-                <div style="display:flex;justify-content:flex-end;margin-top:4px">
-                  <span style="{{ rvStatusStyle }}">{{ rvStatus }}</span>
+                <div style="display:flex;gap:10px;font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-500);padding-left:28px">
+                  <span style="flex:1">{{ rvColLabel }}</span><span style="width:74px;text-align:right">Precio</span><span style="width:34px;text-align:right">Cant.</span>
                 </div>
+                <div style="display:flex;flex-direction:column">
+                  <sc-for list="{{ rvLines }}" as="l" hint-placeholder-count="2">
+                    <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--ink-100)">
+                      <span style="flex:none;width:16px;height:16px;margin-top:2px;border-radius:4px;background:var(--periwinkle-600);display:flex;align-items:center;justify-content:center">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--white)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+                      </span>
+                      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                        <span style="font-size:15px;font-weight:700;color:var(--ink-900);line-height:1.25">{{ l.name }}</span>
+                        <sc-if value="{{ l.components }}"><span style="font-size:12px;color:var(--ink-500);line-height:1.35">{{ l.components }}</span></sc-if>
+                      </div>
+                      <span style="width:74px;text-align:right;font-size:15px;font-weight:700;color:var(--ink-900);font-variant-numeric:tabular-nums">{{ l.price }}</span>
+                      <span style="width:34px;text-align:right;font-size:14px;font-weight:600;color:var(--ink-700);font-variant-numeric:tabular-nums">{{ l.qty }}</span>
+                    </div>
+                  </sc-for>
+                  <sc-if value="{{ rvNoLines }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:var(--ink-500);padding:10px 0 10px 26px">Sin piezas todavía</span></sc-if>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px;padding-top:4px">
+                  <sc-if value="{{ rvBundleSave }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+                      <span style="font-size:13px;color:var(--ink-700)">Precio por separado <strong style="font-variant-numeric:tabular-nums">{{ rvSeparate }}</strong></span>
+                      <span style="font-size:12.5px;font-weight:700;color:var(--pop-magenta-ink, #B23A76);background:var(--pop-magenta-wash, #FBE4EF);border-radius:99px;padding:4px 12px">Descuento por bundle −{{ rvBundleSave }}</span>
+                    </div>
+                  </sc-if>
+                  <sc-for list="{{ rvSums }}" as="x" hint-placeholder-count="1">
+                    <div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--ink-700)"><span>{{ x.label }}</span><span style="font-variant-numeric:tabular-nums">{{ x.value }}</span></div>
+                  </sc-for>
+                  <div style="display:flex;justify-content:flex-end;align-items:baseline;gap:14px;margin-top:4px">
+                    <span style="font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-900)">Total</span>
+                    <span style="font-size:30px;font-weight:800;letter-spacing:-0.01em;color:var(--ink-900);font-variant-numeric:tabular-nums;border-bottom:2px solid var(--ink-900);padding:0 2px 2px;min-width:120px;text-align:right">{{ rvTotal }}</span>
+                  </div>
+                  <div style="display:flex;justify-content:flex-end;margin-top:6px">
+                    <span style="{{ rvStatusStyle }}">{{ rvStatus }}</span>
+                  </div>
+                </div>
+                <sc-if value="{{ rvNota }}"><p style="margin:2px 0 0;font-size:13.5px;color:var(--ink-700);line-height:1.55;background:var(--oat);border-radius:12px;padding:10px 14px">{{ rvNota }}</p></sc-if>
               </div>
-              <sc-if value="{{ rvNota }}"><p style="position:relative;margin:0;font-size:13.5px;color:var(--ink-700);line-height:1.55;text-align:center">{{ rvNota }}</p></sc-if>
-              <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding-top:16px;border-top:1px solid var(--pastel-blush)">
-                <span style="font-family:var(--font-accent);font-size:24px;color:var(--pop-magenta);line-height:1">gracias</span>
-                <span style="font-size:12px;color:var(--ink-500);letter-spacing:0.04em">por ser parte de KYN</span>
-                <span style="font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-300)">@kynstudiomx · Precios en MXN</span>
+
+              <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+                <span style="font-family:var(--font-accent);font-size:38px;line-height:1;color:var(--white)">gracias /</span>
+                <span style="font-size:10.5px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--periwinkle-100);padding-bottom:6px">@kynstudiomx</span>
               </div>
             </div>
           </div>
@@ -2340,12 +2365,20 @@ class Component extends DCLogic {
     this.up();
     this.nav('receiptDetail', { id: r.id });
   };
+  // copia en la línea qué trae el bundle y cuánto saldría por separado
+  receiptLineBundle(line, p, channelId) {
+    const b = this.C.bundleBreakdown(this.state.db, p, channelId);
+    if (b) { line.components = b.components; line.separatePrice = b.separate; }
+    else { delete line.components; delete line.separatePrice; }
+  }
   receiptAddProduct(r, p) {
     const found = r.lines.find((l) => l.productId === p.id);
     if (found) found.qty = (+found.qty || 0) + 1;
     else {
       const { price } = this.C.savedOrSuggestedPrice(this.state.db, p, r.channel);
-      r.lines.push({ id: this.C.uid(), productId: p.id, name: p.name, qty: 1, price: price == null ? 0 : price });
+      const line = { id: this.C.uid(), productId: p.id, name: p.name, qty: 1, price: price == null ? 0 : price };
+      this.receiptLineBundle(line, p, r.channel);
+      r.lines.push(line);
     }
     r.updatedAt = this.today();
     this.up();
@@ -3123,6 +3156,7 @@ class Component extends DCLogic {
             if (!p) continue;
             const { price } = C.savedOrSuggestedPrice(db, p, r.channel, s);
             if (price != null) l.price = price;
+            this.receiptLineBundle(l, p, r.channel);
           }
           touch();
           this.showToast('Precios de ' + s.channels[r.channel].label);
@@ -3145,12 +3179,19 @@ class Component extends DCLogic {
         vals.rdExport = () => this.exportImages(['kyn-receipt'], 'kyn-recibo-' + r.folio + (r.cliente ? '-' + r.cliente.trim().toLowerCase().replace(/[^a-z0-9áéíóúñü]+/gi, '-') : ''));
 
         // vista bonita
-        vals.rvCardStyle = 'position:relative;overflow:hidden;width:420px;max-width:100%;box-sizing:border-box;border-radius:26px;padding:40px 36px 30px;display:flex;flex-direction:column;gap:24px;background:var(--white);border:1px solid var(--border-subtle);box-shadow:var(--shadow-md)';
-        vals.rvBlobStyle = 'position:absolute;top:-90px;right:-80px;width:230px;height:230px;border-radius:46% 54% 58% 42% / 52% 44% 56% 48%;background:var(--pastel-blush);opacity:0.5';
-        vals.rvFolio = r.folio; vals.rvFecha = fechaLarga(r.fecha);
-        vals.rvCliente = r.cliente || '—';
-        vals.rvLines = r.lines.filter((l) => +l.qty > 0).map((l) => ({ label: (+l.qty > 1 ? l.qty + ' × ' : '') + l.name, amount: M((+l.price || 0) * (+l.qty || 0), 0) }));
-        vals.rvNoLines = !vals.rvLines.length;
+        // mismo lenguaje que la papelería impresa: periwinkle con puntitos + tarjeta blanca
+        vals.rvCardStyle = 'position:relative;overflow:hidden;width:440px;max-width:100%;box-sizing:border-box;border-radius:26px;padding:26px 22px 22px;display:flex;flex-direction:column;gap:20px;background-color:var(--periwinkle-700);background-image:url(data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2214%22%20height=%2214%22%3E%3Ccircle%20cx=%227%22%20cy=%227%22%20r=%221.2%22%20fill=%22white%22%20fill-opacity=%220.18%22/%3E%3C/svg%3E);background-repeat:repeat;background-size:14px 14px;box-shadow:var(--shadow-md)';
+        vals.rvFolio = r.folio;
+        vals.rvFecha = r.fecha ? r.fecha.split('-').reverse().join('/') : '';
+        vals.rvCliente = r.cliente || '';
+        const shown = r.lines.filter((l) => +l.qty > 0);
+        const allBundles = shown.length > 0 && shown.every((l) => l.components);
+        vals.rvHeading = allBundles ? 'Tu bundle' : 'Tu pedido';
+        vals.rvColLabel = allBundles ? 'Bundle' : 'Producto';
+        vals.rvLines = shown.map((l) => ({ name: l.name, components: l.components || '', price: M(+l.price || 0, 0), qty: String(l.qty) }));
+        vals.rvNoLines = !shown.length;
+        vals.rvBundleSave = t.bundleSavings >= 1 ? M(t.bundleSavings, 0) : '';
+        vals.rvSeparate = M(t.separate, 0);
         vals.rvSums = [];
         if (t.discount || t.shipping) vals.rvSums.push({ label: 'Subtotal', value: M(t.subtotal, 0) });
         if (t.discount) vals.rvSums.push({ label: 'Descuento', value: '−' + M(t.discount, 0) });
